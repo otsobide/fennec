@@ -168,6 +168,7 @@ The `docs/` directory contains detailed guides. Start with **ARCHITECTURE.md** f
 | Document | Description |
 |---|---|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, layer diagram, key patterns |
+| [ENTITIES.md](docs/ENTITIES.md) | Every aggregate and its value objects, grouped by bounded context |
 | [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) | Full annotated file tree |
 | [CQRS.md](docs/CQRS.md) | How commands and queries flow through the system |
 | [DOMAIN_EVENTS.md](docs/DOMAIN_EVENTS.md) | Event-driven communication between bounded contexts |
