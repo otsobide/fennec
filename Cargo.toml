@@ -5,6 +5,7 @@ members = [
     "apps/config_api",
     "apps/cti_api",
     "libs/config",
+    "libs/ioc",
     "libs/kernel",
     "libs/shared/cqrs",
     "libs/shared/domain-events",

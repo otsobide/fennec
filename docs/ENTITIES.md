@@ -75,6 +75,37 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 ---
 
+## `ioc` bounded context
+
+Crate: `libs/ioc/`. Owns the indicators-of-compromise side of the CTI domain.
+
+### `Ioc`
+
+File: `libs/ioc/src/ioc/domain/entities/ioc.rs`
+
+Represents a single Indicator of Compromise: an observable (IP, domain, URL, hash, email, ...) that is considered relevant for detection or investigation.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `IocId` | `uuid::Uuid` | newtype | Externally provided at construction (not generated). |
+| `ioc_type` | `IocType` | enum `{ Ipv4, Ipv6, Domain, Url, Sha256, Sha1, Md5, Email }` | enum | Parsed from `"ipv4"` / `"ipv6"` / `"domain"` / `"url"` / `"sha256"` / `"sha1"` / `"md5"` / `"email"`. |
+| `value` | `IocValue` | `String` | validated | Non-empty. Per-type validation is intentionally deferred. |
+| `created_at` | `IocCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
+| `updated_at` | `IocUpdatedAt` | `std::time::SystemTime` | newtype | Set to the same instant as `created_at` on creation. |
+
+**Invariants**
+
+- `id`, `ioc_type`, `value`, and `created_at` are immutable after creation (no update use case is exposed).
+- `updated_at` is always `>= created_at`.
+
+**Errors**
+
+- `IocTypeError::Invalid(String)` — unknown `ioc_type` string.
+- `IocValueError::Empty` — value must be non-empty.
+- `IocRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}` — persistence-layer failures.
+
+---
+
 ## `config` bounded context
 
 Crate: `libs/config/`. Reference/example context — a generic key/value store used to illustrate the architecture. Not part of the CTI domain.
@@ -119,4 +150,5 @@ New context-crossing links (IoC ↔ Source, Sighting ↔ IoC, etc.) will follow 
 |---|---|---|---|
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
+| `ioc` | `Ioc` | `IocId`, `IocType`, `IocValue`, `IocCreatedAt`, `IocUpdatedAt` | `cti_api` — `/iocs[/{id}]` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
