@@ -7,6 +7,7 @@ members = [
     "libs/config",
     "libs/ioc",
     "libs/kernel",
+    "libs/sighting",
     "libs/shared/cqrs",
     "libs/shared/domain-events",
     "libs/shared/valueobject",

@@ -106,6 +106,42 @@ Represents a single Indicator of Compromise: an observable (IP, domain, URL, has
 
 ---
 
+## `sighting` bounded context
+
+Crate: `libs/sighting/`. Owns the observation side of the CTI domain — records the fact that a specific `Source` reported a specific `Ioc`.
+
+### `Sighting`
+
+File: `libs/sighting/src/sighting/domain/entities/sighting.rs`
+
+Represents a single observation of an ioc by a source. There is one aggregate per `(ioc_id, source_id)` pair — an IoC reported by N different sources produces N sightings. References to `Ioc` and `Source` are by identifier only; the `sighting` module does not import from `ioc` or `kernel`.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `SightingId` | `uuid::Uuid` | newtype | Externally provided at construction (not generated). |
+| `ioc_id` | `SightingIocId` | `uuid::Uuid` | newtype | Identifier of the referenced `Ioc`. Externally provided. |
+| `source_id` | `SightingSourceId` | `uuid::Uuid` | newtype | Identifier of the referenced `Source`. Externally provided. |
+| `first_seen` | `SightingFirstSeen` | `std::time::SystemTime` | newtype | Set from the caller-supplied `observed_at` on creation; never mutated. |
+| `last_seen` | `SightingLastSeen` | `std::time::SystemTime` | newtype | Set from `observed_at` on creation; refreshed on each observation to `max(previous, observed_at)`. |
+| `count` | `SightingCount` | `u64` | validated | Must be `>= 1`. Starts at `1`; incremented by `1` on each observation. |
+| `created_at` | `SightingCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
+| `updated_at` | `SightingUpdatedAt` | `std::time::SystemTime` | newtype | Set to the same instant as `created_at` on creation; regenerated on each observation. |
+
+**Invariants**
+
+- `id`, `ioc_id`, `source_id`, `first_seen`, `created_at` are immutable after creation.
+- `count` is always `>= 1`.
+- `last_seen` is always `>= first_seen`.
+- `updated_at` is always `>= created_at`.
+- Only one sighting exists per `(ioc_id, source_id)` pair.
+
+**Errors**
+
+- `SightingCountError::Zero` — `count` must be at least `1`.
+- `SightingRepositoryError::{NotFound, IdAlreadyExists, PairAlreadyExists { existing_id }, Unexpected(String)}` — persistence-layer failures. `PairAlreadyExists` carries the id of the existing sighting so the caller can immediately observe it.
+
+---
+
 ## `config` bounded context
 
 Crate: `libs/config/`. Reference/example context — a generic key/value store used to illustrate the architecture. Not part of the CTI domain.
@@ -139,6 +175,8 @@ Bounded contexts never import each other's types. When two aggregates need to be
 | Relationship | Type | Detail |
 |---|---|---|
 | `UrlSource.id` ↔ `Source.id` | Shared identifier | Both aggregates are keyed by the same UUID. Neither imports the other. |
+| `Sighting.ioc_id` → `Ioc.id` | Shared identifier | `sighting` references `ioc` by identifier only; it does not import the `ioc` crate. |
+| `Sighting.source_id` → `Source.id` | Shared identifier | `sighting` references `source` by identifier only; it does not import the `kernel` crate. |
 
 New context-crossing links (IoC ↔ Source, Sighting ↔ IoC, etc.) will follow the same rule: identifier plus events, never a direct import.
 
@@ -151,4 +189,5 @@ New context-crossing links (IoC ↔ Source, Sighting ↔ IoC, etc.) will follow 
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
 | `ioc` | `Ioc` | `IocId`, `IocType`, `IocValue`, `IocCreatedAt`, `IocUpdatedAt` | `cti_api` — `/iocs[/{id}]` |
+| `sighting` | `Sighting` | `SightingId`, `SightingIocId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/iocs/{ioc_id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
