@@ -15,7 +15,7 @@ pub struct UrlSourceDeletedEvent {
 }
 
 impl UrlSourceDeletedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.deleted";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.deleted";
 
     pub fn new(id: UrlSourceId) -> Self {
         Self {
