@@ -26,7 +26,7 @@ pub struct UrlSourceCreatedEvent {
 
 impl UrlSourceCreatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.created";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.created";
 
     pub fn new(
         id: UrlSourceId,
