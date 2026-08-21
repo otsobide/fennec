@@ -29,8 +29,10 @@ workspace of bounded contexts behind thin HTTP apps.
 3. **Business failures are data.** Handlers return a response envelope whose
    `error.concept` the delivery layer maps to an HTTP status. Bus errors are
    reserved for wiring bugs.
-4. **Contexts communicate only through domain events.** They never import each
-   other's crates; aggregates in different contexts relate by shared
-   identifier only.
+4. **Modules never import each other**, whether they live in the same crate or
+   not. `kernel` hosts one module per aggregate (`source`, `url_source`, `ioc`,
+   `sighting`); each relates to the others by shared identifier and
+   communicates through the command, query and event buses, so any of them can
+   be promoted to its own crate without untangling imports.
 5. **Events are published only after a successful write**, and always built
    through their factory function.

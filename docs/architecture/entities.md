@@ -2,6 +2,8 @@
 
 Reference of every aggregate root currently modelled in the system, grouped by bounded context, with the value objects that compose each one.
 
+The CTI domain lives in a single bounded context, `kernel`, which hosts **one module per aggregate**. The modules are isolated from each other: each carries its own `domain` / `application` / `infrastructure` tree, declares its own value object for any foreign identifier, and never imports a sibling. Promoting one of them into its own crate is a move, not a redesign, and `tests/libs/kernel/src/module_isolation_tests.rs` fails the build if that isolation is broken.
+
 Every field in every aggregate is a **value object** — no raw `String`, `Uuid` or `SystemTime` ever leaks into an entity. Value objects are validated at construction, so once an aggregate exists it is guaranteed to be internally consistent.
 
 The **Kind** column below classifies each value object:
@@ -21,7 +23,7 @@ error type. Identifiers additionally expose `generate()`, which produces a fresh
 
 ## `kernel` bounded context
 
-Crate: `libs/kernel/`. Owns the intelligence-source side of the CTI domain.
+Crate: `libs/kernel/`. Owns the whole CTI domain, one module per aggregate: `source` and `url_source` (where intelligence comes from), `ioc` (what is being tracked) and `sighting` (who reported what, and when).
 
 ### `Source`
 
@@ -79,13 +81,9 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 ---
 
-## `ioc` bounded context
-
-Crate: `libs/ioc/`. Owns the indicators-of-compromise side of the CTI domain.
-
 ### `Ioc`
 
-File: `libs/ioc/src/ioc/domain/entities/ioc.rs`
+Module: `libs/kernel/src/ioc/`. File: `libs/kernel/src/ioc/domain/entities/ioc.rs`
 
 Represents a single Indicator of Compromise: an observable (IP, domain, URL, hash, email, ...) that is considered relevant for detection or investigation.
 
@@ -109,15 +107,11 @@ Represents a single Indicator of Compromise: an observable (IP, domain, URL, has
 
 ---
 
-## `sighting` bounded context
-
-Crate: `libs/sighting/`. Owns the observation side of the CTI domain — records the fact that a specific `Source` reported a specific `Ioc`.
-
 ### `Sighting`
 
-File: `libs/sighting/src/sighting/domain/entities/sighting.rs`
+Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific `Ioc`. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
 
-Represents a single observation of an ioc by a source. There is one aggregate per `(ioc_id, source_id)` pair — an IoC reported by N different sources produces N sightings. References to `Ioc` and `Source` are by identifier only; the `sighting` module does not import from `ioc` or `kernel`.
+Represents a single observation of an ioc by a source. There is one aggregate per `(ioc_id, source_id)` pair — an IoC reported by N different sources produces N sightings. References to `Ioc` and `Source` are by identifier only; the `sighting` module does not import from the `ioc` or `source` modules.
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
@@ -171,26 +165,26 @@ Aggregate root for a single key/value pair. The key acts as the identifier.
 
 ---
 
-## Cross-context relationships
+## Relationships between aggregates
 
-Bounded contexts never import each other's types. When two aggregates need to be linked, they share an **identifier** and communicate through **domain events**.
+No module imports another module's types, whether the two live in the same crate or not. When two aggregates need to be linked, they share an **identifier** and communicate through the **buses**: commands and queries for anything a caller drives, domain events for anything a module reacts to.
 
 | Relationship | Type | Detail |
 |---|---|---|
 | `UrlSource.id` ↔ `Source.id` | Shared identifier | Both aggregates are keyed by the same UUID. Neither imports the other. |
-| `Sighting.ioc_id` → `Ioc.id` | Shared identifier | `sighting` references `ioc` by identifier only; it does not import the `ioc` crate. |
-| `Sighting.source_id` → `Source.id` | Shared identifier | `sighting` references `source` by identifier only; it does not import the `kernel` crate. |
+| `Sighting.ioc_id` → `Ioc.id` | Shared identifier | `sighting` declares its own `SightingIocId`; it never uses `IocId`. |
+| `Sighting.source_id` → `Source.id` | Shared identifier | `sighting` declares its own `SightingSourceId`; it never uses `SourceId`. |
 
-New context-crossing links (IoC ↔ Source, Sighting ↔ IoC, etc.) will follow the same rule: identifier plus events, never a direct import.
+This is what keeps every module extractable: the day one of them needs its own crate (or its own service) for scale, the identifiers already match and no import has to be untangled. New links follow the same rule: identifier plus buses, never a direct import.
 
 ---
 
 ## Summary
 
-| Context | Aggregate | Value Objects | Exposed by |
+| Context | Aggregate (module) | Value Objects | Exposed by |
 |---|---|---|---|
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
-| `ioc` | `Ioc` | `IocId`, `IocType`, `IocValue`, `IocCreatedAt`, `IocUpdatedAt` | `cti_api` — `/iocs[/{id}]` |
-| `sighting` | `Sighting` | `SightingId`, `SightingIocId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/iocs/{ioc_id}/sightings`, `/sources/{source_id}/sightings` |
+| `kernel` | `Ioc` | `IocId`, `IocType`, `IocValue`, `IocCreatedAt`, `IocUpdatedAt` | `cti_api` — `/iocs[/{id}]` |
+| `kernel` | `Sighting` | `SightingId`, `SightingIocId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/iocs/{ioc_id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
