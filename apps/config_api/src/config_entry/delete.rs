@@ -17,14 +17,16 @@ use crate::AppState;
 /// - `404 Not Found` – no entry exists for the given key.
 /// - `500 Internal Server Error` – unexpected error.
 #[delete("/config/{key}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let key_str = path.into_inner();
     debug!(key = %key_str, "DELETE /config/{{key}}");
 
-    let command = DeleteConfigEntryCommand { key: ConfigKey::new(key_str.clone()) };
+    let key = match ConfigKey::new(key_str.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
+    let command = DeleteConfigEntryCommand { key };
 
     match state.command_bus.dispatch(Box::new(command)).await {
         Ok(boxed) => {

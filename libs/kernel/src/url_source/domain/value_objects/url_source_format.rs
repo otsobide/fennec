@@ -2,15 +2,7 @@
 //!
 //! [`UrlSource`]: crate::url_source::domain::entities::url_source::UrlSource
 
-use thiserror::Error;
-
-/// Errors returned when constructing a [`UrlSourceFormat`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum UrlSourceFormatError {
-    /// The given string does not match any known format.
-    #[error("invalid url source format: {0}")]
-    Invalid(String),
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object representing the payload format expected from a
 /// [`UrlSource`](crate::url_source::domain::entities::url_source::UrlSource).
@@ -27,19 +19,22 @@ pub enum UrlSourceFormat {
 }
 
 impl UrlSourceFormat {
-    /// Parses a raw string into a `UrlSourceFormat`.
+    /// Parses a raw string into a `UrlSourceFormat`, ignoring surrounding whitespace
+    /// and letter case.
     ///
     /// # Errors
     ///
-    /// Returns [`UrlSourceFormatError::Invalid`] if the value is not a recognised
+    /// Returns [`ValueObjectValidationError`] if the value is not a recognised
     /// format.
-    pub fn from_str(value: &str) -> Result<Self, UrlSourceFormatError> {
-        match value {
+    pub fn from_str(value: &str) -> Result<Self, ValueObjectValidationError> {
+        match value.trim().to_ascii_lowercase().as_str() {
             "plain" => Ok(Self::Plain),
             "csv" => Ok(Self::Csv),
             "json" => Ok(Self::Json),
             "stix" => Ok(Self::Stix),
-            other => Err(UrlSourceFormatError::Invalid(other.to_string())),
+            other => Err(ValueObjectValidationError::new(format!(
+                "invalid url source format: {other}"
+            ))),
         }
     }
 

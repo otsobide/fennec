@@ -2,15 +2,7 @@
 //!
 //! [`Source`]: crate::source::domain::entities::source::Source
 
-use thiserror::Error;
-
-/// Errors returned when constructing a [`SourceType`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum SourceTypeError {
-    /// The given string does not match any known source type.
-    #[error("invalid source type: {0}")]
-    Invalid(String),
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object representing the type of a
 /// [`Source`](crate::source::domain::entities::source::Source).
@@ -24,16 +16,19 @@ pub enum SourceType {
 }
 
 impl SourceType {
-    /// Parses a raw string into a `SourceType`.
+    /// Parses a raw string into a `SourceType`, ignoring surrounding whitespace
+    /// and letter case.
     ///
     /// # Errors
     ///
-    /// Returns [`SourceTypeError::Invalid`] if the value is not a recognised
+    /// Returns [`ValueObjectValidationError`] if the value is not a recognised
     /// source type.
-    pub fn from_str(value: &str) -> Result<Self, SourceTypeError> {
-        match value {
+    pub fn from_str(value: &str) -> Result<Self, ValueObjectValidationError> {
+        match value.trim().to_ascii_lowercase().as_str() {
             "url" => Ok(Self::Url),
-            other => Err(SourceTypeError::Invalid(other.to_string())),
+            other => Err(ValueObjectValidationError::new(format!(
+                "invalid source type: {other}"
+            ))),
         }
     }
 

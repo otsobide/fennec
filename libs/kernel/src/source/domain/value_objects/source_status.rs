@@ -2,15 +2,7 @@
 //!
 //! [`Source`]: crate::source::domain::entities::source::Source
 
-use thiserror::Error;
-
-/// Errors returned when constructing a [`SourceStatus`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum SourceStatusError {
-    /// The given string does not match any known status.
-    #[error("invalid source status: {0}")]
-    Invalid(String),
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object representing the lifecycle status of a
 /// [`Source`](crate::source::domain::entities::source::Source).
@@ -23,17 +15,20 @@ pub enum SourceStatus {
 }
 
 impl SourceStatus {
-    /// Parses a raw string into a `SourceStatus`.
+    /// Parses a raw string into a `SourceStatus`, ignoring surrounding whitespace
+    /// and letter case.
     ///
     /// # Errors
     ///
-    /// Returns [`SourceStatusError::Invalid`] if the value is not a recognised
+    /// Returns [`ValueObjectValidationError`] if the value is not a recognised
     /// status.
-    pub fn from_str(value: &str) -> Result<Self, SourceStatusError> {
-        match value {
+    pub fn from_str(value: &str) -> Result<Self, ValueObjectValidationError> {
+        match value.trim().to_ascii_lowercase().as_str() {
             "active" => Ok(Self::Active),
             "inactive" => Ok(Self::Inactive),
-            other => Err(SourceStatusError::Invalid(other.to_string())),
+            other => Err(ValueObjectValidationError::new(format!(
+                "invalid source status: {other}"
+            ))),
         }
     }
 

@@ -2,15 +2,7 @@
 //!
 //! [`UrlSource`]: crate::url_source::domain::entities::url_source::UrlSource
 
-use thiserror::Error;
-
-/// Errors returned when constructing a [`UrlSourcePollingInterval`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum UrlSourcePollingIntervalError {
-    /// The polling interval is zero. It must be strictly positive.
-    #[error("polling interval must be > 0 seconds")]
-    Zero,
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object representing how often (in seconds) a
 /// [`UrlSource`](crate::url_source::domain::entities::url_source::UrlSource)
@@ -25,10 +17,12 @@ impl UrlSourcePollingInterval {
     ///
     /// # Errors
     ///
-    /// Returns [`UrlSourcePollingIntervalError::Zero`] if `seconds` is `0`.
-    pub fn from_seconds(seconds: u32) -> Result<Self, UrlSourcePollingIntervalError> {
+    /// Returns [`ValueObjectValidationError`] if `seconds` is `0`.
+    pub fn from_seconds(seconds: u32) -> Result<Self, ValueObjectValidationError> {
         if seconds == 0 {
-            return Err(UrlSourcePollingIntervalError::Zero);
+            return Err(ValueObjectValidationError::new(
+                "url source polling interval must be greater than 0 seconds".to_string(),
+            ));
         }
         Ok(Self(seconds))
     }

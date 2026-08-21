@@ -2,7 +2,6 @@
 
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use ::ioc::ioc::application::create_ioc::create_ioc_command::CreateIocCommand;
 use ::ioc::ioc::application::create_ioc::create_ioc_response::CreateIocResponse;
@@ -20,9 +19,9 @@ pub async fn handler(
 ) -> impl Responder {
     debug!(id = %body.id, "POST /iocs");
 
-    let id = match Uuid::parse_str(&body.id) {
-        Ok(uuid) => IocId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match IocId::new(&body.id) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let ioc_type = match IocType::from_str(&body.ioc_type) {
@@ -35,7 +34,11 @@ pub async fn handler(
         Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
     };
 
-    let command = CreateIocCommand { id, ioc_type, value };
+    let command = CreateIocCommand {
+        id,
+        ioc_type,
+        value,
+    };
 
     match state.command_bus.dispatch(Box::new(command)).await {
         Ok(boxed) => {

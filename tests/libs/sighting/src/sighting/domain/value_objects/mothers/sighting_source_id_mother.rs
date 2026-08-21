@@ -6,10 +6,10 @@ pub struct SightingSourceIdMother;
 #[allow(dead_code)]
 impl SightingSourceIdMother {
     pub fn create(value: Uuid) -> SightingSourceId {
-        SightingSourceId::from_uuid(value)
+        SightingSourceId::from_uuid(value).expect("mother must build a valid UUID v4")
     }
 
     pub fn random() -> SightingSourceId {
-        SightingSourceId::from_uuid(Uuid::new_v4())
+        SightingSourceId::generate()
     }
 }

@@ -28,10 +28,17 @@ pub async fn handler(
     let key_str = path.into_inner();
     debug!(key = %key_str, "PUT /config/{{key}}");
 
-    let command = UpdateConfigEntryCommand {
-        key: ConfigKey::new(key_str.clone()),
-        value: ConfigValue::new(body.value.clone()),
+    let key = match ConfigKey::new(key_str.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
+
+    let value = match ConfigValue::new(body.value.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
+    let command = UpdateConfigEntryCommand { key, value };
 
     match state.command_bus.dispatch(Box::new(command)).await {
         Ok(boxed) => {

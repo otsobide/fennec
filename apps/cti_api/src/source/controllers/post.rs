@@ -2,7 +2,6 @@
 
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use kernel::source::application::create_source::create_source_command::CreateSourceCommand;
 use kernel::source::application::create_source::create_source_response::CreateSourceResponse;
@@ -29,9 +28,9 @@ pub async fn handler(
 ) -> impl Responder {
     debug!(id = %body.id, "POST /sources");
 
-    let id = match Uuid::parse_str(&body.id) {
-        Ok(uuid) => SourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SourceId::new(&body.id) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let source_type = match SourceType::from_str(&body.source_type) {
@@ -44,11 +43,16 @@ pub async fn handler(
         Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
     };
 
+    let description = match SourceDescription::new(body.description.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
     let command = CreateSourceCommand {
         id,
         source_type,
         status,
-        description: SourceDescription::new(body.description.clone()),
+        description,
     };
 
     match state.command_bus.dispatch(Box::new(command)).await {

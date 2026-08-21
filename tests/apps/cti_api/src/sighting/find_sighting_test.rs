@@ -6,13 +6,15 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_persists_the_sighting_and_can_be_retrieved() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "01234567-89ab-cdef-0123-456789abcdef";
-    let ioc_id = "fedcba98-7654-3210-fedc-ba9876543210";
-    let source_id = "11223344-5566-7788-99aa-bbccddeeff00";
+    let id = "01234567-89ab-4def-8123-456789abcdef";
+    let ioc_id = "fedcba98-7654-4210-8edc-ba9876543210";
+    let source_id = "11223344-5566-4788-89aa-bbccddeeff00";
     let observed_at: u64 = 1_700_000_123;
 
     let post_req = test::TestRequest::post()
@@ -47,12 +49,14 @@ async fn it_persists_the_sighting_and_can_be_retrieved() {
 #[tokio::test]
 async fn it_returns_404_when_sighting_does_not_exist() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/sightings/00000000-0000-0000-0000-000000000000")
+        .uri("/sightings/00000000-0000-4000-8000-000000000000")
         .to_request();
 
     let resp: ServiceResponse = test::call_service(&app, req).await;
@@ -62,7 +66,9 @@ async fn it_returns_404_when_sighting_does_not_exist() {
 #[tokio::test]
 async fn it_returns_400_when_path_id_is_not_a_uuid() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 

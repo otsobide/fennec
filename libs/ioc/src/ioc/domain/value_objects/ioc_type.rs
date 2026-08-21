@@ -2,15 +2,7 @@
 //!
 //! [`Ioc`]: crate::ioc::domain::entities::ioc::Ioc
 
-use thiserror::Error;
-
-/// Errors returned when constructing an [`IocType`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum IocTypeError {
-    /// The given string does not match any known ioc type.
-    #[error("invalid ioc type: {0}")]
-    Invalid(String),
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object representing the observable kind of an
 /// [`Ioc`](crate::ioc::domain::entities::ioc::Ioc).
@@ -35,14 +27,15 @@ pub enum IocType {
 }
 
 impl IocType {
-    /// Parses a raw string into an `IocType`.
+    /// Parses a raw string into an `IocType`, ignoring surrounding whitespace
+    /// and letter case.
     ///
     /// # Errors
     ///
-    /// Returns [`IocTypeError::Invalid`] if the value is not a recognised
+    /// Returns [`ValueObjectValidationError`] if the value is not a recognised
     /// ioc type.
-    pub fn from_str(value: &str) -> Result<Self, IocTypeError> {
-        match value {
+    pub fn from_str(value: &str) -> Result<Self, ValueObjectValidationError> {
+        match value.trim().to_ascii_lowercase().as_str() {
             "ipv4" => Ok(Self::Ipv4),
             "ipv6" => Ok(Self::Ipv6),
             "domain" => Ok(Self::Domain),
@@ -51,7 +44,9 @@ impl IocType {
             "sha1" => Ok(Self::Sha1),
             "md5" => Ok(Self::Md5),
             "email" => Ok(Self::Email),
-            other => Err(IocTypeError::Invalid(other.to_string())),
+            other => Err(ValueObjectValidationError::new(format!(
+                "invalid ioc type: {other}"
+            ))),
         }
     }
 

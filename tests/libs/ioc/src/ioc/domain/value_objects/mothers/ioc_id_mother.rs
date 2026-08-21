@@ -6,10 +6,10 @@ pub struct IocIdMother;
 #[allow(dead_code)]
 impl IocIdMother {
     pub fn create(value: Uuid) -> IocId {
-        IocId::from_uuid(value)
+        IocId::from_uuid(value).expect("mother must build a valid UUID v4")
     }
 
     pub fn random() -> IocId {
-        IocId::from_uuid(Uuid::new_v4())
+        IocId::generate()
     }
 }

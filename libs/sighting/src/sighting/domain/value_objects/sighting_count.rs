@@ -2,15 +2,7 @@
 //!
 //! [`Sighting`]: crate::sighting::domain::entities::sighting::Sighting
 
-use thiserror::Error;
-
-/// Errors returned when constructing a [`SightingCount`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum SightingCountError {
-    /// The count is zero, which is not a valid observation count.
-    #[error("sighting count must be at least 1")]
-    Zero,
-}
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
 /// An immutable Value Object wrapping the number of times the referenced
 /// observable has been reported by the referenced source.
@@ -30,10 +22,12 @@ impl SightingCount {
     ///
     /// # Errors
     ///
-    /// Returns [`SightingCountError::Zero`] if the value is zero.
-    pub fn from_u64(value: u64) -> Result<Self, SightingCountError> {
+    /// Returns [`ValueObjectValidationError`] if the value is zero.
+    pub fn from_u64(value: u64) -> Result<Self, ValueObjectValidationError> {
         if value == 0 {
-            return Err(SightingCountError::Zero);
+            return Err(ValueObjectValidationError::new(
+                "sighting count must be at least 1".to_string(),
+            ));
         }
         Ok(Self(value))
     }

@@ -5,7 +5,9 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_200_on_health_check() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 

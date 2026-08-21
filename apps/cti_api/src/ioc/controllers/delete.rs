@@ -2,7 +2,6 @@
 
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use ::ioc::ioc::application::delete_ioc::delete_ioc_command::DeleteIocCommand;
 use ::ioc::ioc::application::delete_ioc::delete_ioc_response::DeleteIocResponse;
@@ -11,16 +10,13 @@ use ::ioc::ioc::domain::value_objects::ioc_id::IocId;
 use crate::AppState;
 
 #[delete("/iocs/{id}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let id_str = path.into_inner();
     debug!(id = %id_str, "DELETE /iocs/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => IocId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match IocId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let command = DeleteIocCommand { id };

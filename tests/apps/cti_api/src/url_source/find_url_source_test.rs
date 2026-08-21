@@ -6,11 +6,13 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_persists_the_url_source_and_can_be_retrieved() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    let id = "a1b2c3d4-e5f6-4890-8bcd-ef1234567890";
 
     let post_req = test::TestRequest::post()
         .uri("/url-sources")
@@ -42,12 +44,14 @@ async fn it_persists_the_url_source_and_can_be_retrieved() {
 #[tokio::test]
 async fn it_returns_404_when_url_source_does_not_exist() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/url-sources/00000000-0000-0000-0000-000000000000")
+        .uri("/url-sources/00000000-0000-4000-8000-000000000000")
         .to_request();
 
     let resp: ServiceResponse = test::call_service(&app, req).await;
@@ -57,11 +61,15 @@ async fn it_returns_404_when_url_source_does_not_exist() {
 #[tokio::test]
 async fn it_returns_400_when_path_id_is_not_a_uuid() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let req = test::TestRequest::get().uri("/url-sources/not-a-uuid").to_request();
+    let req = test::TestRequest::get()
+        .uri("/url-sources/not-a-uuid")
+        .to_request();
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400);
 }

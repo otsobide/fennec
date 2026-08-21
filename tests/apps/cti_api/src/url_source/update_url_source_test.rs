@@ -6,11 +6,13 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_updates_an_existing_url_source() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1";
+    let id = "c1c1c1c1-c1c1-41c1-81c1-c1c1c1c1c1c1";
 
     let post = test::TestRequest::post()
         .uri("/url-sources")
@@ -47,12 +49,14 @@ async fn it_updates_an_existing_url_source() {
 #[tokio::test]
 async fn it_returns_404_when_updating_unknown_url_source() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::put()
-        .uri("/url-sources/00000000-0000-0000-0000-000000000000")
+        .uri("/url-sources/00000000-0000-4000-8000-000000000000")
         .set_json(json!({
             "url": "https://feeds.example.com/x.txt",
             "format": "plain",
@@ -67,11 +71,13 @@ async fn it_returns_404_when_updating_unknown_url_source() {
 #[tokio::test]
 async fn it_returns_400_for_invalid_url_on_update() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "d2d2d2d2-d2d2-d2d2-d2d2-d2d2d2d2d2d2";
+    let id = "d2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2";
 
     let post = test::TestRequest::post()
         .uri("/url-sources")

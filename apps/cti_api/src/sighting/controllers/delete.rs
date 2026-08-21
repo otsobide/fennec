@@ -2,7 +2,6 @@
 
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use ::sighting::sighting::application::delete_sighting::delete_sighting_command::DeleteSightingCommand;
 use ::sighting::sighting::application::delete_sighting::delete_sighting_response::DeleteSightingResponse;
@@ -11,16 +10,13 @@ use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
 use crate::AppState;
 
 #[delete("/sightings/{id}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let id_str = path.into_inner();
     debug!(id = %id_str, "DELETE /sightings/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => SightingId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SightingId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let command = DeleteSightingCommand { id };

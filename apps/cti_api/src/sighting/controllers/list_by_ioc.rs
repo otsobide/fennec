@@ -5,7 +5,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use actix_web::{get, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use ::sighting::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_query::ListSightingsByIocQuery;
 use ::sighting::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_response::ListSightingsByIocResponse;
@@ -26,16 +25,13 @@ pub struct SightingListItem {
 }
 
 #[get("/iocs/{ioc_id}/sightings")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let ioc_id_str = path.into_inner();
     debug!(ioc_id = %ioc_id_str, "GET /iocs/{{ioc_id}}/sightings");
 
-    let ioc_id = match Uuid::parse_str(&ioc_id_str) {
-        Ok(uuid) => SightingIocId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let ioc_id = match SightingIocId::new(&ioc_id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let query = ListSightingsByIocQuery { ioc_id };
@@ -76,5 +72,7 @@ pub async fn handler(
 }
 
 fn to_unix_secs(time: SystemTime) -> u64 {
-    time.duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    time.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
