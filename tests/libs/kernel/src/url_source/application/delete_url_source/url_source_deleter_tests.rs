@@ -11,10 +11,7 @@ use crate::src::mocks::url_source_repository_mock::UrlSourceRepositoryMock;
 use crate::src::url_source::domain::entities::mothers::url_source_mother::UrlSourceMother;
 use crate::src::url_source::domain::value_objects::mothers::url_source_id_mother::UrlSourceIdMother;
 
-fn make_deleter(
-    repo: Arc<UrlSourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> UrlSourceDeleter {
+fn make_deleter(repo: Arc<UrlSourceRepositoryMock>, bus: Arc<EventBusMock>) -> UrlSourceDeleter {
     let repo: Arc<dyn UrlSourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     UrlSourceDeleter::new(repo, bus)

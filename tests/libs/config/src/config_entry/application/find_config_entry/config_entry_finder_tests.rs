@@ -20,10 +20,7 @@ async fn it_returns_not_found_when_entry_does_not_exist() {
 
     let result = finder.execute(ConfigKeyMother::random()).await;
 
-    assert!(matches!(
-        result,
-        Err(ConfigEntryRepositoryError::NotFound)
-    ));
+    assert!(matches!(result, Err(ConfigEntryRepositoryError::NotFound)));
 }
 
 #[tokio::test]
