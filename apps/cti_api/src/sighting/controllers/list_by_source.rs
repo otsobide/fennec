@@ -5,7 +5,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use actix_web::{get, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use ::sighting::sighting::application::list_sightings_by_source::list_sightings_by_source_query::ListSightingsBySourceQuery;
 use ::sighting::sighting::application::list_sightings_by_source::list_sightings_by_source_response::ListSightingsBySourceResponse;
@@ -26,16 +25,13 @@ pub struct SightingListItem {
 }
 
 #[get("/sources/{source_id}/sightings")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let source_id_str = path.into_inner();
     debug!(source_id = %source_id_str, "GET /sources/{{source_id}}/sightings");
 
-    let source_id = match Uuid::parse_str(&source_id_str) {
-        Ok(uuid) => SightingSourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let source_id = match SightingSourceId::new(&source_id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let query = ListSightingsBySourceQuery { source_id };
@@ -76,5 +72,7 @@ pub async fn handler(
 }
 
 fn to_unix_secs(time: SystemTime) -> u64 {
-    time.duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+    time.duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }

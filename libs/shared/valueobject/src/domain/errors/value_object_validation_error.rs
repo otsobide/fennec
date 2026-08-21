@@ -14,7 +14,7 @@ use std::fmt;
 /// let err = ValueObjectValidationError::new("-5 is not a positive integer".to_string());
 /// assert!(err.to_string().contains("ValueObject validation error"));
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValueObjectValidationError(String);
 
 impl ValueObjectValidationError {
@@ -25,6 +25,11 @@ impl ValueObjectValidationError {
     /// * `message` - A description of the violated domain invariant.
     pub fn new(message: String) -> Self {
         Self(message)
+    }
+
+    /// Returns the message describing the violated invariant.
+    pub fn message(&self) -> &str {
+        &self.0
     }
 }
 

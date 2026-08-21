@@ -13,10 +13,7 @@ use crate::src::source::domain::value_objects::mothers::source_id_mother::Source
 use crate::src::source::domain::value_objects::mothers::source_status_mother::SourceStatusMother;
 use crate::src::source::domain::value_objects::mothers::source_type_mother::SourceTypeMother;
 
-fn make_creator(
-    repo: Arc<SourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> SourceCreator {
+fn make_creator(repo: Arc<SourceRepositoryMock>, bus: Arc<EventBusMock>) -> SourceCreator {
     let repo: Arc<dyn SourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     SourceCreator::new(repo, bus)

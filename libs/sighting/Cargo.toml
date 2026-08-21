@@ -14,6 +14,7 @@ shared-domain-events = { path = "../shared/domain-events" }
 
 [dependencies]
 shared-cqrs = { path = "../shared/cqrs" }
+shared-valueobject = { path = "../shared/valueobject" }
 shared-domain-events = { path = "../shared/domain-events" }
 async-trait = "0.1"
 thiserror = "2"

@@ -203,9 +203,7 @@ impl SightingRepositoryMock {
 impl SightingRepository for SightingRepositoryMock {
     async fn save(&self, sighting: &Sighting) -> Result<(), SightingRepositoryError> {
         match &self.save_behavior {
-            SaveBehavior::FailsWithIdAlreadyExists => {
-                Err(SightingRepositoryError::IdAlreadyExists)
-            }
+            SaveBehavior::FailsWithIdAlreadyExists => Err(SightingRepositoryError::IdAlreadyExists),
             SaveBehavior::FailsWithPairAlreadyExists { existing_id } => {
                 Err(SightingRepositoryError::PairAlreadyExists {
                     existing_id: existing_id.clone(),

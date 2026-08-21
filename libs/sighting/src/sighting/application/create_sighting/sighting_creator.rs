@@ -29,11 +29,11 @@ pub struct SightingCreator {
 }
 
 impl SightingCreator {
-    pub fn new(
-        repository: Arc<dyn SightingRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn SightingRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(
@@ -50,14 +50,7 @@ impl SightingCreator {
         let updated_at = SightingUpdatedAt::from_system_time(created_at.value());
 
         let sighting = Sighting::new(
-            id,
-            ioc_id,
-            source_id,
-            first_seen,
-            last_seen,
-            count,
-            created_at,
-            updated_at,
+            id, ioc_id, source_id, first_seen, last_seen, count, created_at, updated_at,
         );
         debug!(id = %sighting.id(), "Creating sighting");
 

@@ -42,9 +42,10 @@ impl SightingRepository for InMemorySightingRepository {
 
         // Pair collision takes precedence over id collision so callers get the
         // existing id and can observe it immediately.
-        if let Some(existing) = store.values().find(|s| {
-            s.ioc_id() == sighting.ioc_id() && s.source_id() == sighting.source_id()
-        }) {
+        if let Some(existing) = store
+            .values()
+            .find(|s| s.ioc_id() == sighting.ioc_id() && s.source_id() == sighting.source_id())
+        {
             return Err(SightingRepositoryError::PairAlreadyExists {
                 existing_id: existing.id().clone(),
             });

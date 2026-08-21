@@ -22,23 +22,19 @@ pub struct ConfigEntryDeleter {
 
 impl ConfigEntryDeleter {
     pub fn new(repository: Arc<dyn ConfigEntryRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
-    pub async fn execute(
-        &self,
-        key: ConfigKey,
-    ) -> Result<(), ConfigEntryRepositoryError> {
+    pub async fn execute(&self, key: ConfigKey) -> Result<(), ConfigEntryRepositoryError> {
         debug!(key = %key, "Deleting config entry");
 
-        let entry = self
-            .repository
-            .find_by_key(&key)
-            .await?
-            .ok_or_else(|| {
-                warn!(key = %key, "Config entry not found for deletion");
-                ConfigEntryRepositoryError::NotFound
-            })?;
+        let entry = self.repository.find_by_key(&key).await?.ok_or_else(|| {
+            warn!(key = %key, "Config entry not found for deletion");
+            ConfigEntryRepositoryError::NotFound
+        })?;
 
         self.repository.delete(&key).await?;
 

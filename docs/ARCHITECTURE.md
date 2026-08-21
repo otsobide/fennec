@@ -212,16 +212,21 @@ The following patterns appear throughout the codebase. Understanding them will h
 
 Every domain primitive is a typed wrapper — no raw `String`s, `Uuid`s, or `SystemTime`s in aggregates. This applies even to timestamps and enums: `SourceCreatedAt` wraps a `SystemTime`, `SourceType` is an enum with a validating `from_str`.
 
+Invariants are enforced **at construction**: every value that reaches the domain from outside arrives through a fallible constructor, so once a value object exists it is valid. Failures are reported through the single shared `ValueObjectValidationError` — no value object defines an error type of its own.
+
 ```
-SourceId(Uuid)                  -- externally provided
-SourceType { Url }              -- enum, validated at construction
+SourceId(Uuid)                  -- new(&str) / from_uuid(Uuid) -> Result, must be a UUID v4
+                                -- generate() mints a fresh one platform-side
+SourceType { Url }              -- from_str -> Result, case- and whitespace-insensitive
 SourceStatus { Active, Inactive }
-SourceDescription(String)
-SourceCreatedAt(SystemTime)
+SourceDescription(String)       -- new(..) -> Result, trimmed, <= 1024 characters
+SourceCreatedAt(SystemTime)     -- generated inside the domain service, infallible
 SourceUpdatedAt(SystemTime)
 ```
 
-Generic primitives (`StringValueObject` and other validated wrappers) live in `shared-valueobject/domain/` and can be composed into context-specific value objects via the newtype pattern.
+Timestamps are the only newtypes left without validation: they are produced inside the domain services, never parsed from input.
+
+Generic primitives (`StringValueObject` and the shared `ValueObjectValidationError`) live in `shared-valueobject/domain/` and are composed into context-specific value objects via the newtype pattern.
 
 ### Entities
 

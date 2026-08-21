@@ -6,11 +6,13 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_bumps_count_and_updates_last_seen() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "11112222-3333-4444-5555-666677778888";
+    let id = "11112222-3333-4444-8555-666677778888";
     let first_ts: u64 = 1_700_000_000;
     let second_ts: u64 = 1_700_000_500;
 
@@ -18,8 +20,8 @@ async fn it_bumps_count_and_updates_last_seen() {
         .uri("/sightings")
         .set_json(json!({
             "id": id,
-            "ioc_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-            "source_id": "11111111-2222-3333-4444-555555555555",
+            "ioc_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+            "source_id": "11111111-2222-4333-8444-555555555555",
             "observed_at": first_ts,
         }))
         .to_request();
@@ -47,12 +49,14 @@ async fn it_bumps_count_and_updates_last_seen() {
 #[tokio::test]
 async fn it_returns_404_when_observing_unknown_sighting() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/sightings/00000000-0000-0000-0000-000000000000/observations")
+        .uri("/sightings/00000000-0000-4000-8000-000000000000/observations")
         .set_json(json!({ "observed_at": 1_700_000_000_u64 }))
         .to_request();
 

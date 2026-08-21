@@ -123,7 +123,10 @@ impl UrlSourceRepository for UrlSourceRepositoryMock {
         match &self.save_behavior {
             SaveBehavior::FailsWithAlreadyExists => Err(UrlSourceRepositoryError::AlreadyExists),
             SaveBehavior::Succeeds => {
-                self.saved_ids.lock().unwrap().push(*url_source.id().value());
+                self.saved_ids
+                    .lock()
+                    .unwrap()
+                    .push(*url_source.id().value());
                 Ok(())
             }
         }

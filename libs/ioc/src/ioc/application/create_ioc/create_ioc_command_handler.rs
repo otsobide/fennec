@@ -27,10 +27,7 @@ impl CreateIocCommandHandler {
 impl CommandHandler<CreateIocCommand> for CreateIocCommandHandler {
     type Response = CreateIocResponse;
 
-    async fn handle(
-        &self,
-        command: CreateIocCommand,
-    ) -> Result<Self::Response, CommandBusError> {
+    async fn handle(&self, command: CreateIocCommand) -> Result<Self::Response, CommandBusError> {
         match self
             .creator
             .execute(command.id, command.ioc_type, command.value)

@@ -26,10 +26,17 @@ pub async fn handler(
 ) -> impl Responder {
     debug!(key = %body.key, "POST /config");
 
-    let command = CreateConfigEntryCommand {
-        key: ConfigKey::new(body.key.clone()),
-        value: ConfigValue::new(body.value.clone()),
+    let key = match ConfigKey::new(body.key.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
+
+    let value = match ConfigValue::new(body.value.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
+    let command = CreateConfigEntryCommand { key, value };
 
     match state.command_bus.dispatch(Box::new(command)).await {
         Ok(boxed) => {

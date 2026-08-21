@@ -22,10 +22,7 @@ impl ConfigEntryFinder {
         Self { repository }
     }
 
-    pub async fn execute(
-        &self,
-        key: ConfigKey,
-    ) -> Result<ConfigEntry, ConfigEntryRepositoryError> {
+    pub async fn execute(&self, key: ConfigKey) -> Result<ConfigEntry, ConfigEntryRepositoryError> {
         debug!(key = %key, "Finding config entry");
         let entry = self.repository.find_by_key(&key).await?;
 

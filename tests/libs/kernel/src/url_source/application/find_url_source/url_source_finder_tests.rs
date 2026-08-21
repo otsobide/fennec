@@ -44,5 +44,8 @@ async fn it_returns_error_on_storage_failure() {
 
     let result = finder.execute(UrlSourceIdMother::random()).await;
 
-    assert!(matches!(result, Err(UrlSourceRepositoryError::Unexpected(_))));
+    assert!(matches!(
+        result,
+        Err(UrlSourceRepositoryError::Unexpected(_))
+    ));
 }

@@ -9,9 +9,9 @@ use crate::config_entry::application::find_config_entry::find_config_entry_respo
 };
 use crate::config_entry::domain::errors::config_entry_repository_error::ConfigEntryRepositoryError;
 
+use super::config_entry_finder::ConfigEntryFinder;
 use super::find_config_entry_query::FindConfigEntryQuery;
 use super::find_config_entry_response::FindConfigEntryResponse;
-use super::config_entry_finder::ConfigEntryFinder;
 
 /// [`QueryHandler`] that processes [`FindConfigEntryQuery`]s by delegating
 /// to [`ConfigEntryFinder`].
@@ -31,10 +31,7 @@ impl FindConfigEntryQueryHandler {
 impl QueryHandler<FindConfigEntryQuery> for FindConfigEntryQueryHandler {
     type Response = FindConfigEntryResponse;
 
-    async fn handle(
-        &self,
-        query: FindConfigEntryQuery,
-    ) -> Result<Self::Response, QueryBusError> {
+    async fn handle(&self, query: FindConfigEntryQuery) -> Result<Self::Response, QueryBusError> {
         match self.finder.execute(query.key).await {
             Ok(entry) => Ok(FindConfigEntryResponse {
                 config_entry: Some(ConfigEntryEntry {

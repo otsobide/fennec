@@ -2,7 +2,6 @@
 
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use kernel::url_source::application::delete_url_source::delete_url_source_command::DeleteUrlSourceCommand;
 use kernel::url_source::application::delete_url_source::delete_url_source_response::DeleteUrlSourceResponse;
@@ -11,16 +10,13 @@ use kernel::url_source::domain::value_objects::url_source_id::UrlSourceId;
 use crate::AppState;
 
 #[delete("/url-sources/{id}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let id_str = path.into_inner();
     debug!(id = %id_str, "DELETE /url-sources/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => UrlSourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match UrlSourceId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let command = DeleteUrlSourceCommand { id };

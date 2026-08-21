@@ -22,20 +22,19 @@ pub struct SourceDeleter {
 
 impl SourceDeleter {
     pub fn new(repository: Arc<dyn SourceRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(&self, id: SourceId) -> Result<(), SourceRepositoryError> {
         debug!(id = %id, "Deleting source");
 
-        let source = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Source not found for deletion");
-                SourceRepositoryError::NotFound
-            })?;
+        let source = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Source not found for deletion");
+            SourceRepositoryError::NotFound
+        })?;
 
         self.repository.delete(&id).await?;
 

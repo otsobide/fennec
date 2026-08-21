@@ -7,9 +7,9 @@ use shared_cqrs::command::domain::command_handler::CommandHandler;
 use crate::source::application::find_source::find_source_response::SourceErrorEntry;
 use crate::source::domain::errors::source_repository_error::SourceRepositoryError;
 
+use super::source_updater::SourceUpdater;
 use super::update_source_command::UpdateSourceCommand;
 use super::update_source_response::UpdateSourceResponse;
-use super::source_updater::SourceUpdater;
 
 /// [`CommandHandler`] that processes [`UpdateSourceCommand`]s by delegating
 /// to [`SourceUpdater`].
@@ -27,7 +27,10 @@ impl UpdateSourceCommandHandler {
 impl CommandHandler<UpdateSourceCommand> for UpdateSourceCommandHandler {
     type Response = UpdateSourceResponse;
 
-    async fn handle(&self, command: UpdateSourceCommand) -> Result<Self::Response, CommandBusError> {
+    async fn handle(
+        &self,
+        command: UpdateSourceCommand,
+    ) -> Result<Self::Response, CommandBusError> {
         match self
             .updater
             .execute(command.id, command.status, command.description)

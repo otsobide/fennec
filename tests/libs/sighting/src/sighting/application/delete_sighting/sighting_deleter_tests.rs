@@ -11,10 +11,7 @@ use crate::src::mocks::sighting_repository_mock::SightingRepositoryMock;
 use crate::src::sighting::domain::entities::mothers::sighting_mother::SightingMother;
 use crate::src::sighting::domain::value_objects::mothers::sighting_id_mother::SightingIdMother;
 
-fn make_deleter(
-    repo: Arc<SightingRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> SightingDeleter {
+fn make_deleter(repo: Arc<SightingRepositoryMock>, bus: Arc<EventBusMock>) -> SightingDeleter {
     let repo: Arc<dyn SightingRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     SightingDeleter::new(repo, bus)

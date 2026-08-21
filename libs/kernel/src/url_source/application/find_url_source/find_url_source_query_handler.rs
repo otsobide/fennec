@@ -29,10 +29,7 @@ impl FindUrlSourceQueryHandler {
 impl QueryHandler<FindUrlSourceQuery> for FindUrlSourceQueryHandler {
     type Response = FindUrlSourceResponse;
 
-    async fn handle(
-        &self,
-        query: FindUrlSourceQuery,
-    ) -> Result<Self::Response, QueryBusError> {
+    async fn handle(&self, query: FindUrlSourceQuery) -> Result<Self::Response, QueryBusError> {
         match self.finder.execute(query.id).await {
             Ok(url_source) => Ok(FindUrlSourceResponse {
                 url_source: Some(UrlSourceEntry {

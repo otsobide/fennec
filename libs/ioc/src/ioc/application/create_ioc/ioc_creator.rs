@@ -26,7 +26,10 @@ pub struct IocCreator {
 
 impl IocCreator {
     pub fn new(repository: Arc<dyn IocRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(

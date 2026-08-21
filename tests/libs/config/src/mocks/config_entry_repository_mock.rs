@@ -120,9 +120,7 @@ impl ConfigEntryRepositoryMock {
 impl ConfigEntryRepository for ConfigEntryRepositoryMock {
     async fn save(&self, entry: &ConfigEntry) -> Result<(), ConfigEntryRepositoryError> {
         match &self.save_behavior {
-            SaveBehavior::FailsWithAlreadyExists => {
-                Err(ConfigEntryRepositoryError::AlreadyExists)
-            }
+            SaveBehavior::FailsWithAlreadyExists => Err(ConfigEntryRepositoryError::AlreadyExists),
             SaveBehavior::Succeeds => {
                 self.saved_keys
                     .lock()
@@ -146,10 +144,7 @@ impl ConfigEntryRepository for ConfigEntryRepositoryMock {
         }
     }
 
-    async fn update(
-        &self,
-        _entry: &ConfigEntry,
-    ) -> Result<(), ConfigEntryRepositoryError> {
+    async fn update(&self, _entry: &ConfigEntry) -> Result<(), ConfigEntryRepositoryError> {
         *self.update_call_count.lock().unwrap() += 1;
         match &self.update_behavior {
             UpdateBehavior::Succeeds => Ok(()),

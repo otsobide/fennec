@@ -18,8 +18,9 @@ use crate::command::domain::command_handler::CommandHandler;
 type HandlerFn = Box<
     dyn Fn(
             Box<dyn Any + Send + Sync>,
-        ) -> Pin<Box<dyn Future<Output = Result<Box<dyn Any + Send + Sync>, CommandBusError>> + Send>>
-        + Send
+        ) -> Pin<
+            Box<dyn Future<Output = Result<Box<dyn Any + Send + Sync>, CommandBusError>> + Send>,
+        > + Send
         + Sync,
 >;
 

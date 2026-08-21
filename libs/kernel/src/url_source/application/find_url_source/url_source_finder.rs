@@ -19,10 +19,7 @@ impl UrlSourceFinder {
         Self { repository }
     }
 
-    pub async fn execute(
-        &self,
-        id: UrlSourceId,
-    ) -> Result<UrlSource, UrlSourceRepositoryError> {
+    pub async fn execute(&self, id: UrlSourceId) -> Result<UrlSource, UrlSourceRepositoryError> {
         debug!(id = %id, "Finding url source");
         let url_source = self.repository.find_by_id(&id).await?;
 
