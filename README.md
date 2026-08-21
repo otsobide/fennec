@@ -134,10 +134,11 @@ make config_api/build   # Release build for config_api only
 
 ```bash
 make test               # Everything (unit + e2e + doc-tests)
-make test/unit          # Unit tests only
+make test/unit          # Everything except config-api (so it still runs the cti-api e2e suite)
 make test/e2e           # All e2e suites
 make cti_api/test/e2e   # E2E tests for cti_api only
 make test/summary       # cargo test with empty-suite noise stripped
+cargo test -p kernel    # One context's unit tests
 ```
 
 No database needed — the e2e suites use the in-memory repositories.
@@ -242,17 +243,44 @@ in the separate `.knowledge` repository and take precedence over these pages.
 
 | Target | Description |
 |---|---|
-| `make build` | Release build (all apps) |
+| `make build` | Release build (workspace) |
 | `make dev/build` | Dev build |
-| `make cti_api/build` | Release build for cti_api |
-| `make config_api/build` | Release build for config_api |
-| `make test` | Run all tests |
-| `make test/unit` | Unit tests only |
-| `make test/e2e` | All e2e tests |
-| `make cti_api/test/e2e` | E2E tests for cti_api |
-| `make cti_api/run` | Run cti_api locally |
-| `make config_api/run` | Run config_api locally |
+| `make test` | Run every test (unit, e2e, doc-tests) |
+| `make test/unit` | Workspace tests except `config-api` |
+| `make test/e2e` | E2E suites of every app |
+| `make test/summary` | `cargo test` with empty-suite noise stripped |
 | `make format` | `cargo fmt` |
 | `make audit` | Security audit via cargo-audit |
-| `make docker/up` | Start containers via Docker Compose |
-| `make docker/down` | Stop containers |
+| `make deps` | `cargo update` |
+| `make docker/up` / `docker/down` / `docker/logs` | The unused PostgreSQL scaffolding |
+
+Per app (`cti_api`, `config_api`), delegated to `apps/<app>/Makefile`:
+
+| Target | Description |
+|---|---|
+| `make <app>/build` | Release build for that app |
+| `make <app>/dev-build` | Dev build for that app |
+| `make <app>/run` | Run it locally |
+| `make <app>/test` | Every test of that package |
+| `make <app>/test/e2e` | Only its e2e suite |
+
+## Contributing
+
+`dev` is the default branch and both long-lived branches are protected by
+GitHub rulesets with empty bypass lists: **direct pushes to `dev` and `main`
+are rejected for everyone**, owner included.
+
+```bash
+git switch dev && git pull
+git switch -c feature/<slug>      # even a one-line change gets a branch
+# ...work, committing small and often...
+cargo test --workspace            # green before the pull request merges
+git push -u origin feature/<slug>
+gh pr create --base dev
+```
+
+A pull request into `dev` must come from `feature/*`, `hotfix/*` or `main`; a
+pull request into `main` must come from `dev` and is a release, tagged
+`vX.Y.Z`. Commit messages are `<area>: <imperative summary>`, in English, one
+logical change each. The full model, including the ruleset definitions, is in
+[docs/development/gitflow.md](docs/development/gitflow.md).
