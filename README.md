@@ -155,21 +155,71 @@ Log level defaults to `info`. Override with `RUST_LOG`:
 RUST_LOG=debug make cti_api/run
 ```
 
+### HTTP API
+
+`cti_api` (:8081)
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/health` | Liveness probe |
+| `POST` | `/sources` | Create a source (`id`, `source_type`, `status`, `description`) |
+| `GET` `PUT` `DELETE` | `/sources/{id}` | Read, update (`status`, `description`) or delete a source |
+| `POST` | `/url-sources` | Create the URL payload of a source (`id`, `url`, `format`, `polling_interval_seconds`) |
+| `GET` `PUT` `DELETE` | `/url-sources/{id}` | Read, update or delete it. The id is the parent source's id |
+| `POST` | `/iocs` | Create an indicator (`id`, `ioc_type`, `value`) |
+| `GET` `DELETE` | `/iocs/{id}` | Read or delete an indicator |
+| `POST` | `/sightings` | Record a first sighting (`id`, `ioc_id`, `source_id`, `observed_at`) |
+| `POST` | `/sightings/{id}/observations` | Register another observation (`observed_at`): bumps the counter and last seen |
+| `GET` `DELETE` | `/sightings/{id}` | Read or delete a sighting |
+| `GET` | `/iocs/{ioc_id}/sightings` | Every sighting of one indicator |
+| `GET` | `/sources/{source_id}/sightings` | Every sighting reported by one source |
+
+`config_api` (:8080) exposes the same shape for the reference context: `POST /config`, and `GET` / `PUT` / `DELETE` on `/config/{key}`.
+
+Identifiers are supplied by the caller and must be **UUID v4**; `observed_at` is seconds since the Unix epoch. Invalid input returns `400`, a duplicate id `409`, an unknown id `404`.
+
 ### Try it
 
 ```bash
-# Create a source
-curl -X POST http://localhost:8081/sources \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "source_type": "url",
-    "status": "active",
-    "description": "Primary feed"
-  }'
+BASE=http://localhost:8081
 
-# Retrieve it
-curl http://localhost:8081/sources/550e8400-e29b-41d4-a716-446655440000
+# 1. A source: where intelligence comes from
+curl -X POST $BASE/sources -H 'Content-Type: application/json' -d '{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "source_type": "url",
+  "status": "active",
+  "description": "Primary feed"
+}'
+
+# 2. Its URL payload, keyed by the same id
+curl -X POST $BASE/url-sources -H 'Content-Type: application/json' -d '{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "url": "https://example.test/feed.txt",
+  "format": "plain",
+  "polling_interval_seconds": 3600
+}'
+
+# 3. An indicator
+curl -X POST $BASE/iocs -H 'Content-Type: application/json' -d '{
+  "id": "6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60",
+  "ioc_type": "ipv4",
+  "value": "198.51.100.7"
+}'
+
+# 4. The source reported that indicator
+curl -X POST $BASE/sightings -H 'Content-Type: application/json' -d '{
+  "id": "7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061",
+  "ioc_id": "6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60",
+  "source_id": "550e8400-e29b-41d4-a716-446655440000",
+  "observed_at": 1750000000
+}'
+
+# 5. It reported it again: count goes to 2, last_seen moves forward
+curl -X POST $BASE/sightings/7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061/observations \
+  -H 'Content-Type: application/json' -d '{"observed_at": 1750003600}'
+
+# 6. Everything seen for that indicator
+curl $BASE/iocs/6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60/sightings
 ```
 
 ## Documentation
