@@ -5,9 +5,9 @@ use std::time::{Duration, UNIX_EPOCH};
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
 
-use ::sighting::sighting::application::observe_sighting::observe_sighting_command::ObserveSightingCommand;
-use ::sighting::sighting::application::observe_sighting::observe_sighting_response::ObserveSightingResponse;
-use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::application::observe_sighting::observe_sighting_command::ObserveSightingCommand;
+use kernel::sighting::application::observe_sighting::observe_sighting_response::ObserveSightingResponse;
+use kernel::sighting::domain::value_objects::sighting_id::SightingId;
 
 use crate::sighting::request_dtos::observe_sighting_request::ObserveSightingRequest;
 use crate::AppState;

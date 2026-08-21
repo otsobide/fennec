@@ -6,23 +6,25 @@ A Rust-based **Cyber Threat Intelligence (CTI)** platform, modelled after projec
 
 ## What is Fennec?
 
-Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serve threat intelligence (indicators of compromise, threat actors, campaigns, sources, sightings) under a clean, microservice-friendly architecture. The codebase is organised as a Cargo workspace where each bounded context is an isolated library crate and each HTTP service is a thin Actix-Web app that wires those contexts behind CQRS buses.
+Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serve threat intelligence (indicators of compromise, threat actors, campaigns, sources, sightings) under a clean, microservice-friendly architecture. The codebase is organised as a Cargo workspace where each bounded context is an isolated library crate hosting one module per aggregate, and each HTTP service is a thin Actix-Web app that wires those contexts behind CQRS buses.
 
-The project is **early in its life**, but the core of the model is in place: `kernel` owns the intelligence sources (`Source`, plus the URL-specific `UrlSource` keyed by the same id), `ioc` owns the indicators, and `sighting` records that a source reported an indicator, with first/last seen timestamps and an observation counter. All three are exposed by `cti_api`. The contexts still to come (threat actors, campaigns, events, enrichment) plug in alongside them following exactly the same architectural recipe.
+The project is **early in its life**, but the core of the model is in place. The `kernel` context owns the CTI domain and holds one module per aggregate: `source` and the URL-specific `url_source` (where intelligence comes from), `ioc` (what is being tracked) and `sighting` (which source reported which indicator, with first/last seen timestamps and an observation counter). All four are exposed by `cti_api`. The aggregates still to come (threat actors, campaigns, events, enrichment) plug in alongside them following exactly the same recipe.
 
 The architecture is uncompromising on one principle: business logic depends on traits, never on concrete infrastructure. The same domain code runs against an in-memory `HashMap` in tests and (eventually) a PostgreSQL store in production, with zero conditional compilation and no code changes in the domain or application layers.
 
 ## Bounded contexts
 
-| Context | Aggregate | Status | Exposed by |
-|---|---|---|---|
-| `kernel` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
-| `kernel` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
-| `ioc` | `Ioc` | Create, find and delete indicators of compromise | `cti_api` (:8081) |
-| `sighting` | `Sighting` | Records that a source reported an indicator, with first/last seen and an observation counter | `cti_api` (:8081) |
-| `config` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
+| Context | Module | Aggregate | Status | Exposed by |
+|---|---|---|---|---|
+| `kernel` | `source` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
+| `kernel` | `url_source` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
+| `kernel` | `ioc` | `Ioc` | Create, find and delete indicators of compromise | `cti_api` (:8081) |
+| `kernel` | `sighting` | `Sighting` | Records that a source reported an indicator, with first/last seen and an observation counter | `cti_api` (:8081) |
+| `config` | `config_entry` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
-Each context lives under `libs/<context>/` and is wired into HTTP by an app under `apps/`. An app may expose several contexts: `cti_api` serves `kernel`, `ioc` and `sighting`, while `config_api` serves the reference `config` context on its own. Cross-context communication happens **only** through domain events; aggregates in different contexts relate by shared identifier, never by importing each other's crates.
+Each context is a crate under `libs/<context>/`, and each module inside it owns one aggregate with its own `domain` / `application` / `infrastructure` tree. Apps under `apps/` wire them into HTTP: `cti_api` serves every `kernel` module, `config_api` serves `config`.
+
+**No module imports another**, in the same crate or not. Aggregates relate by shared identifier (`sighting` declares its own `SightingIocId` rather than using `IocId`) and communicate through the command, query and event buses. That is deliberate: the day a module needs its own crate, or its own service, for scale, promoting it is a move rather than a redesign. Two architecture tests fail the build if that isolation is broken.
 
 ## Stack
 
@@ -94,11 +96,12 @@ fennec/
 │   └── config_api/      # Reference HTTP API (port 8080) — exposes the config BC
 │
 ├── libs/
-│   ├── kernel/          # CTI kernel bounded context
-│   │   ├── src/source/      # Source aggregate: id, type, status, description, timestamps
-│   │   └── src/url_source/  # UrlSource aggregate: url, format, polling_interval, timestamps
-│   ├── ioc/             # Indicators of compromise
-│   ├── sighting/        # Sightings: an ioc reported by a source
+│   ├── kernel/          # CTI bounded context, one module per aggregate
+│   │   └── src/
+│   │       ├── source/      # Source: id, type, status, description, timestamps
+│   │       ├── url_source/  # UrlSource: url, format, polling_interval, timestamps
+│   │       ├── ioc/         # Ioc: type and observable value
+│   │       └── sighting/    # Sighting: an ioc reported by a source, first/last seen, count
 │   ├── config/          # Reference bounded context (config_entry CRUD)
 │   └── shared/
 │       ├── cqrs/            # CommandBus + QueryBus (TypeId-based dispatch)
@@ -107,7 +110,7 @@ fennec/
 │
 ├── tests/
 │   ├── apps/{cti_api,config_api}/           # E2E tests (HTTP → bus → repo)
-│   └── libs/{kernel,ioc,sighting,config}/   # Unit tests (mocks + Object Mother)
+│   └── libs/{kernel,config}/                # Unit tests (mocks + Object Mother)
 │
 ├── docs/                # Documentation, one folder per topic
 ├── docker-compose.yml   # PostgreSQL scaffolding (currently unused)

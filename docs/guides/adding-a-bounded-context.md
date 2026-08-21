@@ -2,15 +2,34 @@
 
 A bounded context is a self-contained domain model with its own ubiquitous language. In Fennec each bounded context lives in `libs/<context>/`.
 
-This guide walks through adding a bounded context from scratch. A bounded context in this project is a Cargo library crate that contains a complete domain model: entities, value objects, repository traits, domain events, application services, and infrastructure implementations.
+This guide walks through adding one from scratch: a Cargo library crate containing a complete domain model of entities, value objects, repository traits, domain events, application services, and infrastructure implementations.
 
 The process is methodical -- you build from the inside out, starting with the domain layer (the core types and rules), then the application layer (the use cases that orchestrate domain logic), and finally the infrastructure layer (the concrete implementations of repository traits). This order ensures that your domain model is clean and self-contained before you add any external dependencies.
 
-The example below creates a `user` bounded context with a `User` aggregate. Replace `user` / `User` with your actual context name throughout. For working references in the codebase, look at the **`kernel`** context (`Source` aggregate with externally-provided UUID, full CRUD, every attribute — including timestamps — is a value object) and the simpler **`config`** context (`ConfigEntry` key/value).
+The example below creates a `user` bounded context with a `User` aggregate. Replace `user` / `User` with your actual context name throughout. For working references in the codebase, look at the **`kernel`** context (`Source` with an externally-provided UUID and full CRUD, `Sighting` for a non-CRUD use case) and the simpler **`config`** context (`ConfigEntry` key/value).
+
+---
+
+## 0. First decide: module or crate?
+
+**Most new aggregates are a module, not a crate.** A context hosts one module per aggregate, so a new indicator type, a new kind of source, or a new observation belongs next to the existing modules in `libs/kernel/src/`:
+
+```bash
+mkdir -p libs/kernel/src/user
+# then: pub mod user;  in libs/kernel/src/lib.rs
+```
+
+Everything from [section 2](#2-domain-layer) onwards applies unchanged; only section 1 (creating the crate) is skipped, and the tests join the context's existing test binary instead of getting a new `[[test]]` target.
+
+Give an aggregate its own crate only when it has genuinely earned a context of its own: its own ubiquitous language, its own lifecycle, its own reason to scale or deploy separately. Splitting later is cheap by design, because a module already carries its own three layers, declares its own value object for every foreign identifier, and communicates only through the buses. Splitting early is not: it buys a crate boundary you do not need yet and a dependency graph to maintain.
+
+Whichever you pick, the isolation rule is the same and is enforced by `tests/libs/kernel/src/module_isolation_tests.rs`: never import a sibling module's types. Relate aggregates by shared identifier and talk over the command, query and event buses.
 
 ---
 
 ## 1. Create the library crate
+
+Only for a genuinely new context; skip to section 2 if you are adding a module.
 
 ```bash
 mkdir -p libs/user/src
@@ -493,11 +512,22 @@ Follow the patterns in `tests/libs/config/` -- configurable mocks, object mother
 
 ## 6. Checklist
 
-- [ ] `libs/user/Cargo.toml` created and added to workspace `members`
+As a module of an existing context:
+
+- [ ] `libs/<context>/src/user/` created with its `domain`, `application` and `infrastructure` trees
+- [ ] `pub mod user;` added to `libs/<context>/src/lib.rs`
 - [ ] Domain entities, value objects, errors, repository trait, events defined
 - [ ] Application services and command/query handlers with response envelopes defined
 - [ ] `InMemoryUserRepository` created
 - [ ] All `mod.rs` files wired up
-- [ ] `tests/libs/user/` test crate created with mocks, mothers, and tests
+- [ ] Mocks, mothers and tests added under `tests/libs/<context>/src/user/`, registered in the surrounding `mod.rs`
+- [ ] No import of a sibling module: `cargo test -p <context> module_isolation` passes
+- [ ] `cargo test --workspace` passes
+
+As a crate of its own, additionally:
+
+- [ ] `libs/user/Cargo.toml` created and added to workspace `members`
+- [ ] `tests/libs/user/` test tree created with its own `tests.rs`
 - [ ] `[[test]]` entry in `libs/user/Cargo.toml` pointing to `tests/libs/user/tests.rs`
+- [ ] The app that exposes it depends on the new crate and registers its handlers in `build_state()`
 - [ ] `cargo test -p user` passes

@@ -134,7 +134,9 @@ Dependencies flow inward. The domain never imports application code; application
 
 ## Bounded Contexts
 
-A bounded context is a self-contained module with its own domain model, its own error types, and its own persistence. In practical terms, it is a Cargo crate under `libs/` that owns everything about one area of the domain — entities, value objects, repository traits, events, and errors. Bounded contexts communicate with each other only through domain events, never by importing each other's internals. This isolation means you can modify, test, or even replace an entire context without affecting the rest of the system.
+A bounded context is a self-contained model with its own domain types, its own error types, and its own persistence. In practical terms, it is a Cargo crate under `libs/` that owns everything about one area of the domain — entities, value objects, repository traits, events, and errors.
+
+A context is not one crate per aggregate. `kernel` owns the whole CTI domain and hosts one **module** per aggregate (`source`, `url_source`, `ioc`, `sighting`); `config` hosts the reference `config_entry`. The isolation rule applies at the module level, not just between crates: a module never imports a sibling's types, relates to other aggregates by shared identifier, and communicates through the command, query and event buses. That is what makes promoting a module to its own crate a move rather than a redesign, and `tests/libs/kernel/src/module_isolation_tests.rs` fails the build if the rule is broken.
 
 ```
 libs/

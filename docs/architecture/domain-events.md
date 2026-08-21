@@ -129,8 +129,8 @@ Fennec currently ships **no subscribers** — the event bus infrastructure is wi
 
 ## Adding a new event
 
-1. Create the event struct in `libs/<context>/src/<context>/domain/events/<noun>_<past>_event.rs`.
-2. Implement `DomainEvent` and declare `EVENT_NAME` following `fennec.<context>.<aggregate>.<past>`.
+1. Create the event struct in `libs/<context>/src/<aggregate>/domain/events/<noun>_<past>_event.rs`.
+2. Implement `DomainEvent` and declare `EVENT_NAME` following `fennec.<context>.<aggregate>.<past>`. The context is the crate that owns the aggregate, not the module: everything in `libs/kernel/` publishes under `fennec.kernel.*`.
 3. Create a factory function `create_<noun>_<past>_event.rs`.
 4. Expose both from the domain's `events/mod.rs`.
 5. Publish it from the relevant application service after the repository write succeeds.

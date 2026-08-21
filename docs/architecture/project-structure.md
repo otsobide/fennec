@@ -7,7 +7,7 @@ This document is the navigational map of the Fennec repository: every folder and
 The repository is organised into three top-level areas:
 
 - `apps/` — Actix-Web HTTP services that users interact with.
-- `libs/` — business logic, one bounded context per crate, plus shared infrastructure.
+- `libs/` — business logic, one crate per bounded context, plus shared infrastructure. The `kernel` context hosts one module per aggregate; see [the module rule](#the-module-rule) below.
 - `tests/` — external test crates that mirror the production structure.
 
 ```
@@ -16,11 +16,10 @@ The repository is organised into three top-level areas:
 ├── Cargo.lock                  # Pinned dependency versions (commit this)
 ├── Makefile                    # Root Makefile (delegates to per-app Makefiles via $(MAKE) -C)
 ├── docker-compose.yml          # PostgreSQL scaffolding (not yet integrated)
-├── LICENSE
 ├── .gitignore                  # Ignores target/, CLAUDE.md, .claude/, ...
 │
 ├── apps/
-│   ├── cti_api/                # CTI HTTP API (port 8081) — exposes the kernel BC
+│   ├── cti_api/                # CTI HTTP API (port 8081) — exposes every kernel module
 │   │   ├── Cargo.toml          # Package: cti-api, declares [lib] + [[bin]] + [[test]]
 │   │   ├── Makefile            # Per-app build/run/test targets
 │   │   └── src/
@@ -29,7 +28,7 @@ The repository is organised into three top-level areas:
 │   │       ├── health/
 │   │       │   ├── mod.rs
 │   │       │   └── get.rs      # GET /health -> 200
-│   │       └── source/
+│   │       ├── source/
 │   │           ├── mod.rs      # pub mod controllers; request_dtos;
 │   │           ├── controllers/
 │   │           │   ├── post.rs    # POST   /sources       -> 201 | 400 | 409
@@ -39,6 +38,10 @@ The repository is organised into three top-level areas:
 │   │           └── request_dtos/
 │   │               ├── create_source_request.rs   # { id, source_type, status, description }
 │   │               └── update_source_request.rs   # { status, description }
+│   │       ├── url_source/     # Same shape: controllers/ + request_dtos/
+│   │       ├── ioc/            # POST /iocs, GET|DELETE /iocs/{id}
+│   │       └── sighting/       # /sightings, /sightings/{id}/observations,
+│   │                           # /iocs/{ioc_id}/sightings, /sources/{source_id}/sightings
 │   │
 │   └── config_api/             # Reference HTTP API (port 8080) — exposes the config BC
 │       ├── Cargo.toml          # Package: config-api
@@ -53,11 +56,11 @@ The repository is organised into three top-level areas:
 │               └── update_config_entry_request.rs
 │
 ├── libs/
-│   ├── kernel/                 # CTI kernel bounded context
+│   ├── kernel/                 # CTI bounded context: one module per aggregate
 │   │   ├── Cargo.toml
 │   │   └── src/
-│   │       ├── lib.rs          # pub mod source;
-│   │       └── source/
+│   │       ├── lib.rs          # pub mod ioc; sighting; source; url_source;
+│   │       ├── source/         # Expanded below as the reference module
 │   │           ├── mod.rs      # pub mod application; domain; infrastructure;
 │   │           │
 │   │           ├── domain/
@@ -106,6 +109,10 @@ The repository is organised into three top-level areas:
 │   │               └── persistence/
 │   │                   └── in_memory/
 │   │                       └── in_memory_source_repository.rs  # HashMap<Uuid, Source> + Mutex
+│   │       │
+│   │       ├── url_source/     # UrlSource: url, format, polling_interval  (same three layers)
+│   │       ├── ioc/            # Ioc: ioc_type, value                      (same three layers)
+│   │       └── sighting/       # Sighting: ioc_id, source_id, first/last seen, count
 │   │
 │   ├── config/                 # Reference bounded context — ConfigEntry CRUD
 │   │   ├── Cargo.toml
@@ -153,12 +160,19 @@ The repository is organised into three top-level areas:
 │   │   └── config_api/         # E2E tests for config_api (mirrors cti_api layout)
 │   │
 │   └── libs/
-│       ├── kernel/             # Unit tests for libs/kernel
+│       ├── kernel/             # Unit tests for libs/kernel (all four modules)
 │       │   ├── tests.rs
 │       │   └── src/
+│       │       ├── module_isolation_tests.rs       # Fails if a module imports a sibling
 │       │       ├── mocks/
 │       │       │   ├── source_repository_mock.rs   # Configurable behavior enums
+│       │       │   ├── url_source_repository_mock.rs
+│       │       │   ├── ioc_repository_mock.rs
+│       │       │   ├── sighting_repository_mock.rs
 │       │       │   └── event_bus_mock.rs           # Records published events
+│       │       ├── url_source/  # Mirrors the source/ layout below
+│       │       ├── ioc/
+│       │       ├── sighting/
 │       │       └── source/
 │       │           ├── domain/
 │       │           │   ├── entities/mothers/source_mother.rs
@@ -193,6 +207,27 @@ The repository is organised into three top-level areas:
         ├── adding-a-bounded-context.md
         └── adding-an-app.md
 ```
+
+---
+
+## The module rule
+
+`libs/` holds one crate per bounded context, but a context is not one crate per
+aggregate: `kernel` hosts `source`, `url_source`, `ioc` and `sighting` as
+sibling modules, and `config` hosts the reference `config_entry` module.
+
+What makes that safe is that a module is a complete unit on its own:
+
+- It carries its own `domain/`, `application/` and `infrastructure/` trees.
+- It declares its own value object for any foreign identifier
+  (`SightingIocId`, not `IocId`), so it never needs a sibling's types.
+- It talks to the rest of the system only through the buses: commands and
+  queries for anything a caller drives, domain events for anything it reacts to.
+
+So promoting a module to its own crate is a move plus a `Cargo.toml`, not a
+redesign: the day `sighting` needs to scale on its own, nothing has to be
+untangled first. `tests/libs/kernel/src/module_isolation_tests.rs` fails the
+build if a module reaches into a sibling, so the property cannot rot silently.
 
 ---
 

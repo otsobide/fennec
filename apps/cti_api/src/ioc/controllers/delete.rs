@@ -3,9 +3,9 @@
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
 
-use ::ioc::ioc::application::delete_ioc::delete_ioc_command::DeleteIocCommand;
-use ::ioc::ioc::application::delete_ioc::delete_ioc_response::DeleteIocResponse;
-use ::ioc::ioc::domain::value_objects::ioc_id::IocId;
+use kernel::ioc::application::delete_ioc::delete_ioc_command::DeleteIocCommand;
+use kernel::ioc::application::delete_ioc::delete_ioc_response::DeleteIocResponse;
+use kernel::ioc::domain::value_objects::ioc_id::IocId;
 
 use crate::AppState;
 
