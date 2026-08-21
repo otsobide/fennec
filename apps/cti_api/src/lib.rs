@@ -97,19 +97,15 @@ pub fn build_state() -> web::Data<AppState> {
     let ioc_deleter = IocDeleter::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
 
     // --- sighting ---
-    let sighting_repo: Arc<dyn SightingRepository> =
-        Arc::new(InMemorySightingRepository::new());
+    let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
 
-    let sighting_creator =
-        SightingCreator::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
+    let sighting_creator = SightingCreator::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_observer =
         SightingObserver::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
-    let sighting_deleter =
-        SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
+    let sighting_deleter = SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_finder = SightingFinder::new(Arc::clone(&sighting_repo));
     let sightings_by_ioc_lister = SightingsByIocLister::new(Arc::clone(&sighting_repo));
-    let sightings_by_source_lister =
-        SightingsBySourceLister::new(Arc::clone(&sighting_repo));
+    let sightings_by_source_lister = SightingsBySourceLister::new(Arc::clone(&sighting_repo));
 
     // --- command bus ---
     let mut command_bus = InMemoryCommandBus::new();
@@ -172,7 +168,10 @@ pub fn build_state() -> web::Data<AppState> {
         .expect("Failed to register ListSightingsBySourceQueryHandler");
     let query_bus: Arc<dyn QueryBus> = Arc::new(query_bus);
 
-    web::Data::new(AppState { command_bus, query_bus })
+    web::Data::new(AppState {
+        command_bus,
+        query_bus,
+    })
 }
 
 /// Registers all HTTP routes onto an Actix-Web [`ServiceConfig`].

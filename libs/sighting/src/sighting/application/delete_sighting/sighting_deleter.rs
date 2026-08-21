@@ -24,24 +24,20 @@ pub struct SightingDeleter {
 }
 
 impl SightingDeleter {
-    pub fn new(
-        repository: Arc<dyn SightingRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn SightingRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(&self, id: SightingId) -> Result<(), SightingRepositoryError> {
         debug!(id = %id, "Deleting sighting");
 
-        let sighting = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Sighting not found for deletion");
-                SightingRepositoryError::NotFound
-            })?;
+        let sighting = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Sighting not found for deletion");
+            SightingRepositoryError::NotFound
+        })?;
 
         self.repository.delete(&id).await?;
 

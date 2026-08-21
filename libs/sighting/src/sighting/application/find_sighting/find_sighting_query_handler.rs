@@ -29,10 +29,7 @@ impl FindSightingQueryHandler {
 impl QueryHandler<FindSightingQuery> for FindSightingQueryHandler {
     type Response = FindSightingResponse;
 
-    async fn handle(
-        &self,
-        query: FindSightingQuery,
-    ) -> Result<Self::Response, QueryBusError> {
+    async fn handle(&self, query: FindSightingQuery) -> Result<Self::Response, QueryBusError> {
         match self.finder.execute(query.id).await {
             Ok(sighting) => Ok(FindSightingResponse {
                 sighting: Some(SightingEntry {

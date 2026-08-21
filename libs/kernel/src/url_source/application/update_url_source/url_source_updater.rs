@@ -28,11 +28,11 @@ pub struct UrlSourceUpdater {
 }
 
 impl UrlSourceUpdater {
-    pub fn new(
-        repository: Arc<dyn UrlSourceRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn UrlSourceRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(
@@ -44,14 +44,10 @@ impl UrlSourceUpdater {
     ) -> Result<(), UrlSourceRepositoryError> {
         debug!(id = %id, "Updating url source");
 
-        let previous = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Url source not found for update");
-                UrlSourceRepositoryError::NotFound
-            })?;
+        let previous = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Url source not found for update");
+            UrlSourceRepositoryError::NotFound
+        })?;
 
         let updated = UrlSource::new(
             id,

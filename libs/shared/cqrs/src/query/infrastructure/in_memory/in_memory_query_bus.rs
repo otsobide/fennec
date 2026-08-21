@@ -18,8 +18,9 @@ use crate::query::domain::query_handler::QueryHandler;
 type HandlerFn = Box<
     dyn Fn(
             Box<dyn Any + Send + Sync>,
-        ) -> Pin<Box<dyn Future<Output = Result<Box<dyn Any + Send + Sync>, QueryBusError>> + Send>>
-        + Send
+        ) -> Pin<
+            Box<dyn Future<Output = Result<Box<dyn Any + Send + Sync>, QueryBusError>> + Send>,
+        > + Send
         + Sync,
 >;
 

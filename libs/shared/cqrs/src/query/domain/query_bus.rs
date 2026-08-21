@@ -58,5 +58,6 @@ pub trait QueryBus: Send + Sync {
     /// # Errors
     ///
     /// Returns [`QueryBusError`] if no handler is found or the handler fails.
-    async fn ask(&self, query: Box<dyn Query>) -> Result<Box<dyn Any + Send + Sync>, QueryBusError>;
+    async fn ask(&self, query: Box<dyn Query>)
+        -> Result<Box<dyn Any + Send + Sync>, QueryBusError>;
 }

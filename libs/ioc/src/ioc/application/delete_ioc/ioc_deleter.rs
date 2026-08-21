@@ -22,20 +22,19 @@ pub struct IocDeleter {
 
 impl IocDeleter {
     pub fn new(repository: Arc<dyn IocRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(&self, id: IocId) -> Result<(), IocRepositoryError> {
         debug!(id = %id, "Deleting ioc");
 
-        let ioc = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Ioc not found for deletion");
-                IocRepositoryError::NotFound
-            })?;
+        let ioc = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Ioc not found for deletion");
+            IocRepositoryError::NotFound
+        })?;
 
         self.repository.delete(&id).await?;
 

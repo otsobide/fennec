@@ -33,7 +33,12 @@ impl CommandHandler<CreateSightingCommand> for CreateSightingCommandHandler {
     ) -> Result<Self::Response, CommandBusError> {
         match self
             .creator
-            .execute(command.id, command.ioc_id, command.source_id, command.observed_at)
+            .execute(
+                command.id,
+                command.ioc_id,
+                command.source_id,
+                command.observed_at,
+            )
             .await
         {
             Ok(()) => Ok(CreateSightingResponse { error: None }),

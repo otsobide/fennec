@@ -27,10 +27,7 @@ impl DeleteIocCommandHandler {
 impl CommandHandler<DeleteIocCommand> for DeleteIocCommandHandler {
     type Response = DeleteIocResponse;
 
-    async fn handle(
-        &self,
-        command: DeleteIocCommand,
-    ) -> Result<Self::Response, CommandBusError> {
+    async fn handle(&self, command: DeleteIocCommand) -> Result<Self::Response, CommandBusError> {
         match self.deleter.execute(command.id).await {
             Ok(()) => Ok(DeleteIocResponse { error: None }),
             Err(e) => {

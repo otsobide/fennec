@@ -23,11 +23,11 @@ pub struct SightingObserver {
 }
 
 impl SightingObserver {
-    pub fn new(
-        repository: Arc<dyn SightingRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn SightingRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(
@@ -37,14 +37,10 @@ impl SightingObserver {
     ) -> Result<(), SightingRepositoryError> {
         debug!(id = %id, "Observing sighting");
 
-        let previous = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Sighting not found for observation");
-                SightingRepositoryError::NotFound
-            })?;
+        let previous = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Sighting not found for observation");
+            SightingRepositoryError::NotFound
+        })?;
 
         let updated = previous.observe(observed_at, SightingUpdatedAt::now());
 

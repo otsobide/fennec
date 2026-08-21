@@ -33,7 +33,12 @@ impl CommandHandler<CreateUrlSourceCommand> for CreateUrlSourceCommandHandler {
     ) -> Result<Self::Response, CommandBusError> {
         match self
             .creator
-            .execute(command.id, command.url, command.format, command.polling_interval)
+            .execute(
+                command.id,
+                command.url,
+                command.format,
+                command.polling_interval,
+            )
             .await
         {
             Ok(()) => Ok(CreateUrlSourceResponse { error: None }),

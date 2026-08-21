@@ -21,24 +21,20 @@ pub struct UrlSourceDeleter {
 }
 
 impl UrlSourceDeleter {
-    pub fn new(
-        repository: Arc<dyn UrlSourceRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn UrlSourceRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(&self, id: UrlSourceId) -> Result<(), UrlSourceRepositoryError> {
         debug!(id = %id, "Deleting url source");
 
-        let url_source = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Url source not found for deletion");
-                UrlSourceRepositoryError::NotFound
-            })?;
+        let url_source = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Url source not found for deletion");
+            UrlSourceRepositoryError::NotFound
+        })?;
 
         self.repository.delete(&id).await?;
 

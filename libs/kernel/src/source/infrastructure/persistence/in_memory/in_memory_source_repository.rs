@@ -46,10 +46,7 @@ impl SourceRepository for InMemorySourceRepository {
         Ok(())
     }
 
-    async fn find_by_id(
-        &self,
-        id: &SourceId,
-    ) -> Result<Option<Source>, SourceRepositoryError> {
+    async fn find_by_id(&self, id: &SourceId) -> Result<Option<Source>, SourceRepositoryError> {
         let store = self.store.lock().unwrap();
         Ok(store.get(id.value()).cloned())
     }
