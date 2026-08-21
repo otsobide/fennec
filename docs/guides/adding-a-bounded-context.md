@@ -60,14 +60,60 @@ Value objects are typed wrappers around primitives that enforce invariants at co
 **`libs/user/src/user/domain/value_objects/user_id.rs`**
 
 ```rust
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
+use uuid::Uuid;
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct UserId(String);
+pub struct UserId(Uuid);
 
 impl UserId {
-    pub fn new(v: String) -> Self { Self(v) }
-    pub fn value(&self) -> &str   { &self.0 }
+    /// Mints a fresh identifier platform-side.
+    pub fn generate() -> Self {
+        Self(Uuid::new_v4())
+    }
+
+    /// Parses a raw string into a `UserId`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ValueObjectValidationError`] if the value is not a UUID v4.
+    pub fn new(value: &str) -> Result<Self, ValueObjectValidationError> {
+        let parsed = Uuid::parse_str(value.trim()).map_err(|_| {
+            ValueObjectValidationError::new(format!("user id is not a valid UUID: {value}"))
+        })?;
+
+        Self::from_uuid(parsed)
+    }
+
+    pub fn from_uuid(value: Uuid) -> Result<Self, ValueObjectValidationError> {
+        if value.get_version_num() != 4 {
+            return Err(ValueObjectValidationError::new(
+                "user id must be a UUID v4".to_string(),
+            ));
+        }
+
+        Ok(Self(value))
+    }
+
+    pub fn value(&self) -> &Uuid {
+        &self.0
+    }
 }
 ```
+
+Rules that apply to every value object:
+
+- The constructor returns `Result<Self, ValueObjectValidationError>` and checks
+  every invariant. `ValueObjectValidationError` (from `shared-valueobject`) is
+  the only error type value objects use; do not add one per value object.
+- Normalize on construction (trim, lowercase a canonical form) so equality never
+  depends on input formatting.
+- Bound the length of strings in **characters**, not bytes, and expose the limit
+  as a `pub const MAX_LENGTH`.
+- Identifiers are UUID v4 and get a `generate()` constructor. A human-facing
+  handle (a slug, a username) is a *different* value object with its own rules.
+- Timestamps generated inside a domain service are the one exception: they take
+  no external input, so `now()` / `from_system_time()` stay infallible.
 
 Create `user_name.rs` following the same pattern.
 
@@ -132,23 +178,56 @@ pub trait UserRepository: Send + Sync {
 **`libs/user/src/user/domain/events/user_created_event.rs`**
 
 ```rust
+use std::time::SystemTime;
+
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+
+use crate::user::domain::value_objects::user_id::UserId;
+use crate::user::domain::value_objects::user_name::UserName;
 
 pub struct UserCreatedEvent {
     base: DomainEventBase,
-    pub id:   String,
-    pub name: String,
+    pub id: UserId,
+    pub name: UserName,
 }
 
 impl UserCreatedEvent {
-    pub const EVENT_NAME: &'static str = "user.created";
+    /// Canonical event name: `fennec.<context>.<aggregate>.<past tense verb>`.
+    pub const EVENT_NAME: &'static str = "fennec.user.user.created";
+
+    pub fn new(id: UserId, name: UserName) -> Self {
+        Self {
+            base: DomainEventBase::new(id.to_string()),
+            id,
+            name,
+        }
+    }
 }
 
 impl DomainEvent for UserCreatedEvent {
-    fn base(&self) -> &DomainEventBase { &self.base }
-    fn name(&self) -> &'static str     { Self::EVENT_NAME }
+    fn event_name(&self) -> &'static str {
+        Self::EVENT_NAME
+    }
+
+    fn aggregate_id(&self) -> &str {
+        &self.base.aggregate_id
+    }
+
+    fn event_id(&self) -> &str {
+        &self.base.event_id
+    }
+
+    fn occurred_on(&self) -> SystemTime {
+        self.base.occurred_on
+    }
 }
 ```
+
+Event payloads carry value objects, not primitives: `created` carries the full
+new state, `updated` carries the identity plus both the new and the old values,
+`deleted` carries the identity. Name the event after the context that owns the
+aggregate, not after the module: `UrlSource` lives in `kernel`, so its events
+are `fennec.kernel.url_source.*`.
 
 Create the corresponding factory function in `create_user_created_event.rs`.
 
