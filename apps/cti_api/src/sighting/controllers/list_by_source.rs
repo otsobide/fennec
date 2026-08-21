@@ -6,9 +6,9 @@ use actix_web::{get, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
 
-use ::sighting::sighting::application::list_sightings_by_source::list_sightings_by_source_query::ListSightingsBySourceQuery;
-use ::sighting::sighting::application::list_sightings_by_source::list_sightings_by_source_response::ListSightingsBySourceResponse;
-use ::sighting::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
+use kernel::sighting::application::list_sightings_by_source::list_sightings_by_source_query::ListSightingsBySourceQuery;
+use kernel::sighting::application::list_sightings_by_source::list_sightings_by_source_response::ListSightingsBySourceResponse;
+use kernel::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 use crate::AppState;
 

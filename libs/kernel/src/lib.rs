@@ -10,5 +10,6 @@
 //! is therefore a move, not a redesign.
 
 pub mod ioc;
+pub mod sighting;
 pub mod source;
 pub mod url_source;

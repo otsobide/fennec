@@ -6,11 +6,11 @@ use actix_web::{post, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
 
-use ::sighting::sighting::application::create_sighting::create_sighting_command::CreateSightingCommand;
-use ::sighting::sighting::application::create_sighting::create_sighting_response::CreateSightingResponse;
-use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
-use ::sighting::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
-use ::sighting::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
+use kernel::sighting::application::create_sighting::create_sighting_command::CreateSightingCommand;
+use kernel::sighting::application::create_sighting::create_sighting_response::CreateSightingResponse;
+use kernel::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use kernel::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 use crate::sighting::request_dtos::create_sighting_request::CreateSightingRequest;
 use crate::AppState;

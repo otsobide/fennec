@@ -3,9 +3,9 @@
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
 
-use ::sighting::sighting::application::delete_sighting::delete_sighting_command::DeleteSightingCommand;
-use ::sighting::sighting::application::delete_sighting::delete_sighting_response::DeleteSightingResponse;
-use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::application::delete_sighting::delete_sighting_command::DeleteSightingCommand;
+use kernel::sighting::application::delete_sighting::delete_sighting_response::DeleteSightingResponse;
+use kernel::sighting::domain::value_objects::sighting_id::SightingId;
 
 use crate::AppState;
 

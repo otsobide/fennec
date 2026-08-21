@@ -6,7 +6,6 @@ members = [
     "apps/cti_api",
     "libs/config",
     "libs/kernel",
-    "libs/sighting",
     "libs/shared/cqrs",
     "libs/shared/domain-events",
     "libs/shared/valueobject",

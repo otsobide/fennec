@@ -22,7 +22,6 @@ tokio = { version = "1", features = ["full"] }
 [dependencies]
 actix-web = "4"
 kernel = { path = "../../libs/kernel" }
-sighting = { path = "../../libs/sighting" }
 shared-cqrs = { path = "../../libs/shared/cqrs" }
 shared-domain-events = { path = "../../libs/shared/domain-events" }
 serde = { version = "1", features = ["derive"] }
