@@ -1,106 +1,105 @@
-# Git Flow
+# Gitflow
 
-This project follows a simplified **git-flow** branching strategy.
-
-The branching strategy is intentionally simple: `main` always contains production-ready code, `dev` is the integration branch where features are merged and tested together, and feature branches are short-lived branches where individual changes are developed. This keeps the git history clean and makes it easy to understand what changed and when.
-
-All development happens on feature branches created from `dev`. When a feature is complete, it is merged back into `dev` with `--no-ff` to preserve the branch history. When `dev` is stable and ready for release, it is merged into `main` and tagged.
-
----
+Two long-lived branches, short-lived work branches, and GitHub rulesets that
+make the model mandatory rather than aspirational. This is the shared gitflow
+model applied to Fennec; the cross-repository description lives in the
+`.knowledge` repository.
 
 ## Branches
 
 | Branch | Purpose |
 |---|---|
-| `main` | Production-ready code. Only receives merges from `dev`. |
-| `dev` | Integration branch. All features merge here first. |
-| `feature/<name>` | One branch per feature, created from `dev`. |
-| `hotfix/<name>` | Critical production fixes, branched from `main`. |
+| `main` | Released versions only. Changes exclusively through a merged pull request from `dev`, and every merge is tagged `vX.Y.Z`. |
+| `dev` | Integration branch and the repository's default branch. All work lands here first, through a pull request. |
+| `feature/<slug>` | One branch per unit of work, branched off `dev`, merged back through a pull request, then deleted. |
+| `hotfix/<slug>` | An urgent fix for a released version. Mechanically a feature branch; a release follows immediately. |
 
----
+Branch names use short kebab-case slugs: `feature/namespace-domain-events`,
+`feature/value-object-validation`.
 
-## Feature workflow
+## Protections
 
-```
-dev
- └── feature/<name>   <-- all commits for this feature go here
-      │
-      └── merge back into dev when done
-```
+Two rulesets, both `active` with empty bypass lists, so they bind the owner
+too:
 
-### Step by step
+| Ruleset | Branch | What it enforces |
+|---|---|---|
+| `protect-dev` | `dev` | Pull request required, no force pushes, no deletion, and the required **gitflow branch name** check, which fails any pull request whose head branch is not `feature/*`, `hotfix/*` or `main`. |
+| `protect-main` | `main` | The same base rules, plus the required **release source branch** check, which fails any pull request into `main` whose head branch is not `dev`. |
 
-```bash
-# 1. Start a new feature from dev
-git checkout dev
-git checkout -b feature/<name>
-
-# 2. Work and commit
-git add ...
-git commit -m "feat(...): ..."
-
-# 3. Merge into dev when done (no fast-forward to keep history readable)
-git checkout dev
-git merge --no-ff feature/<name>
-git branch -d feature/<name>
-```
-
----
-
-## Hotfix workflow
-
-Hotfixes are an exception to the normal flow. They are used only for urgent production issues that cannot wait for the next release cycle. Hotfixes branch from `main` (not `dev`) and are merged back into both `main` and `dev` to ensure the fix is present in both branches.
+Both checks live in `.github/workflows/gitflow.yml`. The exact commands that
+created the rulesets are in the `.knowledge` repository
+(`development/branch-protections.md`); verify them with:
 
 ```bash
-# 1. Branch from main
-git checkout main
-git checkout -b hotfix/<name>
-
-# 2. Fix and commit
-git commit -m "fix(...): ..."
-
-# 3. Merge into both main and dev
-git checkout main
-git merge --no-ff hotfix/<name>
-
-git checkout dev
-git merge --no-ff hotfix/<name>
-
-git branch -d hotfix/<name>
+gh api repos/otsobide/fennec/rulesets --jq '.[] | {name, enforcement}'
 ```
 
----
-
-## Promoting dev to main
-
-When `dev` is stable and ready for release:
+## The day-to-day loop
 
 ```bash
-git checkout main
-git merge --no-ff dev
-git tag -a v<version> -m "Release v<version>"
+git switch dev && git pull                # start from a fresh dev
+git switch -c feature/<slug>              # one branch per unit of work
+# ...work, committing small and often...
+cargo test --workspace                    # green before the PR merges
+git push -u origin feature/<slug>
+gh pr create --base dev                   # open the pull request into dev
+# ...checks run; merge when green...
+gh pr merge --merge                       # merge commit, then delete the branch
 ```
 
----
+A pull request into `dev` from a branch named anything other than
+`feature/*`, `hotfix/*` or `main` cannot be merged: rename the branch and
+reopen.
 
-## Commit message conventions
+## Releasing
 
-Consistent commit messages make the git history useful as documentation. The project follows Conventional Commits, which prefixes each message with a type (feat, fix, test, etc.) and an optional scope. This makes it easy to scan the history and understand what each commit does at a glance.
+`main` is the released state. To cut a version:
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+1. Make sure `dev` is green and holds everything the release needs.
+2. Open a pull request from `dev` into `main` and merge it.
+3. Tag the merge commit and push the tag:
+
+   ```bash
+   git switch main && git pull
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+Releasing changes what users get: only do it when the task explicitly asks for
+a release.
+
+## Hotfixes
+
+Branch `hotfix/<slug>` off `dev`, fix, open a pull request into `dev`, merge
+it, and release immediately. There is no direct path into `main`: the release
+source check accepts only `dev`. The price is that whatever else `dev` holds
+ships with the fix, so keep `dev` releasable.
+
+## Commit messages
 
 ```
-<type>(<scope>): <short description>
+<area>: <imperative summary>
 
-Types: feat, fix, test, refactor, docs, ci, chore
+<optional body: the why, when the diff does not make it obvious>
 ```
 
-Examples:
-```
-feat(config): add update_config_entry use case
-fix(config): handle empty value in ConfigValue constructor
-test(config): add unit tests for config entry deleter
-refactor(cqrs): simplify command bus registration
-docs: add git-flow guide
-ci: trigger workflows on main and dev branches
-```
+- Areas in this repository: the context or crate touched (`kernel:`, `ioc:`,
+  `sighting:`, `config:`, `shared:`, `cti-api:`, `config-api:`), or `core:`
+  for a change that sweeps every context, plus `docs:`, `ci:`, `chore:`,
+  `build:`.
+- Imperative and present tense: "add", "fix", "document".
+- Keep the summary under about 72 characters and name the thing that changed.
+- English, always.
+
+Commits before August 2026 use Conventional Commits (`feat(sighting): ...`),
+inherited from the skeleton this repository started from. New commits follow
+the format above, which is the shared convention across repositories.
+
+## Rules of thumb
+
+- About to run `git commit` while on `dev` or `main`? Stop and create a
+  `feature/<slug>` branch first.
+- Never force-push `dev` or `main`. Force-pushing your own unmerged feature
+  branch is fine.
+- Never merge a pull request with failing or missing required checks.
