@@ -1,12 +1,14 @@
 # 🦊 Fennec
 
+[![Test and Build](https://github.com/otsobide/fennec/actions/workflows/test-and-build.yml/badge.svg?branch=dev)](https://github.com/otsobide/fennec/actions/workflows/test-and-build.yml)
+
 A Rust-based **Cyber Threat Intelligence (CTI)** platform, modelled after projects like MISP, built on a strict Domain-Driven Design + Hexagonal Architecture + CQRS foundation.
 
 ## What is Fennec?
 
 Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serve threat intelligence (indicators of compromise, threat actors, campaigns, sources, sightings) under a clean, microservice-friendly architecture. The codebase is organised as a Cargo workspace where each bounded context is an isolated library crate and each HTTP service is a thin Actix-Web app that wires those contexts behind CQRS buses.
 
-The project today is **early in its life**: the `kernel` bounded context owns the `Source` aggregate (origins of intelligence — feeds, producers, external systems) with a full CRUD lifecycle exposed by `cti_api`. New contexts (IoCs, actors, events, sightings...) will plug in alongside `kernel` following exactly the same architectural recipe.
+The project is **early in its life**, but the core of the model is in place: `kernel` owns the intelligence sources (`Source`, plus the URL-specific `UrlSource` keyed by the same id), `ioc` owns the indicators, and `sighting` records that a source reported an indicator, with first/last seen timestamps and an observation counter. All three are exposed by `cti_api`. The contexts still to come (threat actors, campaigns, events, enrichment) plug in alongside them following exactly the same architectural recipe.
 
 The architecture is uncompromising on one principle: business logic depends on traits, never on concrete infrastructure. The same domain code runs against an in-memory `HashMap` in tests and (eventually) a PostgreSQL store in production, with zero conditional compilation and no code changes in the domain or application layers.
 
@@ -20,7 +22,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 | `sighting` | `Sighting` | Records that a source reported an indicator, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
-Each context lives under `libs/<context>/` and is wired into HTTP through a matching app under `apps/<context>_api/`. Cross-context communication happens **only** through domain events.
+Each context lives under `libs/<context>/` and is wired into HTTP by an app under `apps/`. An app may expose several contexts: `cti_api` serves `kernel`, `ioc` and `sighting`, while `config_api` serves the reference `config` context on its own. Cross-context communication happens **only** through domain events; aggregates in different contexts relate by shared identifier, never by importing each other's crates.
 
 ## Stack
 
@@ -31,7 +33,8 @@ Each context lives under `libs/<context>/` and is wired into HTTP through a matc
 | Async runtime | Tokio |
 | Persistence | In-memory (HashMap + Mutex) — pluggable via repository traits |
 | Logging | `tracing` + `tracing-subscriber` (env-filtered) |
-| Errors | `thiserror` |
+| Errors | `thiserror` for domain and repository errors |
+| Validation | Value objects validated at construction, reporting through a single shared `ValueObjectValidationError` |
 | Architecture | DDD + Hexagonal (Ports & Adapters) + CQRS + Domain Events |
 
 No database is required to develop, test, or run the project locally — the default repositories are all in-memory.
@@ -64,7 +67,8 @@ Arrows point inward only. The domain layer has no knowledge of frameworks, datab
 <context>/
   domain/
     entities/         # Aggregate roots
-    value_objects/    # Typed wrappers (every attribute is a VO, including timestamps)
+    value_objects/    # Typed wrappers, validated at construction (every attribute is a VO,
+                      # including timestamps; ids are UUID v4)
     repositories/     # Trait definitions only
     events/           # Domain events + factory functions
     errors/           # NotFound | AlreadyExists | Unexpected
@@ -73,7 +77,8 @@ Arrows point inward only. The domain layer has no knowledge of frameworks, datab
       <noun>_<verb>er.rs              # Domain service
       <verb>_<noun>_command.rs        # Command struct (writes)
       <verb>_<noun>_query.rs          # Query struct (reads)
-      <verb>_<noun>_response.rs       # Response envelope: { data?, error? }
+      <verb>_<noun>_response.rs       # Response envelope: commands carry { error }, queries
+                                      # add the payload field named after the aggregate
       <verb>_<noun>_command_handler.rs / _query_handler.rs
   infrastructure/
     persistence/
@@ -85,7 +90,7 @@ Arrows point inward only. The domain layer has no knowledge of frameworks, datab
 ```
 fennec/
 ├── apps/
-│   ├── cti_api/         # CTI HTTP API (port 8081) — exposes the kernel BC
+│   ├── cti_api/         # CTI HTTP API (port 8081) — exposes kernel, ioc and sighting
 │   └── config_api/      # Reference HTTP API (port 8080) — exposes the config BC
 │
 ├── libs/
@@ -98,7 +103,7 @@ fennec/
 │   └── shared/
 │       ├── cqrs/            # CommandBus + QueryBus (TypeId-based dispatch)
 │       ├── domain-events/   # EventBus + DomainEventSubscriber
-│       └── valueobject/     # Reusable value object primitives
+│       └── valueobject/     # ValueObjectValidationError + value object primitives
 │
 ├── tests/
 │   ├── apps/{cti_api,config_api}/           # E2E tests (HTTP → bus → repo)
