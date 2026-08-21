@@ -22,4 +22,8 @@ Cargo.lock
 
 # Claude Code
 CLAUDE.md
+CLAUDE.local.md
 .claude/
+
+# Shared AI agent knowledge base (separate repo)
+.knowledge/
