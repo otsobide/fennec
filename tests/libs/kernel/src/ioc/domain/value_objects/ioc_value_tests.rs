@@ -1,4 +1,4 @@
-use ioc::ioc::domain::value_objects::ioc_value::{IocValue, MAX_LENGTH};
+use kernel::ioc::domain::value_objects::ioc_value::{IocValue, MAX_LENGTH};
 
 #[test]
 fn it_trims_surrounding_whitespace() {

@@ -3,11 +3,11 @@
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
 
-use ::ioc::ioc::application::create_ioc::create_ioc_command::CreateIocCommand;
-use ::ioc::ioc::application::create_ioc::create_ioc_response::CreateIocResponse;
-use ::ioc::ioc::domain::value_objects::ioc_id::IocId;
-use ::ioc::ioc::domain::value_objects::ioc_type::IocType;
-use ::ioc::ioc::domain::value_objects::ioc_value::IocValue;
+use kernel::ioc::application::create_ioc::create_ioc_command::CreateIocCommand;
+use kernel::ioc::application::create_ioc::create_ioc_response::CreateIocResponse;
+use kernel::ioc::domain::value_objects::ioc_id::IocId;
+use kernel::ioc::domain::value_objects::ioc_type::IocType;
+use kernel::ioc::domain::value_objects::ioc_value::IocValue;
 
 use crate::ioc::request_dtos::create_ioc_request::CreateIocRequest;
 use crate::AppState;

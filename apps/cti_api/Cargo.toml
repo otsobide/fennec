@@ -21,7 +21,6 @@ tokio = { version = "1", features = ["full"] }
 
 [dependencies]
 actix-web = "4"
-ioc = { path = "../../libs/ioc" }
 kernel = { path = "../../libs/kernel" }
 sighting = { path = "../../libs/sighting" }
 shared-cqrs = { path = "../../libs/shared/cqrs" }

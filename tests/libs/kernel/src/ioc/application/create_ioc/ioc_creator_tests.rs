@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use ioc::ioc::application::create_ioc::ioc_creator::IocCreator;
-use ioc::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
-use ioc::ioc::domain::events::ioc_created_event::IocCreatedEvent;
-use ioc::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::application::create_ioc::ioc_creator::IocCreator;
+use kernel::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
+use kernel::ioc::domain::events::ioc_created_event::IocCreatedEvent;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
 use shared_domain_events::domain::event_bus::EventBus;
 
 use crate::src::ioc::domain::value_objects::mothers::ioc_id_mother::IocIdMother;

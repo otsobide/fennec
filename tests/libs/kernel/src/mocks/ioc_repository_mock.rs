@@ -3,10 +3,10 @@ use std::sync::Mutex;
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use ioc::ioc::domain::entities::ioc::Ioc;
-use ioc::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
-use ioc::ioc::domain::repositories::ioc_repository::IocRepository;
-use ioc::ioc::domain::value_objects::ioc_id::IocId;
+use kernel::ioc::domain::entities::ioc::Ioc;
+use kernel::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::domain::value_objects::ioc_id::IocId;
 
 pub enum SaveBehavior {
     Succeeds,

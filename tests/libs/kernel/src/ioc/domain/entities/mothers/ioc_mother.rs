@@ -1,6 +1,6 @@
-use ioc::ioc::domain::entities::ioc::Ioc;
-use ioc::ioc::domain::value_objects::ioc_created_at::IocCreatedAt;
-use ioc::ioc::domain::value_objects::ioc_updated_at::IocUpdatedAt;
+use kernel::ioc::domain::entities::ioc::Ioc;
+use kernel::ioc::domain::value_objects::ioc_created_at::IocCreatedAt;
+use kernel::ioc::domain::value_objects::ioc_updated_at::IocUpdatedAt;
 
 use crate::src::ioc::domain::value_objects::mothers::ioc_id_mother::IocIdMother;
 use crate::src::ioc::domain::value_objects::mothers::ioc_type_mother::IocTypeMother;

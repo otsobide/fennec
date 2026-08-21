@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use ioc::ioc::application::find_ioc::ioc_finder::IocFinder;
-use ioc::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
-use ioc::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::application::find_ioc::ioc_finder::IocFinder;
+use kernel::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
 
 use crate::src::ioc::domain::entities::mothers::ioc_mother::IocMother;
 use crate::src::ioc::domain::value_objects::mothers::ioc_id_mother::IocIdMother;

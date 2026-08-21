@@ -1,4 +1,4 @@
-use ioc::ioc::domain::value_objects::ioc_type::IocType;
+use kernel::ioc::domain::value_objects::ioc_type::IocType;
 
 pub struct IocTypeMother;
 

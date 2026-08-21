@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use ioc::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
-use ioc::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
-use ioc::ioc::domain::events::ioc_deleted_event::IocDeletedEvent;
-use ioc::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
+use kernel::ioc::domain::errors::ioc_repository_error::IocRepositoryError;
+use kernel::ioc::domain::events::ioc_deleted_event::IocDeletedEvent;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
 use shared_domain_events::domain::event_bus::EventBus;
 
 use crate::src::ioc::domain::entities::mothers::ioc_mother::IocMother;

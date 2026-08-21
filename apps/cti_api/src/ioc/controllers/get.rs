@@ -6,9 +6,9 @@ use actix_web::{get, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
 
-use ::ioc::ioc::application::find_ioc::find_ioc_query::FindIocQuery;
-use ::ioc::ioc::application::find_ioc::find_ioc_response::FindIocResponse;
-use ::ioc::ioc::domain::value_objects::ioc_id::IocId;
+use kernel::ioc::application::find_ioc::find_ioc_query::FindIocQuery;
+use kernel::ioc::application::find_ioc::find_ioc_response::FindIocResponse;
+use kernel::ioc::domain::value_objects::ioc_id::IocId;
 
 use crate::AppState;
 

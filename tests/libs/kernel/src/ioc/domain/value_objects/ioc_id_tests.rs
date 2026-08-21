@@ -1,4 +1,4 @@
-use ioc::ioc::domain::value_objects::ioc_id::IocId;
+use kernel::ioc::domain::value_objects::ioc_id::IocId;
 use uuid::Uuid;
 
 const VALID_V4: &str = "550e8400-e29b-41d4-a716-446655440000";

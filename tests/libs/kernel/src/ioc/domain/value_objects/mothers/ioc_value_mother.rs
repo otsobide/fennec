@@ -1,4 +1,4 @@
-use ioc::ioc::domain::value_objects::ioc_value::IocValue;
+use kernel::ioc::domain::value_objects::ioc_value::IocValue;
 use uuid::Uuid;
 
 pub struct IocValueMother;

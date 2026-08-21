@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use actix_web::web;
 
-use ::ioc::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
-use ::ioc::ioc::application::create_ioc::ioc_creator::IocCreator;
-use ::ioc::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
-use ::ioc::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
-use ::ioc::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
-use ::ioc::ioc::application::find_ioc::ioc_finder::IocFinder;
-use ::ioc::ioc::domain::repositories::ioc_repository::IocRepository;
-use ::ioc::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
+use kernel::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
+use kernel::ioc::application::create_ioc::ioc_creator::IocCreator;
+use kernel::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
+use kernel::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
+use kernel::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
+use kernel::ioc::application::find_ioc::ioc_finder::IocFinder;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
