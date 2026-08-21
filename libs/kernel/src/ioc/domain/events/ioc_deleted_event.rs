@@ -15,7 +15,7 @@ pub struct IocDeletedEvent {
 }
 
 impl IocDeletedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.ioc.ioc.deleted";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.ioc.deleted";
 
     pub fn new(id: IocId) -> Self {
         Self {

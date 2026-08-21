@@ -24,7 +24,7 @@ pub struct IocCreatedEvent {
 
 impl IocCreatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "fennec.ioc.ioc.created";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.ioc.created";
 
     pub fn new(
         id: IocId,

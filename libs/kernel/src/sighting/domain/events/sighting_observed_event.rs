@@ -26,7 +26,7 @@ pub struct SightingObservedEvent {
 }
 
 impl SightingObservedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.sighting.sighting.observed";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.sighting.observed";
 
     pub fn new(
         id: SightingId,

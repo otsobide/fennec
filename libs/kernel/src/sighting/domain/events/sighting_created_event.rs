@@ -30,7 +30,7 @@ pub struct SightingCreatedEvent {
 
 impl SightingCreatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "fennec.sighting.sighting.created";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.sighting.created";
 
     #[allow(clippy::too_many_arguments)]
     pub fn new(

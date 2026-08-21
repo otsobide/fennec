@@ -19,7 +19,7 @@ pub struct SightingDeletedEvent {
 }
 
 impl SightingDeletedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.sighting.sighting.deleted";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.sighting.deleted";
 
     pub fn new(id: SightingId, ioc_id: SightingIocId, source_id: SightingSourceId) -> Self {
         Self {
