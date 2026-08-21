@@ -258,7 +258,7 @@ All handlers use a **response envelope pattern**: responses carry an `error: Opt
 
 **Domain services (finders)** return domain entities — the handler maps them to DTOs. This keeps use cases simple and free of response-building logic.
 
-See [CQRS.md](CQRS.md) for details.
+See [cqrs.md](cqrs.md) for details.
 
 ### Domain Events
 
@@ -266,7 +266,7 @@ After a state change succeeds, the domain service publishes events to the `Event
 
 This decouples the producing use case from the consuming side effect. Neither knows the other exists — they communicate only through events.
 
-See [DOMAIN_EVENTS.md](DOMAIN_EVENTS.md) for details.
+See [domain-events.md](domain-events.md) for details.
 
 ### Logging
 

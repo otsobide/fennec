@@ -175,15 +175,23 @@ The repository is organised into three top-level areas:
 │       │
 │       └── config/             # Unit tests for libs/config (mirrors kernel layout)
 │
-└── docs/
-    ├── ARCHITECTURE.md
-    ├── PROJECT_STRUCTURE.md    # <-- this file
-    ├── CQRS.md
-    ├── DOMAIN_EVENTS.md
-    ├── TESTING.md
-    ├── ADDING_A_BOUNDED_CONTEXT.md
-    ├── ADDING_AN_APP.md
-    └── GIT_FLOW.md
+└── docs/                       # One folder per topic, each with a README.md
+    ├── README.md
+    ├── architecture/
+    │   ├── README.md
+    │   ├── overview.md
+    │   ├── project-structure.md    # <-- this file
+    │   ├── cqrs.md
+    │   ├── domain-events.md
+    │   └── entities.md
+    ├── development/
+    │   ├── README.md
+    │   ├── gitflow.md
+    │   └── testing.md
+    └── guides/
+        ├── README.md
+        ├── adding-a-bounded-context.md
+        └── adding-an-app.md
 ```
 
 ---

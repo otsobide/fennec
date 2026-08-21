@@ -8,7 +8,7 @@ Each app follows the same structure: a `lib.rs` that exposes `build_state()` (de
 
 For working references, see **`apps/cti_api/`** (recommended convention: `<resource>/controllers/{post,get,put,delete}.rs` + `<resource>/request_dtos/`) and **`apps/config_api/`** (older convention: verb files directly under the resource folder). New apps should adopt the `cti_api` layout.
 
-This guide adds a `user_api` app that exposes the `user` bounded context (see [ADDING_A_BOUNDED_CONTEXT.md](ADDING_A_BOUNDED_CONTEXT.md)).
+This guide adds a `user_api` app that exposes the `user` bounded context (see [adding-a-bounded-context.md](adding-a-bounded-context.md)).
 
 ---
 

@@ -15,6 +15,9 @@ The architecture is uncompromising on one principle: business logic depends on t
 | Context | Aggregate | Status | Exposed by |
 |---|---|---|---|
 | `kernel` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
+| `kernel` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
+| `ioc` | `Ioc` | Create, find and delete indicators of compromise | `cti_api` (:8081) |
+| `sighting` | `Sighting` | Records that a source reported an indicator, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
 Each context lives under `libs/<context>/` and is wired into HTTP through a matching app under `apps/<context>_api/`. Cross-context communication happens **only** through domain events.
@@ -53,7 +56,7 @@ Domain (libs/*/domain/)    <-- pure types, repository traits, events
 Infrastructure (libs/*/infrastructure/)
 ```
 
-Arrows point inward only. The domain layer has no knowledge of frameworks, databases, or HTTP. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full breakdown.
+Arrows point inward only. The domain layer has no knowledge of frameworks, databases, or HTTP. See [docs/architecture/overview.md](docs/architecture/overview.md) for the full breakdown.
 
 ### Bounded context layout
 
@@ -87,7 +90,10 @@ fennec/
 │
 ├── libs/
 │   ├── kernel/          # CTI kernel bounded context
-│   │   └── src/source/    # Source aggregate: id, type, status, description, created_at, updated_at
+│   │   ├── src/source/      # Source aggregate: id, type, status, description, timestamps
+│   │   └── src/url_source/  # UrlSource aggregate: url, format, polling_interval, timestamps
+│   ├── ioc/             # Indicators of compromise
+│   ├── sighting/        # Sightings: an ioc reported by a source
 │   ├── config/          # Reference bounded context (config_entry CRUD)
 │   └── shared/
 │       ├── cqrs/            # CommandBus + QueryBus (TypeId-based dispatch)
@@ -95,16 +101,16 @@ fennec/
 │       └── valueobject/     # Reusable value object primitives
 │
 ├── tests/
-│   ├── apps/{cti_api,config_api}/   # E2E tests (HTTP → bus → repo)
-│   └── libs/{kernel,config}/        # Unit tests (mocks + Object Mother)
+│   ├── apps/{cti_api,config_api}/           # E2E tests (HTTP → bus → repo)
+│   └── libs/{kernel,ioc,sighting,config}/   # Unit tests (mocks + Object Mother)
 │
-├── docs/                # Architecture documentation
+├── docs/                # Documentation, one folder per topic
 ├── docker-compose.yml   # PostgreSQL scaffolding (currently unused)
 ├── Makefile             # Root Makefile (delegates to per-app Makefiles)
 └── Cargo.toml           # Workspace root
 ```
 
-A more detailed annotated tree lives in [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
+A more detailed annotated tree lives in [docs/architecture/project-structure.md](docs/architecture/project-structure.md).
 
 ## Quick start
 
@@ -163,19 +169,19 @@ curl http://localhost:8081/sources/550e8400-e29b-41d4-a716-446655440000
 
 ## Documentation
 
-The `docs/` directory contains detailed guides. Start with **ARCHITECTURE.md** for the big picture.
+The `docs/` directory is organised one folder per topic, each with its own
+`README.md` entry point. Start with
+[docs/architecture/overview.md](docs/architecture/overview.md) for the big picture.
 
-| Document | Description |
+| Topic | Contents |
 |---|---|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, layer diagram, key patterns |
-| [ENTITIES.md](docs/ENTITIES.md) | Every aggregate and its value objects, grouped by bounded context |
-| [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) | Full annotated file tree |
-| [CQRS.md](docs/CQRS.md) | How commands and queries flow through the system |
-| [DOMAIN_EVENTS.md](docs/DOMAIN_EVENTS.md) | Event-driven communication between bounded contexts |
-| [TESTING.md](docs/TESTING.md) | Test strategy: mocks, Object Mother, e2e |
-| [ADDING_A_BOUNDED_CONTEXT.md](docs/ADDING_A_BOUNDED_CONTEXT.md) | Step-by-step guide to adding a new domain module |
-| [ADDING_AN_APP.md](docs/ADDING_AN_APP.md) | Step-by-step guide to adding a new HTTP service |
-| [GIT_FLOW.md](docs/GIT_FLOW.md) | Branching strategy and commit conventions |
+| [architecture/](docs/architecture/README.md) | [overview](docs/architecture/overview.md) (layers, dependency rule, patterns), [project-structure](docs/architecture/project-structure.md), [cqrs](docs/architecture/cqrs.md), [domain-events](docs/architecture/domain-events.md), [entities](docs/architecture/entities.md) |
+| [development/](docs/development/README.md) | [gitflow](docs/development/gitflow.md) (branching, rulesets, commit format), [testing](docs/development/testing.md) (mocks, object mothers, e2e) |
+| [guides/](docs/guides/README.md) | [adding-a-bounded-context](docs/guides/adding-a-bounded-context.md), [adding-an-app](docs/guides/adding-an-app.md) |
+
+Conventions shared with the other repositories (the English-only rule, the
+small-commit discipline, the gitflow model, the DDD service architecture) live
+in the separate `.knowledge` repository and take precedence over these pages.
 
 ## Make targets
 
