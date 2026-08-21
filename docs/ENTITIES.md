@@ -7,8 +7,15 @@ Every field in every aggregate is a **value object** — no raw `String`, `Uuid`
 The **Kind** column below classifies each value object:
 
 - `newtype` — a thin wrapper with no validation (accepts any value of the underlying type).
-- `validated` — construction returns `Result<_, Error>` and rejects invalid input.
-- `enum` — a closed set of variants, parsed from a string via `from_str`.
+  Only timestamps generated inside the domain services are newtypes.
+- `validated` — construction returns `Result<_, ValueObjectValidationError>` and rejects
+  invalid input. Every value that reaches the domain from outside is validated.
+- `enum` — a closed set of variants, parsed from a string via `from_str`, which also
+  returns `Result<_, ValueObjectValidationError>`.
+
+Every fallible constructor reports failures through the single shared
+`ValueObjectValidationError` (`libs/shared/valueobject`); no value object defines its own
+error type. Identifiers additionally expose `generate()`, which produces a fresh UUID v4.
 
 ---
 
@@ -24,10 +31,10 @@ Represents the origin of intelligence — a feed, producer, or external system. 
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `id` | `SourceId` | `uuid::Uuid` | newtype | Externally provided at construction (not generated). |
-| `source_type` | `SourceType` | enum `{ Url }` | enum | Parsed from `"url"`. |
-| `status` | `SourceStatus` | enum `{ Active, Inactive }` | enum | Parsed from `"active"` / `"inactive"`. |
-| `description` | `SourceDescription` | `String` | newtype | Free-form human-readable text. |
+| `id` | `SourceId` | `uuid::Uuid` | validated | Externally provided at construction; must parse as a UUID **v4**. `SourceId::generate()` exists for platform-side creation. |
+| `source_type` | `SourceType` | enum `{ Url }` | enum | Parsed from `"url"`, ignoring case and surrounding whitespace. |
+| `status` | `SourceStatus` | enum `{ Active, Inactive }` | enum | Parsed from `"active"` / `"inactive"`, ignoring case and surrounding whitespace. |
+| `description` | `SourceDescription` | `String` | validated | Free-form human-readable text: trimmed, may be empty, at most 1024 characters. |
 | `created_at` | `SourceCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
 | `updated_at` | `SourceUpdatedAt` | `std::time::SystemTime` | newtype | Regenerated on every update. |
 
@@ -39,8 +46,7 @@ Represents the origin of intelligence — a feed, producer, or external system. 
 
 **Errors**
 
-- `SourceTypeError::Invalid(String)` — unknown `source_type` string.
-- `SourceStatusError::Invalid(String)` — unknown `status` string.
+- `ValueObjectValidationError` — unknown `source_type` or `status` string, id that is not a UUID v4, or description over 1024 characters.
 - `SourceRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}` — persistence-layer failures.
 
 ---
@@ -53,8 +59,8 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `id` | `UrlSourceId` | `uuid::Uuid` | newtype | Must equal the parent `SourceId`. |
-| `url` | `UrlSourceUrl` | `String` | validated | Non-empty and starts with `http://` or `https://`. |
+| `id` | `UrlSourceId` | `uuid::Uuid` | validated | Must parse as a UUID **v4** and equal the parent `SourceId`. |
+| `url` | `UrlSourceUrl` | `String` | validated | Trimmed, non-empty, starts with `http://` or `https://`, at most 2048 characters. |
 | `format` | `UrlSourceFormat` | enum `{ Plain, Csv, Json, Stix }` | enum | Parsed from `"plain"` / `"csv"` / `"json"` / `"stix"`. |
 | `polling_interval` | `UrlSourcePollingInterval` | `u32` seconds | validated | Must be strictly `> 0`. |
 | `created_at` | `UrlSourceCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
@@ -68,9 +74,7 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 **Errors**
 
-- `UrlSourceUrlError::{Empty, InvalidScheme}` — URL validation.
-- `UrlSourceFormatError::Invalid(String)` — unknown `format` string.
-- `UrlSourcePollingIntervalError::Zero` — polling interval must be `> 0`.
+- `ValueObjectValidationError` — id that is not a UUID v4, empty/over-long URL, URL without an `http(s)` scheme, unknown `format` string, or a polling interval of `0`.
 - `UrlSourceRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}` — persistence-layer failures.
 
 ---
@@ -87,9 +91,9 @@ Represents a single Indicator of Compromise: an observable (IP, domain, URL, has
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `id` | `IocId` | `uuid::Uuid` | newtype | Externally provided at construction (not generated). |
+| `id` | `IocId` | `uuid::Uuid` | validated | Externally provided at construction; must parse as a UUID **v4**. |
 | `ioc_type` | `IocType` | enum `{ Ipv4, Ipv6, Domain, Url, Sha256, Sha1, Md5, Email }` | enum | Parsed from `"ipv4"` / `"ipv6"` / `"domain"` / `"url"` / `"sha256"` / `"sha1"` / `"md5"` / `"email"`. |
-| `value` | `IocValue` | `String` | validated | Non-empty. Per-type validation is intentionally deferred. |
+| `value` | `IocValue` | `String` | validated | Trimmed, non-empty, at most 2048 characters. Per-type validation is intentionally deferred. |
 | `created_at` | `IocCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
 | `updated_at` | `IocUpdatedAt` | `std::time::SystemTime` | newtype | Set to the same instant as `created_at` on creation. |
 
@@ -100,8 +104,7 @@ Represents a single Indicator of Compromise: an observable (IP, domain, URL, has
 
 **Errors**
 
-- `IocTypeError::Invalid(String)` — unknown `ioc_type` string.
-- `IocValueError::Empty` — value must be non-empty.
+- `ValueObjectValidationError` — id that is not a UUID v4, unknown `ioc_type` string, or an empty/over-long value.
 - `IocRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}` — persistence-layer failures.
 
 ---
@@ -118,9 +121,9 @@ Represents a single observation of an ioc by a source. There is one aggregate pe
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `id` | `SightingId` | `uuid::Uuid` | newtype | Externally provided at construction (not generated). |
-| `ioc_id` | `SightingIocId` | `uuid::Uuid` | newtype | Identifier of the referenced `Ioc`. Externally provided. |
-| `source_id` | `SightingSourceId` | `uuid::Uuid` | newtype | Identifier of the referenced `Source`. Externally provided. |
+| `id` | `SightingId` | `uuid::Uuid` | validated | Externally provided at construction; must parse as a UUID **v4**. |
+| `ioc_id` | `SightingIocId` | `uuid::Uuid` | validated | Identifier of the referenced `Ioc`. Externally provided; must be a UUID **v4**. |
+| `source_id` | `SightingSourceId` | `uuid::Uuid` | validated | Identifier of the referenced `Source`. Externally provided; must be a UUID **v4**. |
 | `first_seen` | `SightingFirstSeen` | `std::time::SystemTime` | newtype | Set from the caller-supplied `observed_at` on creation; never mutated. |
 | `last_seen` | `SightingLastSeen` | `std::time::SystemTime` | newtype | Set from `observed_at` on creation; refreshed on each observation to `max(previous, observed_at)`. |
 | `count` | `SightingCount` | `u64` | validated | Must be `>= 1`. Starts at `1`; incremented by `1` on each observation. |
@@ -137,7 +140,7 @@ Represents a single observation of an ioc by a source. There is one aggregate pe
 
 **Errors**
 
-- `SightingCountError::Zero` — `count` must be at least `1`.
+- `ValueObjectValidationError` — id, `ioc_id` or `source_id` that is not a UUID v4, or a `count` below `1`.
 - `SightingRepositoryError::{NotFound, IdAlreadyExists, PairAlreadyExists { existing_id }, Unexpected(String)}` — persistence-layer failures. `PairAlreadyExists` carries the id of the existing sighting so the caller can immediately observe it.
 
 ---
@@ -154,8 +157,8 @@ Aggregate root for a single key/value pair. The key acts as the identifier.
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `key` | `ConfigKey` | `String` | newtype | Unique identifier of the entry. |
-| `value` | `ConfigValue` | `String` | newtype | Free-form value stored under the key. |
+| `key` | `ConfigKey` | `String` | validated | Unique identifier of the entry: trimmed, non-empty, at most 255 characters. |
+| `value` | `ConfigValue` | `String` | validated | Free-form value stored under the key: trimmed, may be empty, at most 4096 characters. |
 
 **Invariants**
 
