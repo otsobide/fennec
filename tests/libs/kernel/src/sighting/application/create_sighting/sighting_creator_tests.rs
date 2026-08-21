@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use shared_domain_events::domain::event_bus::EventBus;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 use kernel::sighting::domain::events::sighting_created_event::SightingCreatedEvent;
 use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
+use shared_domain_events::domain::event_bus::EventBus;
 
 use crate::src::mocks::event_bus_mock::EventBusMock;
 use crate::src::mocks::sighting_repository_mock::SightingRepositoryMock;

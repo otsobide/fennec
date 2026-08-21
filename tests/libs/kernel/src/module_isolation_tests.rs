@@ -12,7 +12,8 @@ const MODULES: [&str; 4] = ["ioc", "sighting", "source", "url_source"];
 
 fn rust_files(directory: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
-    let entries = fs::read_dir(directory).unwrap_or_else(|e| panic!("{}: {e}", directory.display()));
+    let entries =
+        fs::read_dir(directory).unwrap_or_else(|e| panic!("{}: {e}", directory.display()));
 
     for entry in entries {
         let path = entry.expect("readable directory entry").path();
@@ -33,7 +34,10 @@ fn no_module_reaches_into_a_sibling_module() {
 
     for module in MODULES {
         let module_root = source_root.join(module);
-        assert!(module_root.is_dir(), "{module} is not a module of the kernel crate");
+        assert!(
+            module_root.is_dir(),
+            "{module} is not a module of the kernel crate"
+        );
 
         for file in rust_files(&module_root) {
             let contents = fs::read_to_string(&file).expect("readable source file");

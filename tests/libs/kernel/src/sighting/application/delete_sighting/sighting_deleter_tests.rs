@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use shared_domain_events::domain::event_bus::EventBus;
 use kernel::sighting::application::delete_sighting::sighting_deleter::SightingDeleter;
 use kernel::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 use kernel::sighting::domain::events::sighting_deleted_event::SightingDeletedEvent;
 use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
+use shared_domain_events::domain::event_bus::EventBus;
 
 use crate::src::mocks::event_bus_mock::EventBusMock;
 use crate::src::mocks::sighting_repository_mock::SightingRepositoryMock;
