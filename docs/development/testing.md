@@ -161,19 +161,14 @@ Because `build_state()` creates a new in-memory repository on every call, tests 
 
 ## CI pipeline
 
-The CI pipeline provides a safety net that catches failures at every level before code reaches production. Unit tests run first and fast; if they pass, the slower e2e tests run; and only after both succeed does the pipeline attempt to build release artefacts and Docker images.
+Two workflows run on every push to `main` and `dev`, and on every pull request into them:
 
-Tests run in GitHub Actions on every push:
+| Workflow | Jobs |
+|---|---|
+| `test-and-build.yml` | `cargo test --workspace`, then `cargo build --workspace`, then `cargo build --workspace --release`, in a matrix across the stable, beta and nightly toolchains. One suite covers unit, e2e and doc tests, since they all run in-process with no external services. |
+| `gitflow.yml` | The **gitflow branch name** and **release source branch** checks that the branch rulesets require. See [gitflow.md](gitflow.md). |
 
-```
-unit-tests (stable / beta / nightly)
-    └─▶ e2e-tests (per app)
-            └─▶ dev-build
-                    └─▶ build (release)
-                            └─▶ docker-build
-```
-
-Unit tests run in a matrix across three Rust toolchain versions to catch compatibility regressions early.
+The toolchain matrix catches compatibility regressions early; the release build catches anything that only breaks with optimisations on.
 
 ## Adding tests for a new bounded context
 
@@ -186,6 +181,7 @@ Unit tests run in a matrix across three Rust toolchain versions to catch compati
    ```
 3. Create mocks and mothers mirroring the existing patterns under `tests/libs/kernel/src/`.
 4. Write one test file per use case under `tests/libs/<context>/src/<context>/application/`.
+5. Write one test module per value object with an invariant, under `.../domain/value_objects/`.
 
 ## Adding e2e tests for a new app
 
