@@ -20,7 +20,7 @@ pub struct ConfigEntryCreatedEvent {
 
 impl ConfigEntryCreatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "template.config.config_entry.created";
+    pub const EVENT_NAME: &'static str = "fennec.config.config_entry.created";
 
     /// Creates a new `ConfigEntryCreatedEvent` with auto-generated metadata.
     pub fn new(key: ConfigKey, value: ConfigValue) -> Self {

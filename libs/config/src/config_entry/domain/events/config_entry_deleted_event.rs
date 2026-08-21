@@ -17,7 +17,7 @@ pub struct ConfigEntryDeletedEvent {
 
 impl ConfigEntryDeletedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "template.config.config_entry.deleted";
+    pub const EVENT_NAME: &'static str = "fennec.config.config_entry.deleted";
 
     /// Creates a new `ConfigEntryDeletedEvent` with auto-generated metadata.
     pub fn new(key: ConfigKey) -> Self {

@@ -26,7 +26,7 @@ pub struct UrlSourceUpdatedEvent {
 }
 
 impl UrlSourceUpdatedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.updated";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.updated";
 
     pub fn new(
         id: UrlSourceId,
