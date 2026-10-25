@@ -8,7 +8,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const MODULES: [&str; 3] = ["sighting", "source", "url_source"];
+const MODULES: [&str; 4] = ["ipv4_address", "sighting", "source", "url_source"];
 
 fn rust_files(directory: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
