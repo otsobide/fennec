@@ -14,7 +14,8 @@ pub fn create_sighting_observed_event(
 ) -> Result<SightingObservedEvent, SightingRepositoryError> {
     Ok(SightingObservedEvent::new(
         sighting.id().clone(),
-        sighting.ioc_id().clone(),
+        sighting.observable_kind().clone(),
+        *sighting.observable_id(),
         sighting.source_id().clone(),
         observed_at,
         *sighting.count(),

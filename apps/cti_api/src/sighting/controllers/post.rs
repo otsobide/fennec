@@ -9,7 +9,8 @@ use tracing::{debug, info, warn};
 use kernel::sighting::application::create_sighting::create_sighting_command::CreateSightingCommand;
 use kernel::sighting::application::create_sighting::create_sighting_response::CreateSightingResponse;
 use kernel::sighting::domain::value_objects::sighting_id::SightingId;
-use kernel::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use kernel::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use kernel::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use kernel::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 use crate::sighting::request_dtos::create_sighting_request::CreateSightingRequest;
@@ -33,7 +34,12 @@ pub async fn handler(
         Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
-    let ioc_id = match SightingIocId::new(&body.ioc_id) {
+    let observable_kind = match SightingObservableKind::new(&body.observable_kind) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
+    let observable_id = match SightingObservableId::new(&body.observable_id) {
         Ok(value) => value,
         Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
@@ -47,7 +53,8 @@ pub async fn handler(
 
     let command = CreateSightingCommand {
         id,
-        ioc_id,
+        observable_kind,
+        observable_id,
         source_id,
         observed_at,
     };

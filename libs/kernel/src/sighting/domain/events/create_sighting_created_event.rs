@@ -10,7 +10,8 @@ pub fn create_sighting_created_event(
 ) -> Result<SightingCreatedEvent, SightingRepositoryError> {
     Ok(SightingCreatedEvent::new(
         sighting.id().clone(),
-        sighting.ioc_id().clone(),
+        sighting.observable_kind().clone(),
+        *sighting.observable_id(),
         sighting.source_id().clone(),
         sighting.first_seen().clone(),
         sighting.last_seen().clone(),

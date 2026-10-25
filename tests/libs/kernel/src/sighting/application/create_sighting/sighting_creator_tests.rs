@@ -10,7 +10,8 @@ use shared_domain_events::domain::event_bus::EventBus;
 use crate::src::mocks::event_bus_mock::EventBusMock;
 use crate::src::mocks::sighting_repository_mock::SightingRepositoryMock;
 use crate::src::sighting::domain::value_objects::mothers::sighting_id_mother::SightingIdMother;
-use crate::src::sighting::domain::value_objects::mothers::sighting_ioc_id_mother::SightingIocIdMother;
+use crate::src::sighting::domain::value_objects::mothers::sighting_observable_id_mother::SightingObservableIdMother;
+use crate::src::sighting::domain::value_objects::mothers::sighting_observable_kind_mother::SightingObservableKindMother;
 use crate::src::sighting::domain::value_objects::mothers::sighting_source_id_mother::SightingSourceIdMother;
 
 fn make_creator(repo: Arc<SightingRepositoryMock>, bus: Arc<EventBusMock>) -> SightingCreator {
@@ -31,7 +32,8 @@ async fn it_saves_the_sighting() {
     creator
         .execute(
             id,
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             SystemTime::now(),
         )
@@ -50,7 +52,8 @@ async fn it_publishes_a_created_event() {
     creator
         .execute(
             SightingIdMother::random(),
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             SystemTime::now(),
         )
@@ -72,7 +75,8 @@ async fn it_returns_id_already_exists_error() {
     let result = creator
         .execute(
             SightingIdMother::random(),
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             SystemTime::now(),
         )
@@ -98,7 +102,8 @@ async fn it_propagates_pair_already_exists_with_existing_id() {
     let result = creator
         .execute(
             SightingIdMother::random(),
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             SystemTime::now(),
         )
@@ -121,7 +126,8 @@ async fn it_does_not_publish_event_when_save_fails() {
     let _ = creator
         .execute(
             SightingIdMother::random(),
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             SystemTime::now(),
         )

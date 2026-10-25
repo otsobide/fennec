@@ -10,7 +10,8 @@ pub fn create_sighting_deleted_event(
 ) -> Result<SightingDeletedEvent, SightingRepositoryError> {
     Ok(SightingDeletedEvent::new(
         sighting.id().clone(),
-        sighting.ioc_id().clone(),
+        sighting.observable_kind().clone(),
+        *sighting.observable_id(),
         sighting.source_id().clone(),
     ))
 }

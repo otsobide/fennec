@@ -5,7 +5,8 @@ use std::time::SystemTime;
 use shared_cqrs::command::domain::command::Command;
 
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 /// Command that requests the creation of a new sighting.
@@ -17,7 +18,8 @@ use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId
 /// [`SightingCreator`]: super::sighting_creator::SightingCreator
 pub struct CreateSightingCommand {
     pub id: SightingId,
-    pub ioc_id: SightingIocId,
+    pub observable_kind: SightingObservableKind,
+    pub observable_id: SightingObservableId,
     pub source_id: SightingSourceId,
     pub observed_at: SystemTime,
 }

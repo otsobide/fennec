@@ -7,7 +7,8 @@ use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
 use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 /// Domain event raised when a
@@ -16,18 +17,25 @@ use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId
 pub struct SightingDeletedEvent {
     base: DomainEventBase,
     pub id: SightingId,
-    pub ioc_id: SightingIocId,
+    pub observable_kind: SightingObservableKind,
+    pub observable_id: SightingObservableId,
     pub source_id: SightingSourceId,
 }
 
 impl SightingDeletedEvent {
     pub const EVENT_NAME: &'static str = "fennec.kernel.sighting.deleted";
 
-    pub fn new(id: SightingId, ioc_id: SightingIocId, source_id: SightingSourceId) -> Self {
+    pub fn new(
+        id: SightingId,
+        observable_kind: SightingObservableKind,
+        observable_id: SightingObservableId,
+        source_id: SightingSourceId,
+    ) -> Self {
         Self {
             base: DomainEventBase::new(id.to_string()),
             id,
-            ioc_id,
+            observable_kind,
+            observable_id,
             source_id,
         }
     }
@@ -54,8 +62,12 @@ impl DomainEvent for SightingDeletedEvent {
         BTreeMap::from([
             ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
             (
-                "ioc_id".to_string(),
-                PrimitiveValue::Text(self.ioc_id.to_string()),
+                "observable_kind".to_string(),
+                PrimitiveValue::Text(self.observable_kind.to_string()),
+            ),
+            (
+                "observable_id".to_string(),
+                PrimitiveValue::Text(self.observable_id.to_string()),
             ),
             (
                 "source_id".to_string(),

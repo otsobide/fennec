@@ -6,7 +6,8 @@ use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct CreateSightingRequest {
     pub id: String,
-    pub ioc_id: String,
+    pub observable_kind: String,
+    pub observable_id: String,
     pub source_id: String,
     pub observed_at: u64,
 }

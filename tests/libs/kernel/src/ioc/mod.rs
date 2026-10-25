@@ -1,2 +1,0 @@
-mod application;
-mod domain;

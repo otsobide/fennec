@@ -5,7 +5,8 @@ use async_trait::async_trait;
 use crate::sighting::domain::entities::sighting::Sighting;
 use crate::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 /// Async persistence contract for [`Sighting`] aggregates.
@@ -16,7 +17,7 @@ pub trait SightingRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`SightingRepositoryError::PairAlreadyExists`] if a sighting
-    /// for the same `(ioc_id, source_id)` pair already exists,
+    /// for the same `(observable_kind, observable_id, source_id)` triple already exists,
     /// [`SightingRepositoryError::IdAlreadyExists`] if a sighting with the
     /// same id already exists, or [`SightingRepositoryError::Unexpected`] on
     /// storage failure.
@@ -38,21 +39,23 @@ pub trait SightingRepository: Send + Sync {
         id: &SightingId,
     ) -> Result<Option<Sighting>, SightingRepositoryError>;
 
-    /// Retrieves the sighting for the given `(ioc_id, source_id)` pair.
+    /// Retrieves the sighting for the given `(observable_kind, observable_id, source_id)` triple.
     ///
     /// Returns `Ok(None)` if no matching sighting exists.
-    async fn find_by_ioc_and_source(
+    async fn find_by_observable_and_source(
         &self,
-        ioc_id: &SightingIocId,
+        observable_kind: &SightingObservableKind,
+        observable_id: &SightingObservableId,
         source_id: &SightingSourceId,
     ) -> Result<Option<Sighting>, SightingRepositoryError>;
 
-    /// Retrieves every sighting that references the given ioc id.
+    /// Retrieves every sighting that references the given observable.
     ///
-    /// Returns an empty vector if no sighting exists for the ioc.
-    async fn find_by_ioc_id(
+    /// Returns an empty vector if no sighting exists for the observable.
+    async fn find_by_observable(
         &self,
-        ioc_id: &SightingIocId,
+        observable_kind: &SightingObservableKind,
+        observable_id: &SightingObservableId,
     ) -> Result<Vec<Sighting>, SightingRepositoryError>;
 
     /// Retrieves every sighting that was reported by the given source id.
