@@ -14,3 +14,12 @@ time = "0.3"
 tokio = { version = "1", features = ["sync", "rt"] }
 tracing = "0.1"
 uuid = "1"
+
+[[test]]
+name = "shared-persistence-postgres"
+path = "../../../tests/libs/shared/persistence-postgres/tests.rs"
+
+[dev-dependencies]
+async-trait = "0.1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+uuid = { version = "1", features = ["v4"] }
