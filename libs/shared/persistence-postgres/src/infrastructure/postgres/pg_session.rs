@@ -50,4 +50,26 @@ impl PgSession {
             }
         }
     }
+
+    /// Runs `operation` without an aggregate lock, for statements that touch
+    /// no single aggregate, such as listing every sighting of a source. It
+    /// still runs on the current unit of work's transaction when there is
+    /// one.
+    ///
+    /// # Errors
+    ///
+    /// Returns the driver error of the operation.
+    pub async fn run_unlocked<T, F>(&self, operation: F) -> Result<T, sqlx::Error>
+    where
+        T: Send + 'static,
+        F: for<'c> FnOnce(&'c mut PgConnection) -> PgOperation<'c, T> + Send + 'static,
+    {
+        match PgUnitOfWork::current() {
+            Some(unit_of_work) => unit_of_work.execute(operation).await,
+            None => {
+                let mut connection = self.pool.acquire().await?;
+                operation(&mut connection).await
+            }
+        }
+    }
 }

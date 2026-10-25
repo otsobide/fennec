@@ -64,3 +64,21 @@ async fn it_returns_404_when_observing_unknown_sighting() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 404);
 }
+
+#[tokio::test]
+async fn it_returns_400_for_an_observation_time_beyond_year_9999() {
+    let app = test::init_service(
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
+    )
+    .await;
+
+    let req = test::TestRequest::post()
+        .uri("/sightings/78787878-7878-4878-8878-787878787878/observations")
+        .set_json(json!({ "observed_at": 253_402_300_800u64 }))
+        .to_request();
+
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 400);
+}

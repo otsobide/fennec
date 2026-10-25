@@ -21,7 +21,7 @@ use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId
 use crate::sighting::domain::value_objects::sighting_updated_at::SightingUpdatedAt;
 
 /// Aggregate root modelling the observations of one observable by one source.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Sighting {
     id: SightingId,
     observable_kind: SightingObservableKind,

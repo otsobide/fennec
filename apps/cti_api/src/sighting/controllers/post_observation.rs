@@ -1,13 +1,12 @@
 //! POST /sightings/{id}/observations handler for the CTI API.
 
-use std::time::{Duration, UNIX_EPOCH};
-
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
 
 use kernel::sighting::application::observe_sighting::observe_sighting_command::ObserveSightingCommand;
 use kernel::sighting::application::observe_sighting::observe_sighting_response::ObserveSightingResponse;
 use kernel::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::domain::value_objects::sighting_observed_at::SightingObservedAt;
 
 use crate::sighting::request_dtos::observe_sighting_request::ObserveSightingRequest;
 use crate::AppState;
@@ -26,7 +25,10 @@ pub async fn handler(
         Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
-    let observed_at = UNIX_EPOCH + Duration::from_secs(body.observed_at);
+    let observed_at = match SightingObservedAt::from_unix_seconds(body.observed_at) {
+        Ok(value) => value.value(),
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
 
     let command = ObserveSightingCommand { id, observed_at };
 
