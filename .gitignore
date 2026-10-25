@@ -28,3 +28,7 @@ CLAUDE.local.md
 # Reference clones of separate repos, kept locally for context
 .knowledge/
 .rust-ddd-skeleton/
+.opencti/
+.misp/
+.misp-objects/
+.stix2-json-schemas/
