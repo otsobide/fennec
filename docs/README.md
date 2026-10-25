@@ -6,6 +6,9 @@ its own `README.md` as the entry point.
 - [architecture/](architecture/README.md): how the system is designed. The
   layer rule, the CQRS buses, domain events, the annotated file tree, and the
   catalogue of every aggregate and value object.
+- [data-model/](data-model/README.md): how CTI data is modelled. The
+  observable kinds, their deterministic identity, the catalogue of every kind
+  and how each maps to STIX 2.1, OpenCTI and MISP.
 - [development/](development/README.md): how the codebase is worked on. The
   branching model with its GitHub rulesets, and the test strategy.
 - [guides/](guides/README.md): step-by-step recipes for extending the system
