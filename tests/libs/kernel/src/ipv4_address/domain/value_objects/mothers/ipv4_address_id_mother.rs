@@ -6,6 +6,10 @@ pub struct Ipv4AddressIdMother;
 
 #[allow(dead_code)]
 impl Ipv4AddressIdMother {
+    pub fn create(value: &str) -> Ipv4AddressId {
+        Ipv4AddressId::from_value(&Ipv4AddressValueMother::create(value))
+    }
+
     pub fn random() -> Ipv4AddressId {
         Ipv4AddressId::from_value(&Ipv4AddressValueMother::random())
     }

@@ -1,9 +1,10 @@
 use kernel::ipv4_address::domain::value_objects::ipv4_address_id::Ipv4AddressId;
-use kernel::ipv4_address::domain::value_objects::ipv4_address_value::Ipv4AddressValue;
 use uuid::Uuid;
 
+use crate::src::ipv4_address::domain::value_objects::mothers::ipv4_address_id_mother::Ipv4AddressIdMother;
+
 fn id_of(value: &str) -> Ipv4AddressId {
-    Ipv4AddressId::from_value(&Ipv4AddressValue::new(value).expect("valid address"))
+    Ipv4AddressIdMother::create(value)
 }
 
 #[test]
