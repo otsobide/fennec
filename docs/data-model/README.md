@@ -21,6 +21,8 @@ designed from is in [../research/](../research/README.md).
 - [observable-catalogue.md](observable-catalogue.md): every observable kind
   Fennec models or plans to model, wave by wave, with its STIX type, its
   OpenCTI and MISP counterparts, its canonical form and its storage type.
+- [kinds/](kinds/README.md): one page per implemented kind, with its
+  grammar, canonical form, identity, events, API and storage.
 - [interoperability.md](interoperability.md): how Fennec observables map to
   and from STIX 2.1 bundles, OpenCTI and MISP, including what is lossy.
 
