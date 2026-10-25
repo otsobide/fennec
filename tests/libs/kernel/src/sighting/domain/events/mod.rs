@@ -1,0 +1,3 @@
+mod sighting_created_event_tests;
+mod sighting_deleted_event_tests;
+mod sighting_observed_event_tests;
