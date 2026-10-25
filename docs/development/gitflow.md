@@ -84,8 +84,7 @@ ships with the fix, so keep `dev` releasable.
 <optional body: the why, when the diff does not make it obvious>
 ```
 
-- Areas in this repository: the context or crate touched (`kernel:`, `ioc:`,
-  `sighting:`, `config:`, `shared:`, `cti-api:`, `config-api:`), or `core:`
+- Areas in this repository: the context or crate touched (`kernel:`, `config:`, `shared:`, `cti-api:`, `config-api:`), or `core:`
   for a change that sweeps every context, plus `docs:`, `ci:`, `chore:`,
   `build:`.
 - Imperative and present tense: "add", "fix", "document".

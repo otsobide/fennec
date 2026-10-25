@@ -6,7 +6,8 @@ use kernel::sighting::domain::value_objects::sighting_updated_at::SightingUpdate
 
 use crate::src::sighting::domain::value_objects::mothers::sighting_count_mother::SightingCountMother;
 use crate::src::sighting::domain::value_objects::mothers::sighting_id_mother::SightingIdMother;
-use crate::src::sighting::domain::value_objects::mothers::sighting_ioc_id_mother::SightingIocIdMother;
+use crate::src::sighting::domain::value_objects::mothers::sighting_observable_id_mother::SightingObservableIdMother;
+use crate::src::sighting::domain::value_objects::mothers::sighting_observable_kind_mother::SightingObservableKindMother;
 use crate::src::sighting::domain::value_objects::mothers::sighting_source_id_mother::SightingSourceIdMother;
 
 pub struct SightingMother;
@@ -22,7 +23,8 @@ impl SightingMother {
 
         Sighting::new(
             SightingIdMother::random(),
-            SightingIocIdMother::random(),
+            SightingObservableKindMother::random(),
+            SightingObservableIdMother::random(),
             SightingSourceIdMother::random(),
             first_seen,
             last_seen,

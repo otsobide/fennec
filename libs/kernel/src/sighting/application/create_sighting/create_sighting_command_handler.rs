@@ -35,7 +35,8 @@ impl CommandHandler<CreateSightingCommand> for CreateSightingCommandHandler {
             .creator
             .execute(
                 command.id,
-                command.ioc_id,
+                command.observable_kind,
+                command.observable_id,
                 command.source_id,
                 command.observed_at,
             )

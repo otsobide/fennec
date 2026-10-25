@@ -20,7 +20,8 @@ async fn it_bumps_count_and_updates_last_seen() {
         .uri("/sightings")
         .set_json(json!({
             "id": id,
-            "ioc_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+            "observable_kind": "file",
+            "observable_id": "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
             "source_id": "11111111-2222-4333-8444-555555555555",
             "observed_at": first_ts,
         }))

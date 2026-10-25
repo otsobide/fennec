@@ -13,7 +13,7 @@ async fn it_persists_the_sighting_and_can_be_retrieved() {
     .await;
 
     let id = "01234567-89ab-4def-8123-456789abcdef";
-    let ioc_id = "fedcba98-7654-4210-8edc-ba9876543210";
+    let observable_id = "fedcba98-7654-4210-8edc-ba9876543210";
     let source_id = "11223344-5566-4788-89aa-bbccddeeff00";
     let observed_at: u64 = 1_700_000_123;
 
@@ -21,7 +21,8 @@ async fn it_persists_the_sighting_and_can_be_retrieved() {
         .uri("/sightings")
         .set_json(json!({
             "id": id,
-            "ioc_id": ioc_id,
+            "observable_kind": "file",
+            "observable_id": observable_id,
             "source_id": source_id,
             "observed_at": observed_at,
         }))
@@ -37,7 +38,8 @@ async fn it_persists_the_sighting_and_can_be_retrieved() {
 
     let body: serde_json::Value = test::read_body_json(resp).await;
     assert_eq!(body["id"], id);
-    assert_eq!(body["ioc_id"], ioc_id);
+    assert_eq!(body["observable_kind"], "file");
+    assert_eq!(body["observable_id"], observable_id);
     assert_eq!(body["source_id"], source_id);
     assert_eq!(body["count"], 1);
     assert_eq!(body["first_seen"], observed_at);

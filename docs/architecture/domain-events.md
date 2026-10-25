@@ -16,6 +16,7 @@ The practical benefit is extensibility. Need to send a notification when a sourc
 |---|---|
 | `DomainEvent` | Trait that all events implement |
 | `DomainEventBase` | Common metadata: `aggregate_id`, `event_id`, `occurred_on` |
+| `PrimitiveValue` | Serialisation-free payload data returned by `to_primitives` |
 | `EventBus` | Delivers a batch of events to all registered subscribers |
 | `DomainEventSubscriber<E>` | Reacts to one specific event type |
 
@@ -28,14 +29,24 @@ pub trait DomainEvent: AnyDomainEvent {
     fn aggregate_id(&self) -> &str;
     fn event_id(&self) -> &str;
     fn occurred_on(&self) -> SystemTime;
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue>;
 }
 
 pub struct DomainEventBase {
     pub aggregate_id: String,
-    pub event_id:     String,    // UUID v4
+    pub event_id:     String,    // UUID v7, time-ordered
     pub occurred_on:  SystemTime,
 }
 ```
+
+`to_primitives` returns the payload as plain data (`PrimitiveValue`: null,
+booleans, signed and unsigned integers, text, timestamps, lists and maps), so
+the domain never depends on a serialisation crate. It has no default
+implementation: every event states its payload, keyed by field name.
+`created` events carry one key per aggregate field, `updated` events the id
+plus `old_<field>` and `new_<field>`, and `deleted` events the id plus what a
+subscriber needs to react. The PostgreSQL event log stores it as `jsonb` (see
+[event-store.md](event-store.md)).
 
 Every concrete event also declares an `EVENT_NAME` constant used by subscribers and tests:
 
@@ -130,10 +141,11 @@ Fennec currently ships **no subscribers** — the event bus infrastructure is wi
 ## Adding a new event
 
 1. Create the event struct in `libs/<context>/src/<aggregate>/domain/events/<noun>_<past>_event.rs`.
-2. Implement `DomainEvent` and declare `EVENT_NAME` following `fennec.<context>.<aggregate>.<past>`. The context is the crate that owns the aggregate, not the module: everything in `libs/kernel/` publishes under `fennec.kernel.*`.
+2. Implement `DomainEvent`, including `to_primitives`, and declare `EVENT_NAME` following `fennec.<context>.<aggregate>.<past>`. The context is the crate that owns the aggregate, not the module: everything in `libs/kernel/` publishes under `fennec.kernel.*`.
 3. Create a factory function `create_<noun>_<past>_event.rs`.
 4. Expose both from the domain's `events/mod.rs`.
 5. Publish it from the relevant application service after the repository write succeeds.
+6. Add a payload test under `tests/libs/<context>/src/<aggregate>/domain/events/` that checks the keys and values of `to_primitives`.
 
 ## Adding a subscriber
 

@@ -19,8 +19,9 @@ fn it_exposes_the_full_state_as_primitives() {
             "created_at",
             "first_seen",
             "id",
-            "ioc_id",
             "last_seen",
+            "observable_id",
+            "observable_kind",
             "source_id",
             "updated_at"
         ]
@@ -30,8 +31,12 @@ fn it_exposes_the_full_state_as_primitives() {
         PrimitiveValue::Text(sighting.id().to_string())
     );
     assert_eq!(
-        primitives["ioc_id"],
-        PrimitiveValue::Text(sighting.ioc_id().to_string())
+        primitives["observable_kind"],
+        PrimitiveValue::Text(sighting.observable_kind().to_string())
+    );
+    assert_eq!(
+        primitives["observable_id"],
+        PrimitiveValue::Text(sighting.observable_id().to_string())
     );
     assert_eq!(
         primitives["source_id"],

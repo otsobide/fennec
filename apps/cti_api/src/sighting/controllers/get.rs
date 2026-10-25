@@ -15,7 +15,8 @@ use crate::AppState;
 #[derive(Serialize)]
 pub struct GetSightingResponse {
     pub id: String,
-    pub ioc_id: String,
+    pub observable_kind: String,
+    pub observable_id: String,
     pub source_id: String,
     pub first_seen: u64,
     pub last_seen: u64,
@@ -57,7 +58,8 @@ pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> imp
                 info!(id = %id_str, "Sighting found");
                 HttpResponse::Ok().json(GetSightingResponse {
                     id: entry.id.clone(),
-                    ioc_id: entry.ioc_id.clone(),
+                    observable_kind: entry.observable_kind.clone(),
+                    observable_id: entry.observable_id.clone(),
                     source_id: entry.source_id.clone(),
                     first_seen: to_unix_secs(entry.first_seen),
                     last_seen: to_unix_secs(entry.last_seen),

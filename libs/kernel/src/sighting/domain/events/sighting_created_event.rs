@@ -10,8 +10,9 @@ use crate::sighting::domain::value_objects::sighting_count::SightingCount;
 use crate::sighting::domain::value_objects::sighting_created_at::SightingCreatedAt;
 use crate::sighting::domain::value_objects::sighting_first_seen::SightingFirstSeen;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
 use crate::sighting::domain::value_objects::sighting_last_seen::SightingLastSeen;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 use crate::sighting::domain::value_objects::sighting_updated_at::SightingUpdatedAt;
 
@@ -21,7 +22,8 @@ use crate::sighting::domain::value_objects::sighting_updated_at::SightingUpdated
 pub struct SightingCreatedEvent {
     base: DomainEventBase,
     pub id: SightingId,
-    pub ioc_id: SightingIocId,
+    pub observable_kind: SightingObservableKind,
+    pub observable_id: SightingObservableId,
     pub source_id: SightingSourceId,
     pub first_seen: SightingFirstSeen,
     pub last_seen: SightingLastSeen,
@@ -37,7 +39,8 @@ impl SightingCreatedEvent {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: SightingId,
-        ioc_id: SightingIocId,
+        observable_kind: SightingObservableKind,
+        observable_id: SightingObservableId,
         source_id: SightingSourceId,
         first_seen: SightingFirstSeen,
         last_seen: SightingLastSeen,
@@ -48,7 +51,8 @@ impl SightingCreatedEvent {
         Self {
             base: DomainEventBase::new(id.to_string()),
             id,
-            ioc_id,
+            observable_kind,
+            observable_id,
             source_id,
             first_seen,
             last_seen,
@@ -80,8 +84,12 @@ impl DomainEvent for SightingCreatedEvent {
         BTreeMap::from([
             ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
             (
-                "ioc_id".to_string(),
-                PrimitiveValue::Text(self.ioc_id.to_string()),
+                "observable_kind".to_string(),
+                PrimitiveValue::Text(self.observable_kind.to_string()),
+            ),
+            (
+                "observable_id".to_string(),
+                PrimitiveValue::Text(self.observable_id.to_string()),
             ),
             (
                 "source_id".to_string(),

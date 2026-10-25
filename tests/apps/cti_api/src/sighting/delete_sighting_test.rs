@@ -18,7 +18,8 @@ async fn it_deletes_an_existing_sighting() {
         .uri("/sightings")
         .set_json(json!({
             "id": id,
-            "ioc_id": "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd",
+            "observable_kind": "file",
+            "observable_id": "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd",
             "source_id": "efefefef-efef-4fef-8fef-efefefefefef",
             "observed_at": 1_700_000_000_u64,
         }))

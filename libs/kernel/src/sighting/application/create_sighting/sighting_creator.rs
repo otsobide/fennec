@@ -14,8 +14,9 @@ use crate::sighting::domain::value_objects::sighting_count::SightingCount;
 use crate::sighting::domain::value_objects::sighting_created_at::SightingCreatedAt;
 use crate::sighting::domain::value_objects::sighting_first_seen::SightingFirstSeen;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
 use crate::sighting::domain::value_objects::sighting_last_seen::SightingLastSeen;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 use crate::sighting::domain::value_objects::sighting_updated_at::SightingUpdatedAt;
 
@@ -39,7 +40,8 @@ impl SightingCreator {
     pub async fn execute(
         &self,
         id: SightingId,
-        ioc_id: SightingIocId,
+        observable_kind: SightingObservableKind,
+        observable_id: SightingObservableId,
         source_id: SightingSourceId,
         observed_at: SystemTime,
     ) -> Result<(), SightingRepositoryError> {
@@ -50,7 +52,15 @@ impl SightingCreator {
         let updated_at = SightingUpdatedAt::from_system_time(created_at.value());
 
         let sighting = Sighting::new(
-            id, ioc_id, source_id, first_seen, last_seen, count, created_at, updated_at,
+            id,
+            observable_kind,
+            observable_id,
+            source_id,
+            first_seen,
+            last_seen,
+            count,
+            created_at,
+            updated_at,
         );
         debug!(id = %sighting.id(), "Creating sighting");
 

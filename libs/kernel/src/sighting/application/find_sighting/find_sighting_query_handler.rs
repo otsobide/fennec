@@ -34,7 +34,8 @@ impl QueryHandler<FindSightingQuery> for FindSightingQueryHandler {
             Ok(sighting) => Ok(FindSightingResponse {
                 sighting: Some(SightingEntry {
                     id: sighting.id().to_string(),
-                    ioc_id: sighting.ioc_id().to_string(),
+                    observable_kind: sighting.observable_kind().to_string(),
+                    observable_id: sighting.observable_id().to_string(),
                     source_id: sighting.source_id().to_string(),
                     first_seen: sighting.first_seen().value(),
                     last_seen: sighting.last_seen().value(),

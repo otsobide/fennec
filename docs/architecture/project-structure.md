@@ -39,9 +39,10 @@ The repository is organised into three top-level areas:
 │   │               ├── create_source_request.rs   # { id, source_type, status, description }
 │   │               └── update_source_request.rs   # { status, description }
 │   │       ├── url_source/     # Same shape: controllers/ + request_dtos/
-│   │       ├── ioc/            # POST /iocs, GET|DELETE /iocs/{id}
+│   │       ├── ipv4_address/   # POST /ipv4-addresses, GET /ipv4-addresses?value=,
+│   │       │                   # GET|DELETE /ipv4-addresses/{id}; adds response_dtos/
 │   │       └── sighting/       # /sightings, /sightings/{id}/observations,
-│   │                           # /iocs/{ioc_id}/sightings, /sources/{source_id}/sightings
+│   │                           # /observables/{kind}/{id}/sightings, /sources/{source_id}/sightings
 │   │
 │   └── config_api/             # Reference HTTP API (port 8080) — exposes the config BC
 │       ├── Cargo.toml          # Package: config-api
@@ -59,7 +60,7 @@ The repository is organised into three top-level areas:
 │   ├── kernel/                 # CTI bounded context: one module per aggregate
 │   │   ├── Cargo.toml
 │   │   └── src/
-│   │       ├── lib.rs          # pub mod ioc; sighting; source; url_source;
+│   │       ├── lib.rs          # pub mod ipv4_address; sighting; source; url_source;
 │   │       ├── source/         # Expanded below as the reference module
 │   │           ├── mod.rs      # pub mod application; domain; infrastructure;
 │   │           │
@@ -111,8 +112,8 @@ The repository is organised into three top-level areas:
 │   │                       └── in_memory_source_repository.rs  # HashMap<Uuid, Source> + Mutex
 │   │       │
 │   │       ├── url_source/     # UrlSource: url, format, polling_interval  (same three layers)
-│   │       ├── ioc/            # Ioc: ioc_type, value                      (same three layers)
-│   │       └── sighting/       # Sighting: ioc_id, source_id, first/last seen, count
+│   │       ├── ipv4_address/   # Ipv4Address: value-identified observable   (same three layers)
+│   │       └── sighting/       # Sighting: observable kind and id, source_id, first/last seen, count
 │   │
 │   ├── config/                 # Reference bounded context — ConfigEntry CRUD
 │   │   ├── Cargo.toml
@@ -167,11 +168,11 @@ The repository is organised into three top-level areas:
 │       │       ├── mocks/
 │       │       │   ├── source_repository_mock.rs   # Configurable behavior enums
 │       │       │   ├── url_source_repository_mock.rs
-│       │       │   ├── ioc_repository_mock.rs
+│       │       │   ├── ipv4_address_repository_mock.rs
 │       │       │   ├── sighting_repository_mock.rs
 │       │       │   └── event_bus_mock.rs           # Records published events
 │       │       ├── url_source/  # Mirrors the source/ layout below
-│       │       ├── ioc/
+│       │       ├── ipv4_address/  # Also holds the repository contract every adapter runs
 │       │       ├── sighting/
 │       │       └── source/
 │       │           ├── domain/
@@ -213,14 +214,16 @@ The repository is organised into three top-level areas:
 ## The module rule
 
 `libs/` holds one crate per bounded context, but a context is not one crate per
-aggregate: `kernel` hosts `source`, `url_source`, `ioc` and `sighting` as
+aggregate: `kernel` hosts `source`, `url_source`, one module per observable
+kind (`ipv4_address`, ...) and `sighting` as
 sibling modules, and `config` hosts the reference `config_entry` module.
 
 What makes that safe is that a module is a complete unit on its own:
 
 - It carries its own `domain/`, `application/` and `infrastructure/` trees.
 - It declares its own value object for any foreign identifier
-  (`SightingIocId`, not `IocId`), so it never needs a sibling's types.
+  (`SightingObservableId`, not `Ipv4AddressId`), so it never needs a
+  sibling's types.
 - It talks to the rest of the system only through the buses: commands and
   queries for anything a caller drives, domain events for anything it reacts to.
 

@@ -10,7 +10,8 @@ use crate::sighting::domain::entities::sighting::Sighting;
 use crate::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 use crate::sighting::domain::repositories::sighting_repository::SightingRepository;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 /// In-memory implementation of [`SightingRepository`] backed by a [`HashMap`]
@@ -42,10 +43,11 @@ impl SightingRepository for InMemorySightingRepository {
 
         // Pair collision takes precedence over id collision so callers get the
         // existing id and can observe it immediately.
-        if let Some(existing) = store
-            .values()
-            .find(|s| s.ioc_id() == sighting.ioc_id() && s.source_id() == sighting.source_id())
-        {
+        if let Some(existing) = store.values().find(|s| {
+            s.observable_kind() == sighting.observable_kind()
+                && s.observable_id() == sighting.observable_id()
+                && s.source_id() == sighting.source_id()
+        }) {
             return Err(SightingRepositoryError::PairAlreadyExists {
                 existing_id: existing.id().clone(),
             });
@@ -78,26 +80,34 @@ impl SightingRepository for InMemorySightingRepository {
         Ok(store.get(id.value()).cloned())
     }
 
-    async fn find_by_ioc_and_source(
+    async fn find_by_observable_and_source(
         &self,
-        ioc_id: &SightingIocId,
+        observable_kind: &SightingObservableKind,
+        observable_id: &SightingObservableId,
         source_id: &SightingSourceId,
     ) -> Result<Option<Sighting>, SightingRepositoryError> {
         let store = self.store.lock().unwrap();
         Ok(store
             .values()
-            .find(|s| s.ioc_id() == ioc_id && s.source_id() == source_id)
+            .find(|s| {
+                s.observable_kind() == observable_kind
+                    && s.observable_id() == observable_id
+                    && s.source_id() == source_id
+            })
             .cloned())
     }
 
-    async fn find_by_ioc_id(
+    async fn find_by_observable(
         &self,
-        ioc_id: &SightingIocId,
+        observable_kind: &SightingObservableKind,
+        observable_id: &SightingObservableId,
     ) -> Result<Vec<Sighting>, SightingRepositoryError> {
         let store = self.store.lock().unwrap();
         Ok(store
             .values()
-            .filter(|s| s.ioc_id() == ioc_id)
+            .filter(|s| {
+                s.observable_kind() == observable_kind && s.observable_id() == observable_id
+            })
             .cloned()
             .collect())
     }

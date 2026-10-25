@@ -3,5 +3,9 @@ name = "shared-domain-events"
 version = "0.1.0"
 edition = "2021"
 
+[[test]]
+name = "shared-domain-events"
+path = "../../../tests/libs/shared/domain-events/tests.rs"
+
 [dependencies]
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v7"] }

@@ -17,7 +17,7 @@ pub enum SightingRepositoryError {
     #[error("sighting id already exists")]
     IdAlreadyExists,
 
-    /// A sighting for the same `(ioc_id, source_id)` pair already exists.
+    /// A sighting for the same `(observable_kind, observable_id, source_id)` triple already exists.
     ///
     /// The `existing_id` allows callers to immediately observe the existing
     /// sighting rather than retrying construction.

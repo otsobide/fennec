@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use actix_web::web;
 
-use kernel::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
-use kernel::ioc::application::create_ioc::ioc_creator::IocCreator;
-use kernel::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
-use kernel::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
-use kernel::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
-use kernel::ioc::application::find_ioc::ioc_finder::IocFinder;
-use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
-use kernel::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
+use kernel::ipv4_address::application::create_ipv4_address::create_ipv4_address_command_handler::CreateIpv4AddressCommandHandler;
+use kernel::ipv4_address::application::create_ipv4_address::ipv4_address_creator::Ipv4AddressCreator;
+use kernel::ipv4_address::application::delete_ipv4_address::delete_ipv4_address_command_handler::DeleteIpv4AddressCommandHandler;
+use kernel::ipv4_address::application::delete_ipv4_address::ipv4_address_deleter::Ipv4AddressDeleter;
+use kernel::ipv4_address::application::find_ipv4_address::find_ipv4_address_query_handler::FindIpv4AddressQueryHandler;
+use kernel::ipv4_address::application::find_ipv4_address::ipv4_address_finder::Ipv4AddressFinder;
+use kernel::ipv4_address::domain::repositories::ipv4_address_repository::Ipv4AddressRepository;
+use kernel::ipv4_address::infrastructure::persistence::in_memory::in_memory_ipv4_address_repository::InMemoryIpv4AddressRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
@@ -36,8 +36,8 @@ use kernel::sighting::application::delete_sighting::delete_sighting_command_hand
 use kernel::sighting::application::delete_sighting::sighting_deleter::SightingDeleter;
 use kernel::sighting::application::find_sighting::find_sighting_query_handler::FindSightingQueryHandler;
 use kernel::sighting::application::find_sighting::sighting_finder::SightingFinder;
-use kernel::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_query_handler::ListSightingsByIocQueryHandler;
-use kernel::sighting::application::list_sightings_by_ioc::sightings_by_ioc_lister::SightingsByIocLister;
+use kernel::sighting::application::list_sightings_by_observable::list_sightings_by_observable_query_handler::ListSightingsByObservableQueryHandler;
+use kernel::sighting::application::list_sightings_by_observable::sightings_by_observable_lister::SightingsByObservableLister;
 use kernel::sighting::application::list_sightings_by_source::list_sightings_by_source_query_handler::ListSightingsBySourceQueryHandler;
 use kernel::sighting::application::list_sightings_by_source::sightings_by_source_lister::SightingsBySourceLister;
 use kernel::sighting::application::observe_sighting::observe_sighting_command_handler::ObserveSightingCommandHandler;
@@ -52,7 +52,7 @@ use shared_domain_events::domain::event_bus::EventBus;
 use shared_domain_events::infrastructure::in_memory::in_memory_event_bus::InMemoryEventBus;
 
 pub mod health;
-pub mod ioc;
+pub mod ipv4_address;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
@@ -89,12 +89,15 @@ pub fn build_state() -> web::Data<AppState> {
     let url_source_deleter =
         UrlSourceDeleter::new(Arc::clone(&url_source_repo), Arc::clone(&event_bus));
 
-    // --- ioc ---
-    let ioc_repo: Arc<dyn IocRepository> = Arc::new(InMemoryIocRepository::new());
+    // --- ipv4_address ---
+    let ipv4_address_repo: Arc<dyn Ipv4AddressRepository> =
+        Arc::new(InMemoryIpv4AddressRepository::new());
 
-    let ioc_creator = IocCreator::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
-    let ioc_finder = IocFinder::new(Arc::clone(&ioc_repo));
-    let ioc_deleter = IocDeleter::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
+    let ipv4_address_creator =
+        Ipv4AddressCreator::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
+    let ipv4_address_finder = Ipv4AddressFinder::new(Arc::clone(&ipv4_address_repo));
+    let ipv4_address_deleter =
+        Ipv4AddressDeleter::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
 
     // --- sighting ---
     let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
@@ -104,7 +107,8 @@ pub fn build_state() -> web::Data<AppState> {
         SightingObserver::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_deleter = SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_finder = SightingFinder::new(Arc::clone(&sighting_repo));
-    let sightings_by_ioc_lister = SightingsByIocLister::new(Arc::clone(&sighting_repo));
+    let sightings_by_observable_lister =
+        SightingsByObservableLister::new(Arc::clone(&sighting_repo));
     let sightings_by_source_lister = SightingsBySourceLister::new(Arc::clone(&sighting_repo));
 
     // --- command bus ---
@@ -128,11 +132,11 @@ pub fn build_state() -> web::Data<AppState> {
         .register(DeleteUrlSourceCommandHandler::new(url_source_deleter))
         .expect("Failed to register DeleteUrlSourceCommandHandler");
     command_bus
-        .register(CreateIocCommandHandler::new(ioc_creator))
-        .expect("Failed to register CreateIocCommandHandler");
+        .register(CreateIpv4AddressCommandHandler::new(ipv4_address_creator))
+        .expect("Failed to register CreateIpv4AddressCommandHandler");
     command_bus
-        .register(DeleteIocCommandHandler::new(ioc_deleter))
-        .expect("Failed to register DeleteIocCommandHandler");
+        .register(DeleteIpv4AddressCommandHandler::new(ipv4_address_deleter))
+        .expect("Failed to register DeleteIpv4AddressCommandHandler");
     command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
@@ -153,14 +157,16 @@ pub fn build_state() -> web::Data<AppState> {
         .register(FindUrlSourceQueryHandler::new(url_source_finder))
         .expect("Failed to register FindUrlSourceQueryHandler");
     query_bus
-        .register(FindIocQueryHandler::new(ioc_finder))
-        .expect("Failed to register FindIocQueryHandler");
+        .register(FindIpv4AddressQueryHandler::new(ipv4_address_finder))
+        .expect("Failed to register FindIpv4AddressQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
     query_bus
-        .register(ListSightingsByIocQueryHandler::new(sightings_by_ioc_lister))
-        .expect("Failed to register ListSightingsByIocQueryHandler");
+        .register(ListSightingsByObservableQueryHandler::new(
+            sightings_by_observable_lister,
+        ))
+        .expect("Failed to register ListSightingsByObservableQueryHandler");
     query_bus
         .register(ListSightingsBySourceQueryHandler::new(
             sightings_by_source_lister,
@@ -185,13 +191,14 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(url_source::controllers::get::handler)
         .service(url_source::controllers::put::handler)
         .service(url_source::controllers::delete::handler)
-        .service(ioc::controllers::post::handler)
-        .service(ioc::controllers::get::handler)
-        .service(ioc::controllers::delete::handler)
+        .service(ipv4_address::controllers::post::handler)
+        .service(ipv4_address::controllers::get_by_value::handler)
+        .service(ipv4_address::controllers::get::handler)
+        .service(ipv4_address::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
         .service(crate::sighting::controllers::delete::handler)
-        .service(crate::sighting::controllers::list_by_ioc::handler)
+        .service(crate::sighting::controllers::list_by_observable::handler)
         .service(crate::sighting::controllers::list_by_source::handler);
 }

@@ -5,7 +5,8 @@ use std::time::SystemTime;
 /// Data entry DTO for a sighting.
 pub struct SightingEntry {
     pub id: String,
-    pub ioc_id: String,
+    pub observable_kind: String,
+    pub observable_id: String,
     pub source_id: String,
     pub first_seen: SystemTime,
     pub last_seen: SystemTime,
@@ -18,7 +19,7 @@ pub struct SightingEntry {
 ///
 /// `existing_id` is populated only when `concept == "PairAlreadyExists"`, in
 /// which case it carries the id of the existing sighting for the same
-/// `(ioc_id, source_id)` pair.
+/// `(observable_kind, observable_id, source_id)` triple.
 pub struct SightingErrorEntry {
     pub message: String,
     pub concept: String,

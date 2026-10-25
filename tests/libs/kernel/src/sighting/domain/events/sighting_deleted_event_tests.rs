@@ -14,15 +14,19 @@ fn it_exposes_the_identity_and_the_pair_as_primitives() {
 
     assert_eq!(
         primitives.keys().collect::<Vec<_>>(),
-        vec!["id", "ioc_id", "source_id"]
+        vec!["id", "observable_id", "observable_kind", "source_id"]
     );
     assert_eq!(
         primitives["id"],
         PrimitiveValue::Text(sighting.id().to_string())
     );
     assert_eq!(
-        primitives["ioc_id"],
-        PrimitiveValue::Text(sighting.ioc_id().to_string())
+        primitives["observable_kind"],
+        PrimitiveValue::Text(sighting.observable_kind().to_string())
+    );
+    assert_eq!(
+        primitives["observable_id"],
+        PrimitiveValue::Text(sighting.observable_id().to_string())
     );
     assert_eq!(
         primitives["source_id"],

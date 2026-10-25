@@ -7,7 +7,8 @@ use kernel::sighting::domain::entities::sighting::Sighting;
 use kernel::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
 use kernel::sighting::domain::value_objects::sighting_id::SightingId;
-use kernel::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use kernel::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use kernel::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use kernel::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 #[allow(dead_code)]
@@ -40,7 +41,7 @@ pub enum FindByPairBehavior {
 }
 
 #[allow(dead_code)]
-pub enum FindByIocBehavior {
+pub enum FindByObservableBehavior {
     ReturnsEmpty,
     ReturnsSightings(Mutex<Option<Vec<Sighting>>>),
     FailsWithUnexpected(String),
@@ -65,7 +66,7 @@ pub struct SightingRepositoryMock {
     find_by_id_behavior: FindByIdBehavior,
     update_behavior: UpdateBehavior,
     find_by_pair_behavior: FindByPairBehavior,
-    find_by_ioc_behavior: FindByIocBehavior,
+    find_by_observable_behavior: FindByObservableBehavior,
     find_by_source_behavior: FindBySourceBehavior,
     delete_behavior: DeleteBehavior,
     saved_ids: Mutex<Vec<Uuid>>,
@@ -81,7 +82,7 @@ impl SightingRepositoryMock {
             find_by_id_behavior: FindByIdBehavior::ReturnsNone,
             update_behavior: UpdateBehavior::Succeeds,
             find_by_pair_behavior: FindByPairBehavior::ReturnsNone,
-            find_by_ioc_behavior: FindByIocBehavior::ReturnsEmpty,
+            find_by_observable_behavior: FindByObservableBehavior::ReturnsEmpty,
             find_by_source_behavior: FindBySourceBehavior::ReturnsEmpty,
             delete_behavior: DeleteBehavior::Succeeds,
             saved_ids: Mutex::new(vec![]),
@@ -156,16 +157,18 @@ impl SightingRepositoryMock {
         }
     }
 
-    pub fn that_returns_sightings_for_ioc(sightings: Vec<Sighting>) -> Self {
+    pub fn that_returns_sightings_for_observable(sightings: Vec<Sighting>) -> Self {
         Self {
-            find_by_ioc_behavior: FindByIocBehavior::ReturnsSightings(Mutex::new(Some(sightings))),
+            find_by_observable_behavior: FindByObservableBehavior::ReturnsSightings(Mutex::new(
+                Some(sightings),
+            )),
             ..Self::base()
         }
     }
 
-    pub fn that_fails_on_find_by_ioc(message: String) -> Self {
+    pub fn that_fails_on_find_by_observable(message: String) -> Self {
         Self {
-            find_by_ioc_behavior: FindByIocBehavior::FailsWithUnexpected(message),
+            find_by_observable_behavior: FindByObservableBehavior::FailsWithUnexpected(message),
             ..Self::base()
         }
     }
@@ -243,9 +246,10 @@ impl SightingRepository for SightingRepositoryMock {
         }
     }
 
-    async fn find_by_ioc_and_source(
+    async fn find_by_observable_and_source(
         &self,
-        _ioc_id: &SightingIocId,
+        _observable_kind: &SightingObservableKind,
+        _observable_id: &SightingObservableId,
         _source_id: &SightingSourceId,
     ) -> Result<Option<Sighting>, SightingRepositoryError> {
         match &self.find_by_pair_behavior {
@@ -257,16 +261,17 @@ impl SightingRepository for SightingRepositoryMock {
         }
     }
 
-    async fn find_by_ioc_id(
+    async fn find_by_observable(
         &self,
-        _ioc_id: &SightingIocId,
+        _observable_kind: &SightingObservableKind,
+        _observable_id: &SightingObservableId,
     ) -> Result<Vec<Sighting>, SightingRepositoryError> {
-        match &self.find_by_ioc_behavior {
-            FindByIocBehavior::ReturnsEmpty => Ok(Vec::new()),
-            FindByIocBehavior::ReturnsSightings(cell) => {
+        match &self.find_by_observable_behavior {
+            FindByObservableBehavior::ReturnsEmpty => Ok(Vec::new()),
+            FindByObservableBehavior::ReturnsSightings(cell) => {
                 Ok(cell.lock().unwrap().take().unwrap_or_default())
             }
-            FindByIocBehavior::FailsWithUnexpected(msg) => {
+            FindByObservableBehavior::FailsWithUnexpected(msg) => {
                 Err(SightingRepositoryError::Unexpected(msg.clone()))
             }
         }

@@ -13,14 +13,15 @@ async fn it_returns_all_sightings_for_the_given_source() {
     .await;
 
     let source_id = "77777777-7777-4777-8777-777777777777";
-    let ioc_a = "aaaaaaaa-3333-4333-8333-333333333333";
-    let ioc_b = "bbbbbbbb-4444-4444-8444-444444444444";
+    let observable_a = "aaaaaaaa-3333-4333-8333-333333333333";
+    let observable_b = "bbbbbbbb-4444-4444-8444-444444444444";
 
     let post_a = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
             "id": "33333333-cccc-4ccc-8ccc-cccccccccccc",
-            "ioc_id": ioc_a,
+            "observable_kind": "file",
+            "observable_id": observable_a,
             "source_id": source_id,
             "observed_at": 1_700_000_000_u64,
         }))
@@ -31,7 +32,8 @@ async fn it_returns_all_sightings_for_the_given_source() {
         .uri("/sightings")
         .set_json(json!({
             "id": "44444444-dddd-4ddd-8ddd-dddddddddddd",
-            "ioc_id": ioc_b,
+            "observable_kind": "file",
+            "observable_id": observable_b,
             "source_id": source_id,
             "observed_at": 1_700_000_100_u64,
         }))

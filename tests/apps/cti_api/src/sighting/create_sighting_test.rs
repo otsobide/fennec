@@ -16,7 +16,8 @@ async fn it_returns_201_when_sighting_is_created() {
         .uri("/sightings")
         .set_json(json!({
             "id": "11111111-1111-4111-8111-111111111111",
-            "ioc_id": "22222222-2222-4222-8222-222222222222",
+            "observable_kind": "file",
+            "observable_id": "22222222-2222-4222-8222-222222222222",
             "source_id": "33333333-3333-4333-8333-333333333333",
             "observed_at": 1_700_000_000_u64,
         }))
@@ -35,12 +36,13 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
     )
     .await;
 
-    // First create a sighting with (id_a, ioc_a, source_a).
+    // First create a sighting with (id_a, observable_a, source_a).
     let first = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
             "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-            "ioc_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            "observable_kind": "file",
+            "observable_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
             "source_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
             "observed_at": 1_700_000_000_u64,
         }))
@@ -49,12 +51,13 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
 
     // Now attempt to re-use the same id but with a different pair. The
     // in-memory repo prioritises pair collisions when the pair also matches;
-    // here we use a fresh ioc/source pair so only the id collides.
+    // here we use a fresh observable/source pair so only the id collides.
     let second = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
             "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-            "ioc_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+            "observable_kind": "file",
+            "observable_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
             "source_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
             "observed_at": 1_700_000_000_u64,
         }))
@@ -74,14 +77,15 @@ async fn it_returns_409_and_existing_id_when_pair_already_exists() {
     .await;
 
     let existing_id = "12341234-1234-4234-8234-123412341234";
-    let ioc_id = "aaaa1111-aaaa-4111-8aaa-1111aaaa1111";
+    let observable_id = "aaaa1111-aaaa-4111-8aaa-1111aaaa1111";
     let source_id = "bbbb2222-bbbb-4222-8bbb-2222bbbb2222";
 
     let first = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
             "id": existing_id,
-            "ioc_id": ioc_id,
+            "observable_kind": "file",
+            "observable_id": observable_id,
             "source_id": source_id,
             "observed_at": 1_700_000_000_u64,
         }))
@@ -92,7 +96,8 @@ async fn it_returns_409_and_existing_id_when_pair_already_exists() {
         .uri("/sightings")
         .set_json(json!({
             "id": "99999999-9999-4999-8999-999999999999",
-            "ioc_id": ioc_id,
+            "observable_kind": "file",
+            "observable_id": observable_id,
             "source_id": source_id,
             "observed_at": 1_700_000_001_u64,
         }))
@@ -119,7 +124,8 @@ async fn it_returns_400_for_invalid_uuid() {
         .uri("/sightings")
         .set_json(json!({
             "id": "not-a-uuid",
-            "ioc_id": "22222222-2222-4222-8222-222222222222",
+            "observable_kind": "file",
+            "observable_id": "22222222-2222-4222-8222-222222222222",
             "source_id": "33333333-3333-4333-8333-333333333333",
             "observed_at": 1_700_000_000_u64,
         }))
