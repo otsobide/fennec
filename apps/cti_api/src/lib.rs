@@ -2,14 +2,6 @@ use std::sync::Arc;
 
 use actix_web::web;
 
-use kernel::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
-use kernel::ioc::application::create_ioc::ioc_creator::IocCreator;
-use kernel::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
-use kernel::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
-use kernel::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
-use kernel::ioc::application::find_ioc::ioc_finder::IocFinder;
-use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
-use kernel::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
@@ -52,7 +44,6 @@ use shared_domain_events::domain::event_bus::EventBus;
 use shared_domain_events::infrastructure::in_memory::in_memory_event_bus::InMemoryEventBus;
 
 pub mod health;
-pub mod ioc;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
@@ -89,13 +80,6 @@ pub fn build_state() -> web::Data<AppState> {
     let url_source_deleter =
         UrlSourceDeleter::new(Arc::clone(&url_source_repo), Arc::clone(&event_bus));
 
-    // --- ioc ---
-    let ioc_repo: Arc<dyn IocRepository> = Arc::new(InMemoryIocRepository::new());
-
-    let ioc_creator = IocCreator::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
-    let ioc_finder = IocFinder::new(Arc::clone(&ioc_repo));
-    let ioc_deleter = IocDeleter::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
-
     // --- sighting ---
     let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
 
@@ -128,12 +112,6 @@ pub fn build_state() -> web::Data<AppState> {
         .register(DeleteUrlSourceCommandHandler::new(url_source_deleter))
         .expect("Failed to register DeleteUrlSourceCommandHandler");
     command_bus
-        .register(CreateIocCommandHandler::new(ioc_creator))
-        .expect("Failed to register CreateIocCommandHandler");
-    command_bus
-        .register(DeleteIocCommandHandler::new(ioc_deleter))
-        .expect("Failed to register DeleteIocCommandHandler");
-    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -152,9 +130,6 @@ pub fn build_state() -> web::Data<AppState> {
     query_bus
         .register(FindUrlSourceQueryHandler::new(url_source_finder))
         .expect("Failed to register FindUrlSourceQueryHandler");
-    query_bus
-        .register(FindIocQueryHandler::new(ioc_finder))
-        .expect("Failed to register FindIocQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -185,9 +160,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(url_source::controllers::get::handler)
         .service(url_source::controllers::put::handler)
         .service(url_source::controllers::delete::handler)
-        .service(ioc::controllers::post::handler)
-        .service(ioc::controllers::get::handler)
-        .service(ioc::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
