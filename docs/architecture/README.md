@@ -16,6 +16,12 @@ workspace of bounded contexts behind thin HTTP apps.
   the event bus that connects bounded contexts.
 - [entities.md](entities.md): every aggregate and the value objects that
   compose it, with invariants and errors.
+- [persistence.md](persistence.md): how the `kernel` context stores its
+  aggregates in PostgreSQL: one table per kind, native column types,
+  conflict-free creates, partitioning and the database test target.
+- [event-store.md](event-store.md): the append-only domain event log written
+  in the same transaction as the state, the unit of work that makes that
+  atomic, and how consumers read it in a gap-free order.
 
 ## Non-negotiables
 
