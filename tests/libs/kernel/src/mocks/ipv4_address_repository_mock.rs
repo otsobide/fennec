@@ -11,6 +11,12 @@ use kernel::ipv4_address::domain::value_objects::ipv4_address_id::Ipv4AddressId;
 pub enum SaveBehavior {
     Succeeds,
     FailsWithAlreadyExists,
+    FailsWithUnexpected(String),
+}
+
+pub enum DeleteBehavior {
+    Succeeds,
+    FailsWithUnexpected(String),
 }
 
 #[allow(dead_code)]
@@ -23,6 +29,7 @@ pub enum FindByIdBehavior {
 pub struct Ipv4AddressRepositoryMock {
     save_behavior: SaveBehavior,
     find_by_id_behavior: FindByIdBehavior,
+    delete_behavior: DeleteBehavior,
     saved_ids: Mutex<Vec<Uuid>>,
     delete_call_count: Mutex<u32>,
 }
@@ -47,6 +54,23 @@ impl Ipv4AddressRepositoryMock {
         )
     }
 
+    pub fn that_fails_on_save(message: String) -> Self {
+        Self::with(
+            SaveBehavior::FailsWithUnexpected(message),
+            FindByIdBehavior::ReturnsNone,
+        )
+    }
+
+    pub fn that_returns_ipv4_address_but_delete_fails(
+        ipv4_address: Ipv4Address,
+        message: String,
+    ) -> Self {
+        Self {
+            delete_behavior: DeleteBehavior::FailsWithUnexpected(message),
+            ..Self::that_returns_ipv4_address(ipv4_address)
+        }
+    }
+
     pub fn that_finds_nothing() -> Self {
         Self::with(SaveBehavior::Succeeds, FindByIdBehavior::ReturnsNone)
     }
@@ -62,6 +86,7 @@ impl Ipv4AddressRepositoryMock {
         Self {
             save_behavior,
             find_by_id_behavior,
+            delete_behavior: DeleteBehavior::Succeeds,
             saved_ids: Mutex::new(vec![]),
             delete_call_count: Mutex::new(0),
         }
@@ -81,6 +106,9 @@ impl Ipv4AddressRepository for Ipv4AddressRepositoryMock {
     async fn save(&self, ipv4_address: &Ipv4Address) -> Result<(), Ipv4AddressRepositoryError> {
         match &self.save_behavior {
             SaveBehavior::FailsWithAlreadyExists => Err(Ipv4AddressRepositoryError::AlreadyExists),
+            SaveBehavior::FailsWithUnexpected(message) => {
+                Err(Ipv4AddressRepositoryError::Unexpected(message.clone()))
+            }
             SaveBehavior::Succeeds => {
                 self.saved_ids
                     .lock()
@@ -106,6 +134,11 @@ impl Ipv4AddressRepository for Ipv4AddressRepositoryMock {
 
     async fn delete(&self, _id: &Ipv4AddressId) -> Result<(), Ipv4AddressRepositoryError> {
         *self.delete_call_count.lock().unwrap() += 1;
-        Ok(())
+        match &self.delete_behavior {
+            DeleteBehavior::Succeeds => Ok(()),
+            DeleteBehavior::FailsWithUnexpected(message) => {
+                Err(Ipv4AddressRepositoryError::Unexpected(message.clone()))
+            }
+        }
     }
 }

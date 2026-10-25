@@ -89,3 +89,20 @@ async fn it_returns_unexpected_error_when_publishing_fails() {
         Err(Ipv4AddressRepositoryError::Unexpected(_))
     ));
 }
+
+#[tokio::test]
+async fn it_returns_unexpected_error_when_save_fails() {
+    let repo = Arc::new(Ipv4AddressRepositoryMock::that_fails_on_save(
+        "storage error".to_string(),
+    ));
+    let bus = Arc::new(EventBusMock::new());
+    let creator = make_creator(repo.clone(), bus.clone());
+
+    let result = creator.execute(Ipv4AddressValueMother::random()).await;
+
+    assert!(matches!(
+        result,
+        Err(Ipv4AddressRepositoryError::Unexpected(_))
+    ));
+    assert!(bus.published_event_names().is_empty());
+}

@@ -75,3 +75,25 @@ async fn it_does_not_delete_or_publish_when_the_ipv4_address_does_not_exist() {
     assert_eq!(repo.delete_call_count(), 0);
     assert!(bus.published_event_names().is_empty());
 }
+
+#[tokio::test]
+async fn it_does_not_publish_event_when_delete_fails() {
+    let ipv4_address = Ipv4AddressMother::random();
+    let id = *ipv4_address.id();
+    let repo = Arc::new(
+        Ipv4AddressRepositoryMock::that_returns_ipv4_address_but_delete_fails(
+            ipv4_address,
+            "storage error".to_string(),
+        ),
+    );
+    let bus = Arc::new(EventBusMock::new());
+    let deleter = make_deleter(repo.clone(), bus.clone());
+
+    let result = deleter.execute(id).await;
+
+    assert!(matches!(
+        result,
+        Err(Ipv4AddressRepositoryError::Unexpected(_))
+    ));
+    assert!(bus.published_event_names().is_empty());
+}
