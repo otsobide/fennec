@@ -61,7 +61,7 @@ tests/libs/kernel/
 
 The test binary is registered in `libs/kernel/Cargo.toml` as a `[[test]]` target so it can import `kernel` as an external crate — meaning it only accesses what `pub` exposes, just like real consumers would. The `config` context is wired the same way.
 
-One binary covers every module of a context: `tests/libs/kernel/src/` holds `source/`, `url_source/`, `ioc/` and `sighting/` side by side, with one shared `mocks/` directory. It also holds `module_isolation_tests.rs`, two architecture tests that fail the build if a module imports a sibling or loses one of its three layers, which is what keeps each module extractable into its own crate.
+One binary covers every module of a context: `tests/libs/kernel/src/` holds `source/`, `url_source/`, one folder per observable kind (`ipv4_address/`, ...) and `sighting/` side by side, with one shared `mocks/` directory. It also holds `module_isolation_tests.rs`, two architecture tests that fail the build if a module imports a sibling or loses one of its three layers, which is what keeps each module extractable into its own crate.
 
 ### Mocks
 

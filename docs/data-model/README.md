@@ -64,19 +64,20 @@ designed from is in [../research/](../research/README.md).
 
 ## Retiring the generic `ioc` module
 
-The `ioc` module that predates this model is exactly the generic
+The `ioc` module that predated this model was exactly the generic
 `{type, value}` shape rule 1 forbids: an `IocType` enum and an unvalidated
-string. It is deleted in one dedicated commit when the first observable kind
-(`ipv4_address`) lands, and `/iocs` disappears with it. Nothing was ever
-persisted (every repository was in memory), so there is no data to migrate.
+string. It was deleted in one dedicated commit when the first observable kind
+(`ipv4_address`) landed, and `/iocs` disappeared with it. Nothing had ever
+been persisted (every repository was in memory), so there was no data to
+migrate.
 
-The `sighting` module references what was seen through `SightingIocId`, a
-bare UUID v4. In the same change it is replaced by an observable reference
+The `sighting` module referenced what was seen through `SightingIocId`, a
+bare UUID v4. In the same change it was replaced by an observable reference
 made of two value objects, `SightingObservableKind` (the module kind, a
 validated snake case name rather than an enum, so adding a kind never touches
 the sighting module) and `SightingObservableId` (a UUID v4 or v5), so a
 sighting can point at any kind, including value-identified ones whose ids
 are UUID v5. The uniqueness
-pair becomes (observable kind, observable id, source id), and
-`/iocs/{ioc_id}/sightings` becomes
+pair became (observable kind, observable id, source id), and
+`/iocs/{ioc_id}/sightings` became
 `/observables/{kind}/{id}/sightings`.

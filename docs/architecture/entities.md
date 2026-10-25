@@ -107,14 +107,15 @@ One IPv4 host address registered as an observable, the first typed observable ki
 
 ### `Sighting`
 
-Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific `Ioc`. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
+Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific observable. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
 
-Represents a single observation of an ioc by a source. There is one aggregate per `(ioc_id, source_id)` pair — an IoC reported by N different sources produces N sightings. References to `Ioc` and `Source` are by identifier only; the `sighting` module does not import from the `ioc` or `source` modules.
+Represents the observations of one observable by one source. There is one aggregate per `(observable_kind, observable_id, source_id)` triple: an observable reported by N different sources produces N sightings. Observables and sources are referenced by identifier only; the `sighting` module imports neither the observable modules nor `source`. The reference carries the module kind next to the id because ids of different kinds can share a UUID (see [../data-model/identity.md](../data-model/identity.md#qualify-every-reference-by-module-kind)).
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
 | `id` | `SightingId` | `uuid::Uuid` | validated | Externally provided at construction; must parse as a UUID **v4**. |
-| `ioc_id` | `SightingIocId` | `uuid::Uuid` | validated | Identifier of the referenced `Ioc`. Externally provided; must be a UUID **v4**. |
+| `observable_kind` | `SightingObservableKind` | `String` | validated | Module name of the sighted observable (`ipv4_address`): trimmed, snake case, at most 64 characters. A validated name, not an enum, so new kinds never touch this module. |
+| `observable_id` | `SightingObservableId` | `uuid::Uuid` | validated | Id of the sighted observable: an RFC 4122 UUID **v4** or **v5** (value-identified observables have v5 ids). |
 | `source_id` | `SightingSourceId` | `uuid::Uuid` | validated | Identifier of the referenced `Source`. Externally provided; must be a UUID **v4**. |
 | `first_seen` | `SightingFirstSeen` | `std::time::SystemTime` | newtype | Set from the caller-supplied `observed_at` on creation; never mutated. |
 | `last_seen` | `SightingLastSeen` | `std::time::SystemTime` | newtype | Set from `observed_at` on creation; refreshed on each observation to `max(previous, observed_at)`. |
@@ -124,15 +125,15 @@ Represents a single observation of an ioc by a source. There is one aggregate pe
 
 **Invariants**
 
-- `id`, `ioc_id`, `source_id`, `first_seen`, `created_at` are immutable after creation.
+- `id`, `observable_kind`, `observable_id`, `source_id`, `first_seen`, `created_at` are immutable after creation.
 - `count` is always `>= 1`.
 - `last_seen` is always `>= first_seen`.
 - `updated_at` is always `>= created_at`.
-- Only one sighting exists per `(ioc_id, source_id)` pair.
+- Only one sighting exists per `(observable_kind, observable_id, source_id)` triple.
 
 **Errors**
 
-- `ValueObjectValidationError` — id, `ioc_id` or `source_id` that is not a UUID v4, or a `count` below `1`.
+- `ValueObjectValidationError`: an `id` or `source_id` that is not a UUID v4, an `observable_kind` that is not a module name, an `observable_id` that is not a UUID v4 or v5, or a `count` below `1`.
 - `SightingRepositoryError::{NotFound, IdAlreadyExists, PairAlreadyExists { existing_id }, Unexpected(String)}` — persistence-layer failures. `PairAlreadyExists` carries the id of the existing sighting so the caller can immediately observe it.
 
 ---
@@ -170,7 +171,7 @@ No module imports another module's types, whether the two live in the same crate
 | Relationship | Type | Detail |
 |---|---|---|
 | `UrlSource.id` ↔ `Source.id` | Shared identifier | Both aggregates are keyed by the same UUID. Neither imports the other. |
-| `Sighting.ioc_id` → an observable id | Shared identifier | `sighting` declares its own `SightingIocId`. It still accepts UUID v4 only, so it cannot yet reference value-identified observables; it is replaced by a kind-qualified observable reference next (see [../data-model/README.md](../data-model/README.md#retiring-the-generic-ioc-module)). |
+| `Sighting.(observable_kind, observable_id)` → an observable | Kind-qualified identifier | `sighting` declares its own `SightingObservableKind` and `SightingObservableId`; it never uses an observable module's id type. |
 | `Sighting.source_id` → `Source.id` | Shared identifier | `sighting` declares its own `SightingSourceId`; it never uses `SourceId`. |
 
 This is what keeps every module extractable: the day one of them needs its own crate (or its own service) for scale, the identifiers already match and no import has to be untangled. New links follow the same rule: identifier plus buses, never a direct import.
@@ -184,5 +185,5 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
-| `kernel` | `Sighting` | `SightingId`, `SightingIocId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/iocs/{ioc_id}/sightings`, `/sources/{source_id}/sightings` |
+| `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
