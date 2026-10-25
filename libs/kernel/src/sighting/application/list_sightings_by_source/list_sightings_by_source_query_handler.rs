@@ -39,7 +39,8 @@ impl QueryHandler<ListSightingsBySourceQuery> for ListSightingsBySourceQueryHand
                     .into_iter()
                     .map(|s| SightingEntry {
                         id: s.id().to_string(),
-                        ioc_id: s.ioc_id().to_string(),
+                        observable_kind: s.observable_kind().to_string(),
+                        observable_id: s.observable_id().to_string(),
                         source_id: s.source_id().to_string(),
                         first_seen: s.first_seen().value(),
                         last_seen: s.last_seen().value(),

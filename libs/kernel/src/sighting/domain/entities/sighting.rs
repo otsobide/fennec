@@ -1,10 +1,12 @@
 //! `Sighting` aggregate root.
 //!
-//! Represents an observation: a specific `Source` reported a specific `Ioc`.
-//! One row per `(ioc_id, source_id)` pair — an IoC reported by N sources
-//! produces N sightings. References to `Ioc` and `Source` are by identifier
-//! only; the `sighting` bounded context does not import the `ioc` or `kernel`
-//! crates.
+//! Represents an observation: a specific `Source` reported a specific
+//! observable. One sighting exists per `(observable_kind, observable_id,
+//! source_id)` triple, so an observable reported by N sources produces N
+//! sightings. Observables and sources are referenced by identifier only: the
+//! `sighting` module imports neither the observable modules nor `source`.
+//! The observable reference carries the module kind next to the id because
+//! ids of different kinds can share a UUID.
 
 use std::time::SystemTime;
 
@@ -12,16 +14,18 @@ use crate::sighting::domain::value_objects::sighting_count::SightingCount;
 use crate::sighting::domain::value_objects::sighting_created_at::SightingCreatedAt;
 use crate::sighting::domain::value_objects::sighting_first_seen::SightingFirstSeen;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
-use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
 use crate::sighting::domain::value_objects::sighting_last_seen::SightingLastSeen;
+use crate::sighting::domain::value_objects::sighting_observable_id::SightingObservableId;
+use crate::sighting::domain::value_objects::sighting_observable_kind::SightingObservableKind;
 use crate::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 use crate::sighting::domain::value_objects::sighting_updated_at::SightingUpdatedAt;
 
-/// Aggregate root modelling a single observation of an ioc by a source.
+/// Aggregate root modelling the observations of one observable by one source.
 #[derive(Clone)]
 pub struct Sighting {
     id: SightingId,
-    ioc_id: SightingIocId,
+    observable_kind: SightingObservableKind,
+    observable_id: SightingObservableId,
     source_id: SightingSourceId,
     first_seen: SightingFirstSeen,
     last_seen: SightingLastSeen,
@@ -35,7 +39,8 @@ impl Sighting {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: SightingId,
-        ioc_id: SightingIocId,
+        observable_kind: SightingObservableKind,
+        observable_id: SightingObservableId,
         source_id: SightingSourceId,
         first_seen: SightingFirstSeen,
         last_seen: SightingLastSeen,
@@ -45,7 +50,8 @@ impl Sighting {
     ) -> Self {
         Self {
             id,
-            ioc_id,
+            observable_kind,
+            observable_id,
             source_id,
             first_seen,
             last_seen,
@@ -59,8 +65,12 @@ impl Sighting {
         &self.id
     }
 
-    pub fn ioc_id(&self) -> &SightingIocId {
-        &self.ioc_id
+    pub fn observable_kind(&self) -> &SightingObservableKind {
+        &self.observable_kind
+    }
+
+    pub fn observable_id(&self) -> &SightingObservableId {
+        &self.observable_id
     }
 
     pub fn source_id(&self) -> &SightingSourceId {
@@ -104,7 +114,8 @@ impl Sighting {
 
         Sighting {
             id: self.id.clone(),
-            ioc_id: self.ioc_id.clone(),
+            observable_kind: self.observable_kind.clone(),
+            observable_id: self.observable_id,
             source_id: self.source_id.clone(),
             first_seen: self.first_seen.clone(),
             last_seen: SightingLastSeen::from_system_time(new_last_seen),

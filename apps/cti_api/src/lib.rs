@@ -36,8 +36,8 @@ use kernel::sighting::application::delete_sighting::delete_sighting_command_hand
 use kernel::sighting::application::delete_sighting::sighting_deleter::SightingDeleter;
 use kernel::sighting::application::find_sighting::find_sighting_query_handler::FindSightingQueryHandler;
 use kernel::sighting::application::find_sighting::sighting_finder::SightingFinder;
-use kernel::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_query_handler::ListSightingsByIocQueryHandler;
-use kernel::sighting::application::list_sightings_by_ioc::sightings_by_ioc_lister::SightingsByIocLister;
+use kernel::sighting::application::list_sightings_by_observable::list_sightings_by_observable_query_handler::ListSightingsByObservableQueryHandler;
+use kernel::sighting::application::list_sightings_by_observable::sightings_by_observable_lister::SightingsByObservableLister;
 use kernel::sighting::application::list_sightings_by_source::list_sightings_by_source_query_handler::ListSightingsBySourceQueryHandler;
 use kernel::sighting::application::list_sightings_by_source::sightings_by_source_lister::SightingsBySourceLister;
 use kernel::sighting::application::observe_sighting::observe_sighting_command_handler::ObserveSightingCommandHandler;
@@ -107,7 +107,8 @@ pub fn build_state() -> web::Data<AppState> {
         SightingObserver::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_deleter = SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_finder = SightingFinder::new(Arc::clone(&sighting_repo));
-    let sightings_by_ioc_lister = SightingsByIocLister::new(Arc::clone(&sighting_repo));
+    let sightings_by_observable_lister =
+        SightingsByObservableLister::new(Arc::clone(&sighting_repo));
     let sightings_by_source_lister = SightingsBySourceLister::new(Arc::clone(&sighting_repo));
 
     // --- command bus ---
@@ -162,8 +163,10 @@ pub fn build_state() -> web::Data<AppState> {
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
     query_bus
-        .register(ListSightingsByIocQueryHandler::new(sightings_by_ioc_lister))
-        .expect("Failed to register ListSightingsByIocQueryHandler");
+        .register(ListSightingsByObservableQueryHandler::new(
+            sightings_by_observable_lister,
+        ))
+        .expect("Failed to register ListSightingsByObservableQueryHandler");
     query_bus
         .register(ListSightingsBySourceQueryHandler::new(
             sightings_by_source_lister,
@@ -196,6 +199,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
         .service(crate::sighting::controllers::delete::handler)
-        .service(crate::sighting::controllers::list_by_ioc::handler)
+        .service(crate::sighting::controllers::list_by_observable::handler)
         .service(crate::sighting::controllers::list_by_source::handler);
 }

@@ -19,10 +19,11 @@ fn it_exposes_the_observation_and_the_new_values_as_primitives() {
         primitives.keys().collect::<Vec<_>>(),
         vec![
             "id",
-            "ioc_id",
             "new_count",
             "new_last_seen",
             "new_updated_at",
+            "observable_id",
+            "observable_kind",
             "observed_at",
             "source_id"
         ]

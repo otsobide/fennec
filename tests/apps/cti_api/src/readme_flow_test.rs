@@ -33,30 +33,43 @@ async fn readme_example_flow_works() {
         "step 2 create url source"
     );
 
+    let address = test::TestRequest::post()
+        .uri("/ipv4-addresses")
+        .set_json(serde_json::json!({ "value": "198.51.100.7" }))
+        .send_request(&app)
+        .await;
+    assert_eq!(address.status().as_u16(), 201, "step 3 register an address");
+    let address: serde_json::Value = test::read_body_json(address).await;
+    assert_eq!(
+        address["stix_id"], "ipv4-addr--12592121-be4c-5a93-a813-5a5af16e50db",
+        "the id is derived from the value"
+    );
+
     let sighting = test::TestRequest::post()
         .uri("/sightings")
         .set_json(serde_json::json!({
             "id": "7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061",
-            "ioc_id": "6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60",
+            "observable_kind": "ipv4_address",
+            "observable_id": "12592121-be4c-5a93-a813-5a5af16e50db",
             "source_id": "550e8400-e29b-41d4-a716-446655440000",
             "observed_at": 1750000000u64
         }))
         .send_request(&app)
         .await;
-    assert_eq!(sighting.status().as_u16(), 201, "step 3 create sighting");
+    assert_eq!(sighting.status().as_u16(), 201, "step 4 create sighting");
 
     let observation = test::TestRequest::post()
         .uri("/sightings/7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061/observations")
         .set_json(serde_json::json!({ "observed_at": 1750003600u64 }))
         .send_request(&app)
         .await;
-    assert_eq!(observation.status().as_u16(), 200, "step 4 observe again");
+    assert_eq!(observation.status().as_u16(), 200, "step 5 observe again");
 
     let listed = test::TestRequest::get()
-        .uri("/iocs/6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60/sightings")
+        .uri("/observables/ipv4_address/12592121-be4c-5a93-a813-5a5af16e50db/sightings")
         .send_request(&app)
         .await;
-    assert_eq!(listed.status().as_u16(), 200, "step 5 list by ioc");
+    assert_eq!(listed.status().as_u16(), 200, "step 6 list by observable");
     let body: serde_json::Value = test::read_body_json(listed).await;
     assert_eq!(
         body[0]["count"], 2,

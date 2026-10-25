@@ -1,4 +1,4 @@
-//! [`QueryHandler`] for the list-sightings-by-ioc use case.
+//! [`QueryHandler`] for the list-sightings-by-observable use case.
 
 use async_trait::async_trait;
 use shared_cqrs::query::domain::query_bus_error::QueryBusError;
@@ -9,37 +9,42 @@ use crate::sighting::application::find_sighting::find_sighting_response::{
 };
 use crate::sighting::domain::errors::sighting_repository_error::SightingRepositoryError;
 
-use super::list_sightings_by_ioc_query::ListSightingsByIocQuery;
-use super::list_sightings_by_ioc_response::ListSightingsByIocResponse;
-use super::sightings_by_ioc_lister::SightingsByIocLister;
+use super::list_sightings_by_observable_query::ListSightingsByObservableQuery;
+use super::list_sightings_by_observable_response::ListSightingsByObservableResponse;
+use super::sightings_by_observable_lister::SightingsByObservableLister;
 
-/// [`QueryHandler`] that processes [`ListSightingsByIocQuery`]s by delegating
-/// to [`SightingsByIocLister`].
-pub struct ListSightingsByIocQueryHandler {
-    lister: SightingsByIocLister,
+/// [`QueryHandler`] that processes [`ListSightingsByObservableQuery`]s by delegating
+/// to [`SightingsByObservableLister`].
+pub struct ListSightingsByObservableQueryHandler {
+    lister: SightingsByObservableLister,
 }
 
-impl ListSightingsByIocQueryHandler {
-    pub fn new(lister: SightingsByIocLister) -> Self {
+impl ListSightingsByObservableQueryHandler {
+    pub fn new(lister: SightingsByObservableLister) -> Self {
         Self { lister }
     }
 }
 
 #[async_trait]
-impl QueryHandler<ListSightingsByIocQuery> for ListSightingsByIocQueryHandler {
-    type Response = ListSightingsByIocResponse;
+impl QueryHandler<ListSightingsByObservableQuery> for ListSightingsByObservableQueryHandler {
+    type Response = ListSightingsByObservableResponse;
 
     async fn handle(
         &self,
-        query: ListSightingsByIocQuery,
+        query: ListSightingsByObservableQuery,
     ) -> Result<Self::Response, QueryBusError> {
-        match self.lister.execute(query.ioc_id).await {
-            Ok(sightings) => Ok(ListSightingsByIocResponse {
+        match self
+            .lister
+            .execute(query.observable_kind, query.observable_id)
+            .await
+        {
+            Ok(sightings) => Ok(ListSightingsByObservableResponse {
                 sightings: sightings
                     .into_iter()
                     .map(|s| SightingEntry {
                         id: s.id().to_string(),
-                        ioc_id: s.ioc_id().to_string(),
+                        observable_kind: s.observable_kind().to_string(),
+                        observable_id: s.observable_id().to_string(),
                         source_id: s.source_id().to_string(),
                         first_seen: s.first_seen().value(),
                         last_seen: s.last_seen().value(),
@@ -59,7 +64,7 @@ impl QueryHandler<ListSightingsByIocQuery> for ListSightingsByIocQueryHandler {
                     }
                     SightingRepositoryError::Unexpected(_) => ("Unexpected", None),
                 };
-                Ok(ListSightingsByIocResponse {
+                Ok(ListSightingsByObservableResponse {
                     sightings: Vec::new(),
                     error: Some(SightingErrorEntry {
                         message: e.to_string(),

@@ -14,7 +14,7 @@ use crate::sighting::domain::value_objects::sighting_id::SightingId;
 /// [`SightingDeletedEvent`] via the event bus.
 ///
 /// The aggregate is fetched before deletion so the event carries the
-/// `ioc_id` and `source_id` of the deleted sighting.
+/// `observable_kind`, `observable_id` and `source_id` of the deleted sighting.
 ///
 /// [`Sighting`]: crate::sighting::domain::entities::sighting::Sighting
 /// [`SightingDeletedEvent`]: crate::sighting::domain::events::sighting_deleted_event::SightingDeletedEvent
