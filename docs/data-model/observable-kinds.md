@@ -37,9 +37,15 @@ sighting or network session they were measured in, as value objects.
    as `ipv4-addr`; Fennec has `ipv4_address` and `ipv4_network` (and the IPv6
    pair), which both export to `ipv4-addr`. A `/32` (or `/128`) network is
    normalised to the host kind.
-4. **Split composite values.** MISP composite types (`domain|ip`, `ip-dst|port`,
-   `filename|sha256`) are two observables and a relationship. An importer splits
-   them; no kind holds two values.
+4. **Split composite values.** No kind holds two values. An importer takes
+   MISP composite types apart by what they describe:
+   - `domain|ip` is two observables (a `domain_name` and an address) plus the
+     relationship between them;
+   - `filename|<hash>` and `malware-sample` are one `file` with a name and a
+     hash;
+   - `ip-src|port` and `ip-dst|port` are the address observable, with the port
+     carried by the network traffic or sighting it was seen in (a port is not
+     an observable).
 5. **Expose typed components.** A value object that has structure exposes it:
    `GoogleAnalyticsTrackingId::account_number()`, `Imei::type_allocation_code()`,
    `MacAddress::is_locally_administered()`, `Ja4Fingerprint::alpn()`. Nothing
@@ -89,20 +95,33 @@ aggregates exist.
 
 ## The module contract
 
-Every value-identified kind ships the same slice, built inside-out with one
-commit per step (see
+Every observable kind ships the same slice, built inside-out with one commit
+per step (see
 [../guides/adding-a-bounded-context.md](../guides/adding-a-bounded-context.md)
 for the order):
 
 | Layer | Contents |
 |---|---|
-| Domain | The aggregate (`Ipv4Address`), its id value object (`Ipv4AddressId`, UUID v5, built from the value), one value object per property (`Ipv4AddressValue`, `Ipv4AddressCreatedAt`), the repository error enum, the repository trait, the `Created` and `Deleted` events with their factories, and the `STIX_TYPE` constant. |
+| Domain | The aggregate (`Ipv4Address`), its id value object (`Ipv4AddressId`), one value object per property (`Ipv4AddressValue`, `Ipv4AddressCreatedAt`), the repository error enum, the repository trait, the `Created` and `Deleted` events with their factories, and the `STIX_TYPE` constant. |
 | Application | `create_<kind>`, `find_<kind>` and `delete_<kind>`, plus any use case the kind needs (updating the name of an autonomous system, adding a hash to a file). |
-| Infrastructure | The in-memory repository and the PostgreSQL repository, plus the table migration. |
-| Delivery | `POST /<kinds>`, `GET /<kinds>/{id}`, `GET /<kinds>?value=<value>` and `DELETE /<kinds>/{id}` in `cti_api`. |
+| Infrastructure | The in-memory repository, the PostgreSQL repository (`SqlxPostgres<Kind>Repository` under `infrastructure/persistence/sqlx_postgres/`) and the table migration. |
+| Delivery | `POST /<kinds>`, `GET /<kinds>/{id}`, `GET /<kinds>?value=<value>` and `DELETE /<kinds>/{id}` in `cti_api`, with the create semantics in [identity.md](identity.md#create-semantics). |
 | Tests | Value object tests (every accepted spelling, every rejection, the canonical form, the identifier test vectors), the four standard service tests per use case, the in-memory and PostgreSQL repository contract tests, and the e2e tests. |
+
+Events follow the shared payload conventions:
+
+- `Created` carries the full state: the id and every property.
+- `Deleted` carries the id **and the canonical value** (or, for regime B,
+  the natural keys). A value-identified id is a one-way hash, so without the
+  value a subscriber could not tell what was deleted.
+- `Updated` carries the id plus `old_<field>` and `new_<field>` for every
+  field that changed.
 
 The aggregate of a value-identified kind records `created_at` (when Fennec
 first registered it) and no `updated_at`: nothing about it can change. Kinds
-with mutable descriptive properties (an autonomous system's name) add
-`updated_at` and an update use case whose event carries old and new values.
+with mutable descriptive properties (an autonomous system's name, a file's
+size) add `updated_at` and an update use case. Concurrent commands on one
+aggregate are serialised by the unit of work (see
+[../architecture/event-store.md](../architecture/event-store.md#one-command-at-a-time-per-aggregate)),
+so an update reads the current state, changes it and writes it back without a
+version check.
