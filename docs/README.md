@@ -10,6 +10,9 @@ its own `README.md` as the entry point.
   branching model with its GitHub rulesets, and the test strategy.
 - [guides/](guides/README.md): step-by-step recipes for extending the system
   with a new bounded context or a new HTTP app.
+- [research/](research/README.md): source-level studies of the OpenCTI,
+  MISP and STIX 2.1 data models, pivot identifiers and PostgreSQL storage
+  that the Fennec data model was designed from.
 
 Start with [architecture/overview.md](architecture/overview.md) for the big
 picture.
