@@ -42,10 +42,13 @@ designed from is in [../research/](../research/README.md).
    aggregate. Kinds whose identity can grow (a file learning a new hash) keep
    a stable UUID v4 and carry the STIX identifier as a separate value object.
    See [identity.md](identity.md).
-4. **Identifiers are always qualified by kind.** The STIX algorithm does not
-   hash the type, so `domain-name` and `hostname` with the same value share a
-   UUID. Anything that references an observable outside its own module uses
-   the full `<stix-type>--<uuid>` form, never a bare UUID.
+4. **References are qualified by module kind.** The STIX algorithm does not
+   hash the type, and several kinds share a STIX type (`ipv4_address` and
+   `ipv4_network` both export `ipv4-addr`), so neither a bare UUID nor a STIX
+   identifier says which aggregate it points to. Anything that references an
+   observable outside its own module (a sighting, the event log, a future
+   relationship) stores the **module kind** (`ipv4_network`) next to the
+   UUID. The STIX identifier is an export and import form only.
 5. **Observables are facts, not judgements.** An observable records what was
    seen and when Fennec first registered it. Scores, labels, markings,
    confidence, authorship and detection rules are assessments about an
@@ -56,3 +59,22 @@ designed from is in [../research/](../research/README.md).
    pixel, an AS number or a Telegram chat. The kind is always stated by the
    caller (an endpoint per kind, a field per kind in an import), never
    guessed by Fennec.
+
+## Retiring the generic `ioc` module
+
+The `ioc` module that predates this model is exactly the generic
+`{type, value}` shape rule 1 forbids: an `IocType` enum and an unvalidated
+string. It is deleted in one dedicated commit when the first observable kind
+(`ipv4_address`) lands, and `/iocs` disappears with it. Nothing was ever
+persisted (every repository was in memory), so there is no data to migrate.
+
+The `sighting` module references what was seen through `SightingIocId`, a
+bare UUID v4. In the same change it is replaced by an observable reference
+made of two value objects, `SightingObservableKind` (the module kind, a
+validated snake case name rather than an enum, so adding a kind never touches
+the sighting module) and `SightingObservableId` (a UUID v4 or v5), so a
+sighting can point at any kind, including value-identified ones whose ids
+are UUID v5. The uniqueness
+pair becomes (observable kind, observable id, source id), and
+`/iocs/{ioc_id}/sightings` becomes
+`/observables/{kind}/{id}/sightings`.
