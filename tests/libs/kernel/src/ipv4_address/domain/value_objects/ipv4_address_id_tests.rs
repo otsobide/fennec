@@ -59,6 +59,18 @@ fn it_rejects_a_version_4_uuid() {
 }
 
 #[test]
+fn it_rejects_a_version_5_nibble_with_a_non_rfc_4122_variant() {
+    for raw in [
+        "00000000-0000-5000-0000-000000000000",
+        "00000000-0000-5000-c000-000000000000",
+    ] {
+        let error = Ipv4AddressId::new(raw).expect_err("no derivation produces this UUID");
+
+        assert!(error.message().contains("must be a UUID v5"));
+    }
+}
+
+#[test]
 fn it_rejects_a_value_that_is_not_a_uuid() {
     let error = Ipv4AddressId::new("not-a-uuid").expect_err("not a UUID");
 

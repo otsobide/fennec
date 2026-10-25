@@ -4,7 +4,7 @@
 
 use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 use shared_valueobject::domain::stix::stix_deterministic_uuid::StixDeterministicUuid;
-use uuid::Uuid;
+use uuid::{Uuid, Variant};
 
 use crate::ipv4_address::domain::value_objects::ipv4_address_value::Ipv4AddressValue;
 
@@ -34,7 +34,7 @@ impl Ipv4AddressId {
     /// # Errors
     ///
     /// Returns [`ValueObjectValidationError`] if the value is not a valid
-    /// UUID, or if it is not version 5.
+    /// UUID, or if it is not an RFC 4122 version 5 UUID.
     pub fn new(value: &str) -> Result<Self, ValueObjectValidationError> {
         let parsed = Uuid::parse_str(value.trim()).map_err(|_| {
             ValueObjectValidationError::new(format!("ipv4 address id is not a valid UUID: {value}"))
@@ -47,12 +47,14 @@ impl Ipv4AddressId {
     ///
     /// # Errors
     ///
-    /// Returns [`ValueObjectValidationError`] if the UUID is not version 5.
+    /// Returns [`ValueObjectValidationError`] if the UUID is not an RFC 4122
+    /// version 5 UUID, the only kind the derivation can produce.
     pub fn from_uuid(value: Uuid) -> Result<Self, ValueObjectValidationError> {
-        if value.get_version_num() != 5 {
+        if value.get_version_num() != 5 || value.get_variant() != Variant::RFC4122 {
             return Err(ValueObjectValidationError::new(format!(
-                "ipv4 address id must be a UUID v5, got version {}",
-                value.get_version_num()
+                "ipv4 address id must be a UUID v5 with the RFC 4122 variant, got version {} with the {:?} variant",
+                value.get_version_num(),
+                value.get_variant()
             )));
         }
 
