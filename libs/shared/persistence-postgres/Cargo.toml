@@ -1,0 +1,7 @@
+[package]
+name = "shared-persistence-postgres"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "time", "json", "migrate", "macros", "sqlx-toml"] }
