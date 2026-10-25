@@ -40,8 +40,10 @@ impl<T: Any + Send + Sync> AnyDomainEvent for T {
 /// # Example
 ///
 /// ```rust
+/// use std::collections::BTreeMap;
 /// use std::time::SystemTime;
 /// use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+/// use shared_domain_events::domain::primitive_value::PrimitiveValue;
 ///
 /// struct UserCreatedEvent {
 ///     base: DomainEventBase,
@@ -53,6 +55,12 @@ impl<T: Any + Send + Sync> AnyDomainEvent for T {
 ///     fn aggregate_id(&self) -> &str { &self.base.aggregate_id }
 ///     fn event_id(&self) -> &str { &self.base.event_id }
 ///     fn occurred_on(&self) -> SystemTime { self.base.occurred_on }
+///     fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+///         BTreeMap::from([(
+///             "username".to_string(),
+///             PrimitiveValue::Text(self.username.clone()),
+///         )])
+///     }
 /// }
 /// ```
 pub trait DomainEvent: AnyDomainEvent {
@@ -74,12 +82,7 @@ pub trait DomainEvent: AnyDomainEvent {
     /// the identity plus `old_<field>` and `new_<field>` for each changed
     /// field, and `deleted` events the identity plus what a subscriber needs
     /// to react.
-    ///
-    /// The empty default is temporary: it lets every existing event adopt
-    /// the method one context at a time, and is removed once they all have.
-    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
-        BTreeMap::new()
-    }
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue>;
 }
 
 /// Shared metadata fields for all domain events.
