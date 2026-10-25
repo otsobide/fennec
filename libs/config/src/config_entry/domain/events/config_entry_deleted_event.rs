@@ -1,8 +1,10 @@
 //! Domain event raised when a config entry is deleted.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::config_entry::domain::value_objects::config_key::ConfigKey;
 
@@ -43,5 +45,12 @@ impl DomainEvent for ConfigEntryDeletedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([(
+            "key".to_string(),
+            PrimitiveValue::Text(self.key.value().to_string()),
+        )])
     }
 }

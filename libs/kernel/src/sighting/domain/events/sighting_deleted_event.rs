@@ -1,8 +1,10 @@
 //! Domain event raised when a sighting is deleted.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
 use crate::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
@@ -46,5 +48,19 @@ impl DomainEvent for SightingDeletedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "ioc_id".to_string(),
+                PrimitiveValue::Text(self.ioc_id.to_string()),
+            ),
+            (
+                "source_id".to_string(),
+                PrimitiveValue::Text(self.source_id.to_string()),
+            ),
+        ])
     }
 }

@@ -1,8 +1,10 @@
 //! Domain event raised when an existing sighting is observed again.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::sighting::domain::value_objects::sighting_count::SightingCount;
 use crate::sighting::domain::value_objects::sighting_id::SightingId;
@@ -65,5 +67,35 @@ impl DomainEvent for SightingObservedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "ioc_id".to_string(),
+                PrimitiveValue::Text(self.ioc_id.to_string()),
+            ),
+            (
+                "source_id".to_string(),
+                PrimitiveValue::Text(self.source_id.to_string()),
+            ),
+            (
+                "observed_at".to_string(),
+                PrimitiveValue::Timestamp(self.observed_at),
+            ),
+            (
+                "new_count".to_string(),
+                PrimitiveValue::UnsignedInteger(self.new_count.value()),
+            ),
+            (
+                "new_last_seen".to_string(),
+                PrimitiveValue::Timestamp(self.new_last_seen.value()),
+            ),
+            (
+                "new_updated_at".to_string(),
+                PrimitiveValue::Timestamp(self.new_updated_at.value()),
+            ),
+        ])
     }
 }

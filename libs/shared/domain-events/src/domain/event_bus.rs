@@ -26,6 +26,7 @@ use super::event_bus_error::EventBusError;
 /// #     fn aggregate_id(&self) -> &str { &self.base.aggregate_id }
 /// #     fn event_id(&self) -> &str { &self.base.event_id }
 /// #     fn occurred_on(&self) -> SystemTime { self.base.occurred_on }
+/// #     fn to_primitives(&self) -> std::collections::BTreeMap<String, shared_domain_events::domain::primitive_value::PrimitiveValue> { Default::default() }
 /// # }
 /// # let bus = InMemoryEventBus::new();
 /// # let user_created_event = UserCreatedEvent { base: DomainEventBase::new("agg-1") };

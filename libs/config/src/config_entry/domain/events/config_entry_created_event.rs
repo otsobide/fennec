@@ -1,8 +1,10 @@
 //! Domain event raised when a new config entry is created.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::config_entry::domain::value_objects::config_key::ConfigKey;
 use crate::config_entry::domain::value_objects::config_value::ConfigValue;
@@ -47,5 +49,18 @@ impl DomainEvent for ConfigEntryCreatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            (
+                "key".to_string(),
+                PrimitiveValue::Text(self.key.value().to_string()),
+            ),
+            (
+                "value".to_string(),
+                PrimitiveValue::Text(self.value.value().to_string()),
+            ),
+        ])
     }
 }

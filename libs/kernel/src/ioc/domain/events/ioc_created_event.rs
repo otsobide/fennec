@@ -1,8 +1,10 @@
 //! Domain event raised when a new ioc is created.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::ioc::domain::value_objects::ioc_created_at::IocCreatedAt;
 use crate::ioc::domain::value_objects::ioc_id::IocId;
@@ -59,5 +61,27 @@ impl DomainEvent for IocCreatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "ioc_type".to_string(),
+                PrimitiveValue::Text(self.ioc_type.as_str().to_string()),
+            ),
+            (
+                "value".to_string(),
+                PrimitiveValue::Text(self.value.value().to_string()),
+            ),
+            (
+                "created_at".to_string(),
+                PrimitiveValue::Timestamp(self.created_at.value()),
+            ),
+            (
+                "updated_at".to_string(),
+                PrimitiveValue::Timestamp(self.updated_at.value()),
+            ),
+        ])
     }
 }
