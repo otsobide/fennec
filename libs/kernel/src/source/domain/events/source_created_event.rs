@@ -1,8 +1,10 @@
 //! Domain event raised when a new source is created.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::source::domain::value_objects::source_created_at::SourceCreatedAt;
 use crate::source::domain::value_objects::source_description::SourceDescription;
@@ -64,5 +66,31 @@ impl DomainEvent for SourceCreatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "source_type".to_string(),
+                PrimitiveValue::Text(self.source_type.as_str().to_string()),
+            ),
+            (
+                "status".to_string(),
+                PrimitiveValue::Text(self.status.as_str().to_string()),
+            ),
+            (
+                "description".to_string(),
+                PrimitiveValue::Text(self.description.value().to_string()),
+            ),
+            (
+                "created_at".to_string(),
+                PrimitiveValue::Timestamp(self.created_at.value()),
+            ),
+            (
+                "updated_at".to_string(),
+                PrimitiveValue::Timestamp(self.updated_at.value()),
+            ),
+        ])
     }
 }
