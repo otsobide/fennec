@@ -92,14 +92,16 @@ pub trait DomainEvent: AnyDomainEvent {
 pub struct DomainEventBase {
     /// Identifier of the aggregate that produced the event.
     pub aggregate_id: String,
-    /// Unique identifier for this event instance (UUID v4).
+    /// Unique identifier for this event instance: a time-ordered UUID v7, so
+    /// event ids sort by creation time and index at the right edge.
     pub event_id: String,
     /// Timestamp at which the event was created.
     pub occurred_on: SystemTime,
 }
 
 impl DomainEventBase {
-    /// Creates a new `DomainEventBase` with a generated UUID and the current time.
+    /// Creates a new `DomainEventBase` with a generated UUID v7 and the current
+    /// time.
     ///
     /// # Arguments
     ///
@@ -107,7 +109,7 @@ impl DomainEventBase {
     pub fn new(aggregate_id: impl Into<String>) -> Self {
         Self {
             aggregate_id: aggregate_id.into(),
-            event_id: Uuid::new_v4().to_string(),
+            event_id: Uuid::now_v7().to_string(),
             occurred_on: SystemTime::now(),
         }
     }
