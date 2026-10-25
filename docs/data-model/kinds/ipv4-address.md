@@ -77,8 +77,14 @@ curl localhost:8081/ipv4-addresses?value=89.19.209.154
 
 ## Storage
 
-In memory today (`InMemoryIpv4AddressRepository`, keyed by id). The
-PostgreSQL table, from [../../architecture/persistence.md](../../architecture/persistence.md):
+`InMemoryIpv4AddressRepository` (keyed by id) and
+`SqlxPostgresIpv4AddressRepository`, which run the same repository contract.
+The PostgreSQL repository writes inside the command's unit of work after
+taking the address's advisory lock, detects duplicates with
+`ON CONFLICT DO NOTHING`, and rebuilds rows through the value objects,
+rejecting a row whose id is not the one its value derives. Its table, from
+`libs/kernel/migrations/20261026120001_create_ipv4_address.sql` (see
+[../../architecture/persistence.md](../../architecture/persistence.md)):
 
 ```sql
 CREATE TABLE kernel.ipv4_address (

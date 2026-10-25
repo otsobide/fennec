@@ -7,4 +7,4 @@ in the pull request that implements it.
 
 | Kind | Module | STIX type | Persistence |
 |---|---|---|---|
-| [IPv4 address](ipv4-address.md) | `ipv4_address` | `ipv4-addr` | In memory |
+| [IPv4 address](ipv4-address.md) | `ipv4_address` | `ipv4-addr` | In memory and PostgreSQL |
