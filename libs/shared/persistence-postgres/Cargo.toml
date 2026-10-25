@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 shared-domain-events = { path = "../domain-events" }
+serde_json = "1"
 sha2 = "0.10"
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "time", "json", "migrate", "macros", "sqlx-toml"] }
+time = "0.3"
 tokio = { version = "1", features = ["sync", "rt"] }
 uuid = "1"
