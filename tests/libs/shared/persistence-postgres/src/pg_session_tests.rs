@@ -117,3 +117,30 @@ async fn it_marks_the_unit_of_work_failed_when_an_operation_fails(pool: PgPool) 
     assert!(second.is_err(), "the duplicate primary key must fail");
     assert!(unit_of_work.has_failed());
 }
+
+#[sqlx::test]
+#[ignore = "requires DATABASE_URL"]
+async fn it_runs_unlocked_statements_on_the_unit_of_work_too(pool: PgPool) {
+    create_widget_table(&pool).await;
+    let session = PgSession::new(pool.clone());
+    let unit_of_work = PgUnitOfWork::begin(&pool).await.unwrap();
+
+    let seen = Arc::clone(&unit_of_work)
+        .scope(async {
+            insert_widget(&session, Uuid::new_v4()).await.unwrap();
+            session
+                .run_unlocked(|connection| {
+                    Box::pin(async move {
+                        sqlx::query_scalar::<_, i64>("SELECT count(*) FROM widget")
+                            .fetch_one(connection)
+                            .await
+                    })
+                })
+                .await
+                .unwrap()
+        })
+        .await;
+
+    assert_eq!(seen, 1);
+    assert_eq!(count_widgets(&pool).await, 0, "nothing is committed yet");
+}
