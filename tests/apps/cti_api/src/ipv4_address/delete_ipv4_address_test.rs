@@ -64,3 +64,48 @@ async fn it_returns_400_for_an_invalid_id() {
 
     assert_eq!(resp.status(), 400);
 }
+
+#[tokio::test]
+async fn it_returns_404_when_deleting_twice() {
+    let app = test::init_service(
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
+    )
+    .await;
+
+    let create = test::TestRequest::post()
+        .uri("/ipv4-addresses")
+        .set_json(json!({ "value": "89.19.209.154" }))
+        .to_request();
+    let _: ServiceResponse = test::call_service(&app, create).await;
+
+    let first = test::TestRequest::delete()
+        .uri("/ipv4-addresses/abfb438a-8baf-5f54-b19e-b85ee74b3ed7")
+        .to_request();
+    let _: ServiceResponse = test::call_service(&app, first).await;
+
+    let second = test::TestRequest::delete()
+        .uri("/ipv4-addresses/abfb438a-8baf-5f54-b19e-b85ee74b3ed7")
+        .to_request();
+    let resp: ServiceResponse = test::call_service(&app, second).await;
+
+    assert_eq!(resp.status(), 404);
+}
+
+#[tokio::test]
+async fn it_returns_400_for_a_uuid_v4_id() {
+    let app = test::init_service(
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
+    )
+    .await;
+
+    let req = test::TestRequest::delete()
+        .uri("/ipv4-addresses/550e8400-e29b-41d4-8716-446655440000")
+        .to_request();
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), 400);
+}

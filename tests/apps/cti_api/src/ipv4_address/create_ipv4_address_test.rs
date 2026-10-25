@@ -54,7 +54,13 @@ async fn it_returns_409_with_the_existing_id_for_another_spelling_of_the_same_ad
 
     assert_eq!(resp.status(), 409);
     let body: serde_json::Value = test::read_body_json(resp).await;
-    assert_eq!(body["id"], "28bb3599-77cd-5a82-a950-b5bc3caf07c4");
+    assert_eq!(
+        body,
+        json!({
+            "id": "28bb3599-77cd-5a82-a950-b5bc3caf07c4",
+            "stix_id": "ipv4-addr--28bb3599-77cd-5a82-a950-b5bc3caf07c4"
+        })
+    );
 }
 
 #[tokio::test]
