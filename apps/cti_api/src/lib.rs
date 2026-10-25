@@ -2,6 +2,14 @@ use std::sync::Arc;
 
 use actix_web::web;
 
+use kernel::ipv4_address::application::create_ipv4_address::create_ipv4_address_command_handler::CreateIpv4AddressCommandHandler;
+use kernel::ipv4_address::application::create_ipv4_address::ipv4_address_creator::Ipv4AddressCreator;
+use kernel::ipv4_address::application::delete_ipv4_address::delete_ipv4_address_command_handler::DeleteIpv4AddressCommandHandler;
+use kernel::ipv4_address::application::delete_ipv4_address::ipv4_address_deleter::Ipv4AddressDeleter;
+use kernel::ipv4_address::application::find_ipv4_address::find_ipv4_address_query_handler::FindIpv4AddressQueryHandler;
+use kernel::ipv4_address::application::find_ipv4_address::ipv4_address_finder::Ipv4AddressFinder;
+use kernel::ipv4_address::domain::repositories::ipv4_address_repository::Ipv4AddressRepository;
+use kernel::ipv4_address::infrastructure::persistence::in_memory::in_memory_ipv4_address_repository::InMemoryIpv4AddressRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
@@ -44,6 +52,7 @@ use shared_domain_events::domain::event_bus::EventBus;
 use shared_domain_events::infrastructure::in_memory::in_memory_event_bus::InMemoryEventBus;
 
 pub mod health;
+pub mod ipv4_address;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
@@ -80,6 +89,16 @@ pub fn build_state() -> web::Data<AppState> {
     let url_source_deleter =
         UrlSourceDeleter::new(Arc::clone(&url_source_repo), Arc::clone(&event_bus));
 
+    // --- ipv4_address ---
+    let ipv4_address_repo: Arc<dyn Ipv4AddressRepository> =
+        Arc::new(InMemoryIpv4AddressRepository::new());
+
+    let ipv4_address_creator =
+        Ipv4AddressCreator::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
+    let ipv4_address_finder = Ipv4AddressFinder::new(Arc::clone(&ipv4_address_repo));
+    let ipv4_address_deleter =
+        Ipv4AddressDeleter::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
 
@@ -112,6 +131,12 @@ pub fn build_state() -> web::Data<AppState> {
         .register(DeleteUrlSourceCommandHandler::new(url_source_deleter))
         .expect("Failed to register DeleteUrlSourceCommandHandler");
     command_bus
+        .register(CreateIpv4AddressCommandHandler::new(ipv4_address_creator))
+        .expect("Failed to register CreateIpv4AddressCommandHandler");
+    command_bus
+        .register(DeleteIpv4AddressCommandHandler::new(ipv4_address_deleter))
+        .expect("Failed to register DeleteIpv4AddressCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -130,6 +155,9 @@ pub fn build_state() -> web::Data<AppState> {
     query_bus
         .register(FindUrlSourceQueryHandler::new(url_source_finder))
         .expect("Failed to register FindUrlSourceQueryHandler");
+    query_bus
+        .register(FindIpv4AddressQueryHandler::new(ipv4_address_finder))
+        .expect("Failed to register FindIpv4AddressQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -160,6 +188,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(url_source::controllers::get::handler)
         .service(url_source::controllers::put::handler)
         .service(url_source::controllers::delete::handler)
+        .service(ipv4_address::controllers::post::handler)
+        .service(ipv4_address::controllers::get_by_value::handler)
+        .service(ipv4_address::controllers::get::handler)
+        .service(ipv4_address::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
