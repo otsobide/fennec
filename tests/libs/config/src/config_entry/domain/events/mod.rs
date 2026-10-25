@@ -1,0 +1,3 @@
+mod config_entry_created_event_tests;
+mod config_entry_deleted_event_tests;
+mod config_entry_updated_event_tests;
