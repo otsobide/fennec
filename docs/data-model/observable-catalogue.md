@@ -25,6 +25,9 @@ Column legend:
 - **Id**: the identity regime, `A` (value-identified, UUID v5) or `B`
   (evolving, UUID v4).
 - **PD**: marks kinds that are personal data.
+- **Status**: `planned`, `in memory` (the module exists with the in-memory
+  repository), or `postgres` (the PostgreSQL repository and table exist too).
+  Implemented kinds link to their page.
 
 Grammars quoted below are anchored Rust `regex` patterns. Grammars marked
 *observed* come from real-world samples because the vendor publishes no
