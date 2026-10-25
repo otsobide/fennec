@@ -43,9 +43,9 @@ each rule are in
 | Choice | Value |
 |---|---|
 | Server | PostgreSQL 18 (`postgres:18-alpine` in `docker-compose.yml` and as the CI service container). The floor is 17, the first version with identity columns on partitioned tables. |
-| Driver | `sqlx` 0.8 with its default features (`macros`, `migrate`, `json`) plus `runtime-tokio`, `postgres`, `uuid`, `time`, `ipnet` and `mac_address` |
+| Driver | `sqlx` 0.9 without default features, with `runtime-tokio`, `postgres`, `uuid`, `time`, `json`, `migrate`, `macros` and `sqlx-toml`, plus `ipnet` and `mac_address` where a kind needs them |
 | Queries | Runtime queries (`sqlx::query`, `query_as` with `FromRow`) only. The compile-time `query!` macros are not used, so builds never need a database or a `.sqlx` cache across the three CI toolchains |
-| Migrations | Embedded with `sqlx::migrate!("./migrations")` from `libs/kernel/migrations/`, one numbered file per change (`0001_create_event_store.sql`, `0002_create_ipv4_address.sql`). `libs/kernel/build.rs` prints `cargo:rerun-if-changed=migrations`, because Cargo does not otherwise rebuild the crate when only a migration changes. |
+| Migrations | Each crate that owns tables embeds its own with `sqlx::migrate!()` and keeps its own history table, set in its `sqlx.toml` (`[migrate] table-name`, `create-schemas`): the event store's in `libs/shared/persistence-postgres/migrations/`, tracked in `event_store._sqlx_migrations`, and the kernel's in `libs/kernel/migrations/`, tracked in `kernel._sqlx_migrations`. The two migrators therefore run independently on the same database. Files are named `<UTC timestamp>_<description>.sql`. Each crate's `build.rs` prints `cargo:rerun-if-changed=migrations`, because Cargo does not otherwise rebuild a crate when only a migration changes. |
 | Shared infrastructure | `libs/shared/persistence-postgres` (crate `shared-persistence-postgres`): the unit of work, the transactional command bus decorator, the outbox event bus, the event log writer and the partition maintenance. It contains no CTI logic. |
 | Extensions | None |
 | Isolation | `READ COMMITTED` for every write transaction |
@@ -60,9 +60,9 @@ each rule are in
   the command bus. It exists once every kernel module has a PostgreSQL
   repository (rule 7).
 - `main.rs` reads `DATABASE_URL`. When it is set, it builds the pool once
-  before `HttpServer::new`, runs the embedded migrations and the partition
-  maintenance, and calls `build_postgres_state`. When it is not, it calls
-  `build_state`.
+  before `HttpServer::new`, runs the event store and kernel migrators, calls
+  `event_store.ensure_partitions(12)`, and calls `build_postgres_state`.
+  When it is not, it calls `build_state`.
 
 Running migrations from the application at startup is the first step.
 Moving them to a separate deploy step that runs as a schema-owner role, with
@@ -174,23 +174,27 @@ The event log is range-partitioned by month from the first migration, see
 - Repository behaviour shared by every adapter (save, duplicate, find,
   delete, missing) is tested against the in-memory repository in the normal
   unit suite.
-- The PostgreSQL repositories run the same contract in a separate test
-  target, `kernel-postgres`. Each test is a `#[sqlx::test]` that gets a fresh
-  database with the kernel migrations applied, so tests are isolated even
-  when they insert the same deterministic ids, and concurrency tests can
-  commit across connections. The tests are marked
-  `#[ignore = "requires DATABASE_URL"]`.
-- A second target, `cti-api-pg-e2e`, runs the HTTP API on
-  `build_postgres_state` and asserts what only a real database can show:
-  state and events commit together, a forced failure of the event append
-  returns `500` and leaves neither the row nor the event, and concurrent
-  creates of one value produce one row and one `Created` event.
-- CI runs both targets with `-- --ignored` against a PostgreSQL 18 service
-  container. Locally:
+- Every test that needs a database is a `#[sqlx::test]` marked
+  `#[ignore = "requires DATABASE_URL"]`, in the same test target as the rest
+  of its crate's tests. Each gets a fresh database with the migrations it
+  names applied, so tests are isolated even when they insert the same
+  deterministic ids, and concurrency tests can commit across connections.
+- The PostgreSQL repositories run the same repository contract as the
+  in-memory ones. The `shared-persistence-postgres` tests cover the unit of
+  work, the session, the outbox, the event store writer and the
+  transactional command bus, and pin the assumption the event ordering rests
+  on: the aggregate advisory lock assigns no transaction id.
+- The HTTP e2e suite gains `build_postgres_state` tests that assert what
+  only a real database can show: state and events commit together, a
+  failure to append the events returns `500` and leaves neither the row nor
+  the event, and concurrent creates of one value produce one row and one
+  `Created` event.
+- The default `cargo test --workspace` skips them. The `PostgreSQL 18` CI job
+  runs exactly them with `cargo test --workspace -- --ignored` against a
+  service container. Locally:
 
   ```bash
   docker compose up -d postgres
-  export DATABASE_URL=postgres://fennec:fennec@localhost:5432/fennec
-  cargo test -p kernel --test kernel-postgres -- --ignored
-  cargo test -p cti-api --test cti-api-pg-e2e -- --ignored
+  DATABASE_URL=postgres://fennec:fennec@localhost:5432/fennec \
+    cargo test --workspace -- --ignored
   ```
