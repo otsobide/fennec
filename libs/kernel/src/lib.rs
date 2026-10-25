@@ -10,6 +10,7 @@
 //! is therefore a move, not a redesign.
 
 pub mod ipv4_address;
+pub mod kernel_migrator;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
