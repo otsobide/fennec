@@ -1,8 +1,11 @@
 //! Core traits and base struct for domain events.
 
 use std::any::{Any, TypeId};
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 use uuid::Uuid;
+
+use crate::domain::primitive_value::PrimitiveValue;
 
 /// Helper trait that enables type erasure for domain events, allowing them to
 /// be stored and dispatched as `dyn Any` in a thread-safe manner.
@@ -64,6 +67,19 @@ pub trait DomainEvent: AnyDomainEvent {
 
     /// Returns the timestamp at which the event occurred.
     fn occurred_on(&self) -> SystemTime;
+
+    /// Returns the event payload as plain data, keyed by field name.
+    ///
+    /// `created` events carry one key per aggregate field, `updated` events
+    /// the identity plus `old_<field>` and `new_<field>` for each changed
+    /// field, and `deleted` events the identity plus what a subscriber needs
+    /// to react.
+    ///
+    /// The empty default is temporary: it lets every existing event adopt
+    /// the method one context at a time, and is removed once they all have.
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::new()
+    }
 }
 
 /// Shared metadata fields for all domain events.
