@@ -8,3 +8,4 @@ pub mod pg_event_store;
 pub mod pg_operation;
 pub mod pg_session;
 pub mod pg_unit_of_work;
+pub mod transactional_command_bus;
