@@ -6,9 +6,9 @@ A Rust-based **Cyber Threat Intelligence (CTI)** platform, modelled after projec
 
 ## What is Fennec?
 
-Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serve threat intelligence (indicators of compromise, threat actors, campaigns, sources, sightings) under a clean, microservice-friendly architecture. The codebase is organised as a Cargo workspace where each bounded context is an isolated library crate hosting one module per aggregate, and each HTTP service is a thin Actix-Web app that wires those contexts behind CQRS buses.
+Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serve threat intelligence (observables such as IP addresses, domains, file hashes and tracking ids, threat actors, campaigns, sources, sightings) under a clean, microservice-friendly architecture. Its data model is compatible with STIX 2.1 and OpenCTI and learns from MISP; it is described in [docs/data-model/](docs/data-model/README.md). The codebase is organised as a Cargo workspace where each bounded context is an isolated library crate hosting one module per aggregate, and each HTTP service is a thin Actix-Web app that wires those contexts behind CQRS buses.
 
-The project is **early in its life**, but the core of the model is in place. The `kernel` context owns the CTI domain and holds one module per aggregate: `source` and the URL-specific `url_source` (where intelligence comes from), `ioc` (what is being tracked) and `sighting` (which source reported which indicator, with first/last seen timestamps and an observation counter). All four are exposed by `cti_api`. The aggregates still to come (threat actors, campaigns, events, enrichment) plug in alongside them following exactly the same recipe.
+The project is **early in its life**, but the core of the model is in place. The `kernel` context owns the CTI domain and holds one module per aggregate: `source` and the URL-specific `url_source` (where intelligence comes from), one module per observable kind (what is being tracked: `ipv4_address` is the first of the more than a hundred kinds in the [catalogue](docs/data-model/observable-catalogue.md)) and `sighting` (which source reported which observable, with first/last seen timestamps and an observation counter). All of them are exposed by `cti_api`. There are no generic types: every observable kind is its own aggregate with value objects that validate and canonicalise its exact syntax. The aggregates still to come (the other observable kinds, threat actors, campaigns, enrichment) plug in alongside them following exactly the same recipe.
 
 The architecture is uncompromising on one principle: business logic depends on traits, never on concrete infrastructure. The same domain code runs against an in-memory `HashMap` in tests and (eventually) a PostgreSQL store in production, with zero conditional compilation and no code changes in the domain or application layers.
 
@@ -18,13 +18,13 @@ The architecture is uncompromising on one principle: business logic depends on t
 |---|---|---|---|---|
 | `kernel` | `source` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
 | `kernel` | `url_source` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
-| `kernel` | `ioc` | `Ioc` | Create, find and delete indicators of compromise | `cti_api` (:8081) |
-| `kernel` | `sighting` | `Sighting` | Records that a source reported an indicator, with first/last seen and an observation counter | `cti_api` (:8081) |
+| `kernel` | `ipv4_address` | `Ipv4Address` | Register, find (by id or value) and delete IPv4 host addresses; the id is the STIX deterministic id | `cti_api` (:8081) |
+| `kernel` | `sighting` | `Sighting` | Records that a source reported an observable, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `config_entry` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
 Each context is a crate under `libs/<context>/`, and each module inside it owns one aggregate with its own `domain` / `application` / `infrastructure` tree. Apps under `apps/` wire them into HTTP: `cti_api` serves every `kernel` module, `config_api` serves `config`.
 
-**No module imports another**, in the same crate or not. Aggregates relate by shared identifier (`sighting` declares its own `SightingIocId` rather than using `IocId`) and communicate through the command, query and event buses. That is deliberate: the day a module needs its own crate, or its own service, for scale, promoting it is a move rather than a redesign. Two architecture tests fail the build if that isolation is broken.
+**No module imports another**, in the same crate or not. Aggregates relate by shared identifier (`sighting` declares its own `SightingObservableKind` and `SightingObservableId` rather than importing an observable module) and communicate through the command, query and event buses. That is deliberate: the day a module needs its own crate, or its own service, for scale, promoting it is a move rather than a redesign. Two architecture tests fail the build if that isolation is broken.
 
 ## Stack
 
@@ -92,7 +92,7 @@ Arrows point inward only. The domain layer has no knowledge of frameworks, datab
 ```
 fennec/
 ├── apps/
-│   ├── cti_api/         # CTI HTTP API (port 8081) — exposes kernel, ioc and sighting
+│   ├── cti_api/         # CTI HTTP API (port 8081), exposes every kernel module
 │   └── config_api/      # Reference HTTP API (port 8080) — exposes the config BC
 │
 ├── libs/
@@ -100,8 +100,8 @@ fennec/
 │   │   └── src/
 │   │       ├── source/      # Source: id, type, status, description, timestamps
 │   │       ├── url_source/  # UrlSource: url, format, polling_interval, timestamps
-│   │       ├── ioc/         # Ioc: type and observable value
-│   │       └── sighting/    # Sighting: an ioc reported by a source, first/last seen, count
+│   │       ├── ipv4_address/ # Ipv4Address: an observed IPv4 host, identified by its value
+│   │       └── sighting/    # Sighting: an observable reported by a source, first/last seen, count
 │   ├── config/          # Reference bounded context (config_entry CRUD)
 │   └── shared/
 │       ├── cqrs/            # CommandBus + QueryBus (TypeId-based dispatch)
@@ -170,17 +170,18 @@ RUST_LOG=debug make cti_api/run
 | `GET` `PUT` `DELETE` | `/sources/{id}` | Read, update (`status`, `description`) or delete a source |
 | `POST` | `/url-sources` | Create the URL payload of a source (`id`, `url`, `format`, `polling_interval_seconds`) |
 | `GET` `PUT` `DELETE` | `/url-sources/{id}` | Read, update or delete it. The id is the parent source's id |
-| `POST` | `/iocs` | Create an indicator (`id`, `ioc_type`, `value`) |
-| `GET` `DELETE` | `/iocs/{id}` | Read or delete an indicator |
-| `POST` | `/sightings` | Record a first sighting (`id`, `ioc_id`, `source_id`, `observed_at`) |
+| `POST` | `/ipv4-addresses` | Register an IPv4 address (`value` only); answers `201` with `{id, stix_id}`, or `409` with the same body if it is already registered |
+| `GET` | `/ipv4-addresses?value=<address>` | Find an IPv4 address by value |
+| `GET` `DELETE` | `/ipv4-addresses/{id}` | Read or delete an IPv4 address |
+| `POST` | `/sightings` | Record a first sighting (`id`, `observable_kind`, `observable_id`, `source_id`, `observed_at`) |
 | `POST` | `/sightings/{id}/observations` | Register another observation (`observed_at`): bumps the counter and last seen |
 | `GET` `DELETE` | `/sightings/{id}` | Read or delete a sighting |
-| `GET` | `/iocs/{ioc_id}/sightings` | Every sighting of one indicator |
+| `GET` | `/observables/{kind}/{id}/sightings` | Every sighting of one observable |
 | `GET` | `/sources/{source_id}/sightings` | Every sighting reported by one source |
 
 `config_api` (:8080) exposes the same shape for the reference context: `POST /config`, and `GET` / `PUT` / `DELETE` on `/config/{key}`.
 
-Identifiers are supplied by the caller and must be **UUID v4**; `observed_at` is seconds since the Unix epoch. Invalid input returns `400`, a duplicate id `409`, an unknown id `404`.
+Sources and sightings take a **UUID v4** id supplied by the caller. Value-identified observables such as IPv4 addresses take no id: theirs is the UUID v5 of their [STIX deterministic identifier](docs/data-model/identity.md), derived from the canonical value, so every producer that sees the same address gets the same id. `observed_at` is seconds since the Unix epoch. Invalid input returns `400`, a duplicate `409`, an unknown id `404`.
 
 ### Try it
 
@@ -203,17 +204,17 @@ curl -X POST $BASE/url-sources -H 'Content-Type: application/json' -d '{
   "polling_interval_seconds": 3600
 }'
 
-# 3. An indicator
-curl -X POST $BASE/iocs -H 'Content-Type: application/json' -d '{
-  "id": "6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60",
-  "ioc_type": "ipv4",
+# 3. An observable: its id is derived from the value
+curl -X POST $BASE/ipv4-addresses -H 'Content-Type: application/json' -d '{
   "value": "198.51.100.7"
 }'
+# => {"id":"12592121-be4c-5a93-a813-5a5af16e50db","stix_id":"ipv4-addr--12592121-be4c-5a93-a813-5a5af16e50db"}
 
-# 4. The source reported that indicator
+# 4. The source reported that address
 curl -X POST $BASE/sightings -H 'Content-Type: application/json' -d '{
   "id": "7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061",
-  "ioc_id": "6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60",
+  "observable_kind": "ipv4_address",
+  "observable_id": "12592121-be4c-5a93-a813-5a5af16e50db",
   "source_id": "550e8400-e29b-41d4-a716-446655440000",
   "observed_at": 1750000000
 }'
@@ -222,8 +223,8 @@ curl -X POST $BASE/sightings -H 'Content-Type: application/json' -d '{
 curl -X POST $BASE/sightings/7e2b3c4d-5e6f-4071-9b02-1c2d3e4f5061/observations \
   -H 'Content-Type: application/json' -d '{"observed_at": 1750003600}'
 
-# 6. Everything seen for that indicator
-curl $BASE/iocs/6f1a2b3c-4d5e-4f60-8a91-0b2c3d4e5f60/sightings
+# 6. Everything seen for that address
+curl $BASE/observables/ipv4_address/12592121-be4c-5a93-a813-5a5af16e50db/sightings
 ```
 
 ## Documentation
@@ -234,7 +235,9 @@ The `docs/` directory is organised one folder per topic, each with its own
 
 | Topic | Contents |
 |---|---|
-| [architecture/](docs/architecture/README.md) | [overview](docs/architecture/overview.md) (layers, dependency rule, patterns), [project-structure](docs/architecture/project-structure.md), [cqrs](docs/architecture/cqrs.md), [domain-events](docs/architecture/domain-events.md), [entities](docs/architecture/entities.md) |
+| [architecture/](docs/architecture/README.md) | [overview](docs/architecture/overview.md) (layers, dependency rule, patterns), [project-structure](docs/architecture/project-structure.md), [cqrs](docs/architecture/cqrs.md), [domain-events](docs/architecture/domain-events.md), [entities](docs/architecture/entities.md), [persistence](docs/architecture/persistence.md), [event-store](docs/architecture/event-store.md) |
+| [data-model/](docs/data-model/README.md) | [identity](docs/data-model/identity.md), [observable kinds](docs/data-model/observable-kinds.md), [catalogue](docs/data-model/observable-catalogue.md), [kinds](docs/data-model/kinds/README.md), [interoperability](docs/data-model/interoperability.md) |
+| [research/](docs/research/README.md) | OpenCTI, MISP and STIX 2.1 data models, pivot identifiers, PostgreSQL storage |
 | [development/](docs/development/README.md) | [gitflow](docs/development/gitflow.md) (branching, rulesets, commit format), [testing](docs/development/testing.md) (mocks, object mothers, e2e) |
 | [guides/](docs/guides/README.md) | [adding-a-bounded-context](docs/guides/adding-a-bounded-context.md), [adding-an-app](docs/guides/adding-an-app.md) |
 
