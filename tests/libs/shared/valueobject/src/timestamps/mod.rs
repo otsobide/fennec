@@ -1,1 +1,2 @@
 mod microsecond_timestamp_tests;
+mod truncate_to_microseconds_tests;
