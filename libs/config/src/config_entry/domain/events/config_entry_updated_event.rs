@@ -1,8 +1,10 @@
 //! Domain event raised when a config entry is updated.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::config_entry::domain::value_objects::config_key::ConfigKey;
 use crate::config_entry::domain::value_objects::config_value::ConfigValue;
@@ -22,7 +24,7 @@ pub struct ConfigEntryUpdatedEvent {
 
 impl ConfigEntryUpdatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "template.config.config_entry.updated";
+    pub const EVENT_NAME: &'static str = "fennec.config.config_entry.updated";
 
     /// Creates a new `ConfigEntryUpdatedEvent` with auto-generated metadata.
     pub fn new(key: ConfigKey, new_value: ConfigValue, old_value: ConfigValue) -> Self {
@@ -50,5 +52,22 @@ impl DomainEvent for ConfigEntryUpdatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            (
+                "key".to_string(),
+                PrimitiveValue::Text(self.key.value().to_string()),
+            ),
+            (
+                "new_value".to_string(),
+                PrimitiveValue::Text(self.new_value.value().to_string()),
+            ),
+            (
+                "old_value".to_string(),
+                PrimitiveValue::Text(self.old_value.value().to_string()),
+            ),
+        ])
     }
 }

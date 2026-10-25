@@ -23,7 +23,10 @@ pub struct ConfigEntryUpdater {
 
 impl ConfigEntryUpdater {
     pub fn new(repository: Arc<dyn ConfigEntryRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(
@@ -33,14 +36,10 @@ impl ConfigEntryUpdater {
     ) -> Result<(), ConfigEntryRepositoryError> {
         debug!(key = %key, "Updating config entry");
 
-        let previous = self
-            .repository
-            .find_by_key(&key)
-            .await?
-            .ok_or_else(|| {
-                warn!(key = %key, "Config entry not found for update");
-                ConfigEntryRepositoryError::NotFound
-            })?;
+        let previous = self.repository.find_by_key(&key).await?.ok_or_else(|| {
+            warn!(key = %key, "Config entry not found for update");
+            ConfigEntryRepositoryError::NotFound
+        })?;
 
         let updated = ConfigEntry::new(key, value);
         self.repository.update(&updated).await?;

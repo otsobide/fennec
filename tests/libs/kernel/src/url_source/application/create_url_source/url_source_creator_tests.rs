@@ -13,10 +13,7 @@ use crate::src::url_source::domain::value_objects::mothers::url_source_id_mother
 use crate::src::url_source::domain::value_objects::mothers::url_source_polling_interval_mother::UrlSourcePollingIntervalMother;
 use crate::src::url_source::domain::value_objects::mothers::url_source_url_mother::UrlSourceUrlMother;
 
-fn make_creator(
-    repo: Arc<UrlSourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> UrlSourceCreator {
+fn make_creator(repo: Arc<UrlSourceRepositoryMock>, bus: Arc<EventBusMock>) -> UrlSourceCreator {
     let repo: Arc<dyn UrlSourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     UrlSourceCreator::new(repo, bus)
@@ -81,7 +78,10 @@ async fn it_returns_already_exists_error() {
         )
         .await;
 
-    assert!(matches!(result, Err(UrlSourceRepositoryError::AlreadyExists)));
+    assert!(matches!(
+        result,
+        Err(UrlSourceRepositoryError::AlreadyExists)
+    ));
 }
 
 #[tokio::test]

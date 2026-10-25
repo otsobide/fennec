@@ -27,10 +27,7 @@ pub trait SourceRepository: Send + Sync {
     /// # Errors
     ///
     /// Returns [`SourceRepositoryError::Unexpected`] on storage failure.
-    async fn find_by_id(
-        &self,
-        id: &SourceId,
-    ) -> Result<Option<Source>, SourceRepositoryError>;
+    async fn find_by_id(&self, id: &SourceId) -> Result<Option<Source>, SourceRepositoryError>;
 
     /// Updates an existing source.
     ///

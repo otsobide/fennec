@@ -6,7 +6,9 @@ use config_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_200_when_entry_is_updated() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -28,7 +30,9 @@ async fn it_returns_200_when_entry_is_updated() {
 #[tokio::test]
 async fn it_persists_the_updated_value() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -44,9 +48,7 @@ async fn it_persists_the_updated_value() {
         .to_request();
     let _: ServiceResponse = test::call_service(&app, put_req).await;
 
-    let get_req = test::TestRequest::get()
-        .uri("/config/theme")
-        .to_request();
+    let get_req = test::TestRequest::get().uri("/config/theme").to_request();
     let resp: ServiceResponse = test::call_service(&app, get_req).await;
 
     let body: serde_json::Value = test::read_body_json(resp).await;
@@ -56,7 +58,9 @@ async fn it_persists_the_updated_value() {
 #[tokio::test]
 async fn it_returns_404_when_updating_nonexistent_entry() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 

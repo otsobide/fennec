@@ -2,7 +2,6 @@
 
 use actix_web::{delete, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use kernel::source::application::delete_source::delete_source_command::DeleteSourceCommand;
 use kernel::source::application::delete_source::delete_source_response::DeleteSourceResponse;
@@ -19,16 +18,13 @@ use crate::AppState;
 /// - `404 Not Found` – no source exists for the given id.
 /// - `500 Internal Server Error` – unexpected error.
 #[delete("/sources/{id}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let id_str = path.into_inner();
     debug!(id = %id_str, "DELETE /sources/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => SourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SourceId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let command = DeleteSourceCommand { id };

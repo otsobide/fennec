@@ -7,3 +7,4 @@ pub mod domain_event;
 pub mod domain_event_subscriber;
 pub mod event_bus;
 pub mod event_bus_error;
+pub mod primitive_value;

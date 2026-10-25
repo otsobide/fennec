@@ -1,8 +1,10 @@
 //! Domain event raised when a new url source is created.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::url_source::domain::value_objects::url_source_created_at::UrlSourceCreatedAt;
 use crate::url_source::domain::value_objects::url_source_format::UrlSourceFormat;
@@ -26,7 +28,7 @@ pub struct UrlSourceCreatedEvent {
 
 impl UrlSourceCreatedEvent {
     /// Canonical event name used to identify this event type on the bus.
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.created";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.created";
 
     pub fn new(
         id: UrlSourceId,
@@ -63,5 +65,31 @@ impl DomainEvent for UrlSourceCreatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "url".to_string(),
+                PrimitiveValue::Text(self.url.value().to_string()),
+            ),
+            (
+                "format".to_string(),
+                PrimitiveValue::Text(self.format.as_str().to_string()),
+            ),
+            (
+                "polling_interval".to_string(),
+                PrimitiveValue::UnsignedInteger(u64::from(self.polling_interval.seconds())),
+            ),
+            (
+                "created_at".to_string(),
+                PrimitiveValue::Timestamp(self.created_at.value()),
+            ),
+            (
+                "updated_at".to_string(),
+                PrimitiveValue::Timestamp(self.updated_at.value()),
+            ),
+        ])
     }
 }

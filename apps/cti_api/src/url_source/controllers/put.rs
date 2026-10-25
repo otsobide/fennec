@@ -2,7 +2,6 @@
 
 use actix_web::{put, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use kernel::url_source::application::update_url_source::update_url_source_command::UpdateUrlSourceCommand;
 use kernel::url_source::application::update_url_source::update_url_source_response::UpdateUrlSourceResponse;
@@ -23,9 +22,9 @@ pub async fn handler(
     let id_str = path.into_inner();
     debug!(id = %id_str, "PUT /url-sources/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => UrlSourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match UrlSourceId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let url = match UrlSourceUrl::new(body.url.clone()) {
@@ -38,12 +37,18 @@ pub async fn handler(
         Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
     };
 
-    let polling_interval = match UrlSourcePollingInterval::from_seconds(body.polling_interval_seconds) {
-        Ok(p) => p,
-        Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
-    };
+    let polling_interval =
+        match UrlSourcePollingInterval::from_seconds(body.polling_interval_seconds) {
+            Ok(p) => p,
+            Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
+        };
 
-    let command = UpdateUrlSourceCommand { id, url, format, polling_interval };
+    let command = UpdateUrlSourceCommand {
+        id,
+        url,
+        format,
+        polling_interval,
+    };
 
     match state.command_bus.dispatch(Box::new(command)).await {
         Ok(boxed) => {

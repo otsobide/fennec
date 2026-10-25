@@ -28,7 +28,10 @@ pub struct SourceUpdater {
 
 impl SourceUpdater {
     pub fn new(repository: Arc<dyn SourceRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(
@@ -39,14 +42,10 @@ impl SourceUpdater {
     ) -> Result<(), SourceRepositoryError> {
         debug!(id = %id, "Updating source");
 
-        let previous = self
-            .repository
-            .find_by_id(&id)
-            .await?
-            .ok_or_else(|| {
-                warn!(id = %id, "Source not found for update");
-                SourceRepositoryError::NotFound
-            })?;
+        let previous = self.repository.find_by_id(&id).await?.ok_or_else(|| {
+            warn!(id = %id, "Source not found for update");
+            SourceRepositoryError::NotFound
+        })?;
 
         let updated = Source::new(
             id,

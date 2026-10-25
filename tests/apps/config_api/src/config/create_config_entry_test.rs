@@ -6,7 +6,9 @@ use config_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_201_when_entry_is_created() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -22,7 +24,9 @@ async fn it_returns_201_when_entry_is_created() {
 #[tokio::test]
 async fn it_persists_the_entry_and_can_be_retrieved() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -47,7 +51,9 @@ async fn it_persists_the_entry_and_can_be_retrieved() {
 #[tokio::test]
 async fn it_returns_409_when_creating_a_duplicate_key() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -71,7 +77,9 @@ async fn it_returns_409_when_creating_a_duplicate_key() {
 #[tokio::test]
 async fn it_returns_404_when_entry_does_not_exist() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -86,7 +94,9 @@ async fn it_returns_404_when_entry_does_not_exist() {
 #[tokio::test]
 async fn it_stores_the_value_exactly_as_provided() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -108,7 +118,9 @@ async fn it_stores_the_value_exactly_as_provided() {
 #[tokio::test]
 async fn it_isolates_state_between_tests() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 

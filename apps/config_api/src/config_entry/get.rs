@@ -25,14 +25,16 @@ pub struct GetConfigEntryResponse {
 /// - `404 Not Found` – no entry exists for the given key.
 /// - `500 Internal Server Error` – unexpected error.
 #[get("/config/{key}")]
-pub async fn handler(
-    state: web::Data<AppState>,
-    path: web::Path<String>,
-) -> impl Responder {
+pub async fn handler(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
     let key_str = path.into_inner();
     debug!(key = %key_str, "GET /config/{{key}}");
 
-    let query = FindConfigEntryQuery { key: ConfigKey::new(key_str.clone()) };
+    let key = match ConfigKey::new(key_str.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
+    let query = FindConfigEntryQuery { key };
 
     match state.query_bus.ask(Box::new(query)).await {
         Ok(boxed) => {

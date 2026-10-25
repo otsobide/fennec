@@ -1,8 +1,11 @@
 //! Core traits and base struct for domain events.
 
 use std::any::{Any, TypeId};
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 use uuid::Uuid;
+
+use crate::domain::primitive_value::PrimitiveValue;
 
 /// Helper trait that enables type erasure for domain events, allowing them to
 /// be stored and dispatched as `dyn Any` in a thread-safe manner.
@@ -37,8 +40,10 @@ impl<T: Any + Send + Sync> AnyDomainEvent for T {
 /// # Example
 ///
 /// ```rust
+/// use std::collections::BTreeMap;
 /// use std::time::SystemTime;
 /// use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+/// use shared_domain_events::domain::primitive_value::PrimitiveValue;
 ///
 /// struct UserCreatedEvent {
 ///     base: DomainEventBase,
@@ -50,6 +55,12 @@ impl<T: Any + Send + Sync> AnyDomainEvent for T {
 ///     fn aggregate_id(&self) -> &str { &self.base.aggregate_id }
 ///     fn event_id(&self) -> &str { &self.base.event_id }
 ///     fn occurred_on(&self) -> SystemTime { self.base.occurred_on }
+///     fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+///         BTreeMap::from([(
+///             "username".to_string(),
+///             PrimitiveValue::Text(self.username.clone()),
+///         )])
+///     }
 /// }
 /// ```
 pub trait DomainEvent: AnyDomainEvent {
@@ -64,6 +75,14 @@ pub trait DomainEvent: AnyDomainEvent {
 
     /// Returns the timestamp at which the event occurred.
     fn occurred_on(&self) -> SystemTime;
+
+    /// Returns the event payload as plain data, keyed by field name.
+    ///
+    /// `created` events carry one key per aggregate field, `updated` events
+    /// the identity plus `old_<field>` and `new_<field>` for each changed
+    /// field, and `deleted` events the identity plus what a subscriber needs
+    /// to react.
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue>;
 }
 
 /// Shared metadata fields for all domain events.

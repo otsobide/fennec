@@ -2,7 +2,6 @@
 
 use actix_web::{put, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 use kernel::source::application::update_source::update_source_command::UpdateSourceCommand;
 use kernel::source::application::update_source::update_source_response::UpdateSourceResponse;
@@ -30,9 +29,9 @@ pub async fn handler(
     let id_str = path.into_inner();
     debug!(id = %id_str, "PUT /sources/{{id}}");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => SourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SourceId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let status = match SourceStatus::from_str(&body.status) {
@@ -40,10 +39,15 @@ pub async fn handler(
         Err(e) => return HttpResponse::BadRequest().body(e.to_string()),
     };
 
+    let description = match SourceDescription::new(body.description.clone()) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
+    };
+
     let command = UpdateSourceCommand {
         id,
         status,
-        description: SourceDescription::new(body.description.clone()),
+        description,
     };
 
     match state.command_bus.dispatch(Box::new(command)).await {

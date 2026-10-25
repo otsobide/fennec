@@ -21,13 +21,10 @@ tokio = { version = "1", features = ["full"] }
 
 [dependencies]
 actix-web = "4"
-ioc = { path = "../../libs/ioc" }
 kernel = { path = "../../libs/kernel" }
-sighting = { path = "../../libs/sighting" }
 shared-cqrs = { path = "../../libs/shared/cqrs" }
 shared-domain-events = { path = "../../libs/shared/domain-events" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-uuid = { version = "1", features = ["v4", "serde"] }

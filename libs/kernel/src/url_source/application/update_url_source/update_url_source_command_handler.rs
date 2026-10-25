@@ -33,7 +33,12 @@ impl CommandHandler<UpdateUrlSourceCommand> for UpdateUrlSourceCommandHandler {
     ) -> Result<Self::Response, CommandBusError> {
         match self
             .updater
-            .execute(command.id, command.url, command.format, command.polling_interval)
+            .execute(
+                command.id,
+                command.url,
+                command.format,
+                command.polling_interval,
+            )
             .await
         {
             Ok(()) => Ok(UpdateUrlSourceResponse { error: None }),

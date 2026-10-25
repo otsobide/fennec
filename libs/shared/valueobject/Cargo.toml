@@ -3,8 +3,12 @@ name = "shared-valueobject"
 version = "0.1.0"
 edition = "2021"
 
+[[test]]
+name = "shared-valueobject"
+path = "../../../tests/libs/shared/valueobject/tests.rs"
+
 [dependencies]
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1", features = ["v4", "v5"] }
 
 [dev-dependencies]
 rand = "0.8"

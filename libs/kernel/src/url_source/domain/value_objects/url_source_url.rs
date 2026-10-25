@@ -2,47 +2,52 @@
 //!
 //! [`UrlSource`]: crate::url_source::domain::entities::url_source::UrlSource
 
-use thiserror::Error;
+use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 
-/// Errors returned when constructing a [`UrlSourceUrl`].
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum UrlSourceUrlError {
-    /// The URL is empty.
-    #[error("url is empty")]
-    Empty,
-    /// The URL does not start with `http://` or `https://`.
-    #[error("url must start with http:// or https://")]
-    InvalidScheme,
-}
+/// Maximum length, in characters, accepted by [`UrlSourceUrl`].
+pub const MAX_LENGTH: usize = 2048;
 
 /// An immutable Value Object wrapping the URL of a
 /// [`UrlSource`](crate::url_source::domain::entities::url_source::UrlSource).
 ///
-/// Validated at construction: must be non-empty and use the `http` or `https`
-/// scheme.
+/// Validated at construction: trimmed, non-empty, `http`/`https` scheme, and
+/// at most [`MAX_LENGTH`] characters.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct UrlSourceUrl(String);
 
 impl UrlSourceUrl {
-    /// Creates a new `UrlSourceUrl` from a raw string.
+    /// Creates a new `UrlSourceUrl` from a raw string, trimming surrounding
+    /// whitespace.
     ///
     /// # Errors
     ///
-    /// Returns [`UrlSourceUrlError::Empty`] if the value is empty, or
-    /// [`UrlSourceUrlError::InvalidScheme`] if it does not start with
-    /// `http://` or `https://`.
-    pub fn new(value: impl Into<String>) -> Result<Self, UrlSourceUrlError> {
-        let value = value.into();
+    /// Returns [`ValueObjectValidationError`] when an invariant is violated.
+    pub fn new(value: impl Into<String>) -> Result<Self, ValueObjectValidationError> {
+        let value = value.into().trim().to_string();
+
         if value.is_empty() {
-            return Err(UrlSourceUrlError::Empty);
+            return Err(ValueObjectValidationError::new(
+                "url source url must not be empty".to_string(),
+            ));
         }
+
         if !value.starts_with("http://") && !value.starts_with("https://") {
-            return Err(UrlSourceUrlError::InvalidScheme);
+            return Err(ValueObjectValidationError::new(
+                "url source url must start with http:// or https://".to_string(),
+            ));
         }
+
+        if value.chars().count() > MAX_LENGTH {
+            return Err(ValueObjectValidationError::new(format!(
+                "url source url must be at most {MAX_LENGTH} characters, got {}",
+                value.chars().count()
+            )));
+        }
+
         Ok(Self(value))
     }
 
-    /// Returns a reference to the underlying URL string.
+    /// Returns a reference to the underlying string.
     pub fn value(&self) -> &str {
         &self.0
     }

@@ -23,7 +23,10 @@ pub struct ConfigEntryCreator {
 
 impl ConfigEntryCreator {
     pub fn new(repository: Arc<dyn ConfigEntryRepository>, event_bus: Arc<dyn EventBus>) -> Self {
-        Self { repository, event_bus }
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(

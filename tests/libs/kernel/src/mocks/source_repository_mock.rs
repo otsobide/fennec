@@ -129,10 +129,7 @@ impl SourceRepository for SourceRepositoryMock {
         }
     }
 
-    async fn find_by_id(
-        &self,
-        _id: &SourceId,
-    ) -> Result<Option<Source>, SourceRepositoryError> {
+    async fn find_by_id(&self, _id: &SourceId) -> Result<Option<Source>, SourceRepositoryError> {
         match &self.find_by_id_behavior {
             FindByIdBehavior::ReturnsNone => Ok(None),
             FindByIdBehavior::ReturnsSource(cell) => Ok(cell.lock().unwrap().take()),

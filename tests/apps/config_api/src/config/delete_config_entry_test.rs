@@ -6,7 +6,9 @@ use config_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_204_when_entry_is_deleted() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -27,7 +29,9 @@ async fn it_returns_204_when_entry_is_deleted() {
 #[tokio::test]
 async fn it_is_no_longer_retrievable_after_deletion() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -53,7 +57,9 @@ async fn it_is_no_longer_retrievable_after_deletion() {
 #[tokio::test]
 async fn it_returns_404_when_deleting_nonexistent_entry() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -68,7 +74,9 @@ async fn it_returns_404_when_deleting_nonexistent_entry() {
 #[tokio::test]
 async fn it_returns_404_when_deleting_the_same_entry_twice() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -78,14 +86,10 @@ async fn it_returns_404_when_deleting_the_same_entry_twice() {
         .to_request();
     let _: ServiceResponse = test::call_service(&app, post_req).await;
 
-    let first = test::TestRequest::delete()
-        .uri("/config/once")
-        .to_request();
+    let first = test::TestRequest::delete().uri("/config/once").to_request();
     let _: ServiceResponse = test::call_service(&app, first).await;
 
-    let second = test::TestRequest::delete()
-        .uri("/config/once")
-        .to_request();
+    let second = test::TestRequest::delete().uri("/config/once").to_request();
     let resp: ServiceResponse = test::call_service(&app, second).await;
 
     assert_eq!(resp.status(), 404);

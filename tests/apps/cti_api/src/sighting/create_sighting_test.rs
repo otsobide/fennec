@@ -6,16 +6,18 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_201_when_sighting_is_created() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
-            "id": "11111111-1111-1111-1111-111111111111",
-            "ioc_id": "22222222-2222-2222-2222-222222222222",
-            "source_id": "33333333-3333-3333-3333-333333333333",
+            "id": "11111111-1111-4111-8111-111111111111",
+            "ioc_id": "22222222-2222-4222-8222-222222222222",
+            "source_id": "33333333-3333-4333-8333-333333333333",
             "observed_at": 1_700_000_000_u64,
         }))
         .to_request();
@@ -27,7 +29,9 @@ async fn it_returns_201_when_sighting_is_created() {
 #[tokio::test]
 async fn it_returns_409_when_creating_a_duplicate_id() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -35,9 +39,9 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
     let first = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
-            "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "ioc_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "source_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            "ioc_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            "source_id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
             "observed_at": 1_700_000_000_u64,
         }))
         .to_request();
@@ -49,9 +53,9 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
     let second = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
-            "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "ioc_id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
-            "source_id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+            "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            "ioc_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+            "source_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
             "observed_at": 1_700_000_000_u64,
         }))
         .to_request();
@@ -63,13 +67,15 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
 #[tokio::test]
 async fn it_returns_409_and_existing_id_when_pair_already_exists() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let existing_id = "12341234-1234-1234-1234-123412341234";
-    let ioc_id = "aaaa1111-aaaa-1111-aaaa-1111aaaa1111";
-    let source_id = "bbbb2222-bbbb-2222-bbbb-2222bbbb2222";
+    let existing_id = "12341234-1234-4234-8234-123412341234";
+    let ioc_id = "aaaa1111-aaaa-4111-8aaa-1111aaaa1111";
+    let source_id = "bbbb2222-bbbb-4222-8bbb-2222bbbb2222";
 
     let first = test::TestRequest::post()
         .uri("/sightings")
@@ -85,7 +91,7 @@ async fn it_returns_409_and_existing_id_when_pair_already_exists() {
     let second = test::TestRequest::post()
         .uri("/sightings")
         .set_json(json!({
-            "id": "99999999-9999-9999-9999-999999999999",
+            "id": "99999999-9999-4999-8999-999999999999",
             "ioc_id": ioc_id,
             "source_id": source_id,
             "observed_at": 1_700_000_001_u64,
@@ -103,7 +109,9 @@ async fn it_returns_409_and_existing_id_when_pair_already_exists() {
 #[tokio::test]
 async fn it_returns_400_for_invalid_uuid() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -111,8 +119,8 @@ async fn it_returns_400_for_invalid_uuid() {
         .uri("/sightings")
         .set_json(json!({
             "id": "not-a-uuid",
-            "ioc_id": "22222222-2222-2222-2222-222222222222",
-            "source_id": "33333333-3333-3333-3333-333333333333",
+            "ioc_id": "22222222-2222-4222-8222-222222222222",
+            "source_id": "33333333-3333-4333-8333-333333333333",
             "observed_at": 1_700_000_000_u64,
         }))
         .to_request();
@@ -124,13 +132,15 @@ async fn it_returns_400_for_invalid_uuid() {
 #[tokio::test]
 async fn it_returns_400_for_missing_body_fields() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/sightings")
-        .set_json(json!({ "id": "11111111-1111-1111-1111-111111111111" }))
+        .set_json(json!({ "id": "11111111-1111-4111-8111-111111111111" }))
         .to_request();
 
     let resp: ServiceResponse = test::call_service(&app, req).await;

@@ -14,10 +14,7 @@ use crate::src::url_source::domain::value_objects::mothers::url_source_id_mother
 use crate::src::url_source::domain::value_objects::mothers::url_source_polling_interval_mother::UrlSourcePollingIntervalMother;
 use crate::src::url_source::domain::value_objects::mothers::url_source_url_mother::UrlSourceUrlMother;
 
-fn make_updater(
-    repo: Arc<UrlSourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> UrlSourceUpdater {
+fn make_updater(repo: Arc<UrlSourceRepositoryMock>, bus: Arc<EventBusMock>) -> UrlSourceUpdater {
     let repo: Arc<dyn UrlSourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     UrlSourceUpdater::new(repo, bus)
@@ -87,9 +84,8 @@ async fn it_returns_not_found_when_url_source_does_not_exist() {
 #[tokio::test]
 async fn it_does_not_publish_event_when_update_fails() {
     let url_source = UrlSourceMother::random();
-    let repo = Arc::new(UrlSourceRepositoryMock::that_returns_url_source_but_update_fails(
-        url_source,
-    ));
+    let repo =
+        Arc::new(UrlSourceRepositoryMock::that_returns_url_source_but_update_fails(url_source));
     let bus = Arc::new(EventBusMock::new());
     let updater = make_updater(repo.clone(), bus.clone());
 

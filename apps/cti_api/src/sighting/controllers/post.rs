@@ -5,13 +5,12 @@ use std::time::{Duration, UNIX_EPOCH};
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::Serialize;
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
-use ::sighting::sighting::application::create_sighting::create_sighting_command::CreateSightingCommand;
-use ::sighting::sighting::application::create_sighting::create_sighting_response::CreateSightingResponse;
-use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
-use ::sighting::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
-use ::sighting::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
+use kernel::sighting::application::create_sighting::create_sighting_command::CreateSightingCommand;
+use kernel::sighting::application::create_sighting::create_sighting_response::CreateSightingResponse;
+use kernel::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::domain::value_objects::sighting_ioc_id::SightingIocId;
+use kernel::sighting::domain::value_objects::sighting_source_id::SightingSourceId;
 
 use crate::sighting::request_dtos::create_sighting_request::CreateSightingRequest;
 use crate::AppState;
@@ -29,19 +28,19 @@ pub async fn handler(
 ) -> impl Responder {
     debug!(id = %body.id, "POST /sightings");
 
-    let id = match Uuid::parse_str(&body.id) {
-        Ok(uuid) => SightingId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SightingId::new(&body.id) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
-    let ioc_id = match Uuid::parse_str(&body.ioc_id) {
-        Ok(uuid) => SightingIocId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid ioc_id UUID format"),
+    let ioc_id = match SightingIocId::new(&body.ioc_id) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
-    let source_id = match Uuid::parse_str(&body.source_id) {
-        Ok(uuid) => SightingSourceId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid source_id UUID format"),
+    let source_id = match SightingSourceId::new(&body.source_id) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let observed_at = UNIX_EPOCH + Duration::from_secs(body.observed_at);

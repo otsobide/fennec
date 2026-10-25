@@ -8,8 +8,8 @@ use shared_domain_events::domain::event_bus::EventBus;
 
 use crate::src::config_entry::domain::value_objects::mothers::config_key_mother::ConfigKeyMother;
 use crate::src::config_entry::domain::value_objects::mothers::config_value_mother::ConfigValueMother;
-use crate::src::mocks::event_bus_mock::EventBusMock;
 use crate::src::mocks::config_entry_repository_mock::ConfigEntryRepositoryMock;
+use crate::src::mocks::event_bus_mock::EventBusMock;
 
 fn make_creator(
     repo: Arc<ConfigEntryRepositoryMock>,

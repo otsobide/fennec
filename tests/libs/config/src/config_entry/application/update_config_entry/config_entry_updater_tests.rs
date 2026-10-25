@@ -9,8 +9,8 @@ use shared_domain_events::domain::event_bus::EventBus;
 use crate::src::config_entry::domain::entities::mothers::config_entry_mother::ConfigEntryMother;
 use crate::src::config_entry::domain::value_objects::mothers::config_key_mother::ConfigKeyMother;
 use crate::src::config_entry::domain::value_objects::mothers::config_value_mother::ConfigValueMother;
-use crate::src::mocks::event_bus_mock::EventBusMock;
 use crate::src::mocks::config_entry_repository_mock::ConfigEntryRepositoryMock;
+use crate::src::mocks::event_bus_mock::EventBusMock;
 
 fn make_updater(
     repo: Arc<ConfigEntryRepositoryMock>,
@@ -64,10 +64,7 @@ async fn it_returns_not_found_when_entry_does_not_exist() {
         .execute(ConfigKeyMother::random(), ConfigValueMother::random())
         .await;
 
-    assert!(matches!(
-        result,
-        Err(ConfigEntryRepositoryError::NotFound)
-    ));
+    assert!(matches!(result, Err(ConfigEntryRepositoryError::NotFound)));
 }
 
 #[tokio::test]

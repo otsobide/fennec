@@ -4,11 +4,10 @@ use std::time::{Duration, UNIX_EPOCH};
 
 use actix_web::{post, web, HttpResponse, Responder};
 use tracing::{debug, info, warn};
-use uuid::Uuid;
 
-use ::sighting::sighting::application::observe_sighting::observe_sighting_command::ObserveSightingCommand;
-use ::sighting::sighting::application::observe_sighting::observe_sighting_response::ObserveSightingResponse;
-use ::sighting::sighting::domain::value_objects::sighting_id::SightingId;
+use kernel::sighting::application::observe_sighting::observe_sighting_command::ObserveSightingCommand;
+use kernel::sighting::application::observe_sighting::observe_sighting_response::ObserveSightingResponse;
+use kernel::sighting::domain::value_objects::sighting_id::SightingId;
 
 use crate::sighting::request_dtos::observe_sighting_request::ObserveSightingRequest;
 use crate::AppState;
@@ -22,9 +21,9 @@ pub async fn handler(
     let id_str = path.into_inner();
     debug!(id = %id_str, "POST /sightings/{{id}}/observations");
 
-    let id = match Uuid::parse_str(&id_str) {
-        Ok(uuid) => SightingId::from_uuid(uuid),
-        Err(_) => return HttpResponse::BadRequest().body("Invalid UUID format"),
+    let id = match SightingId::new(&id_str) {
+        Ok(value) => value,
+        Err(error) => return HttpResponse::BadRequest().body(error.to_string()),
     };
 
     let observed_at = UNIX_EPOCH + Duration::from_secs(body.observed_at);

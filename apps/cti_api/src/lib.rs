@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use actix_web::web;
 
-use ::ioc::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
-use ::ioc::ioc::application::create_ioc::ioc_creator::IocCreator;
-use ::ioc::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
-use ::ioc::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
-use ::ioc::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
-use ::ioc::ioc::application::find_ioc::ioc_finder::IocFinder;
-use ::ioc::ioc::domain::repositories::ioc_repository::IocRepository;
-use ::ioc::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
+use kernel::ioc::application::create_ioc::create_ioc_command_handler::CreateIocCommandHandler;
+use kernel::ioc::application::create_ioc::ioc_creator::IocCreator;
+use kernel::ioc::application::delete_ioc::delete_ioc_command_handler::DeleteIocCommandHandler;
+use kernel::ioc::application::delete_ioc::ioc_deleter::IocDeleter;
+use kernel::ioc::application::find_ioc::find_ioc_query_handler::FindIocQueryHandler;
+use kernel::ioc::application::find_ioc::ioc_finder::IocFinder;
+use kernel::ioc::domain::repositories::ioc_repository::IocRepository;
+use kernel::ioc::infrastructure::persistence::in_memory::in_memory_ioc_repository::InMemoryIocRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
@@ -30,20 +30,20 @@ use kernel::url_source::application::update_url_source::update_url_source_comman
 use kernel::url_source::application::update_url_source::url_source_updater::UrlSourceUpdater;
 use kernel::url_source::domain::repositories::url_source_repository::UrlSourceRepository;
 use kernel::url_source::infrastructure::persistence::in_memory::in_memory_url_source_repository::InMemoryUrlSourceRepository;
-use ::sighting::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
-use ::sighting::sighting::application::create_sighting::sighting_creator::SightingCreator;
-use ::sighting::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
-use ::sighting::sighting::application::delete_sighting::sighting_deleter::SightingDeleter;
-use ::sighting::sighting::application::find_sighting::find_sighting_query_handler::FindSightingQueryHandler;
-use ::sighting::sighting::application::find_sighting::sighting_finder::SightingFinder;
-use ::sighting::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_query_handler::ListSightingsByIocQueryHandler;
-use ::sighting::sighting::application::list_sightings_by_ioc::sightings_by_ioc_lister::SightingsByIocLister;
-use ::sighting::sighting::application::list_sightings_by_source::list_sightings_by_source_query_handler::ListSightingsBySourceQueryHandler;
-use ::sighting::sighting::application::list_sightings_by_source::sightings_by_source_lister::SightingsBySourceLister;
-use ::sighting::sighting::application::observe_sighting::observe_sighting_command_handler::ObserveSightingCommandHandler;
-use ::sighting::sighting::application::observe_sighting::sighting_observer::SightingObserver;
-use ::sighting::sighting::domain::repositories::sighting_repository::SightingRepository;
-use ::sighting::sighting::infrastructure::persistence::in_memory::in_memory_sighting_repository::InMemorySightingRepository;
+use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
+use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
+use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
+use kernel::sighting::application::delete_sighting::sighting_deleter::SightingDeleter;
+use kernel::sighting::application::find_sighting::find_sighting_query_handler::FindSightingQueryHandler;
+use kernel::sighting::application::find_sighting::sighting_finder::SightingFinder;
+use kernel::sighting::application::list_sightings_by_ioc::list_sightings_by_ioc_query_handler::ListSightingsByIocQueryHandler;
+use kernel::sighting::application::list_sightings_by_ioc::sightings_by_ioc_lister::SightingsByIocLister;
+use kernel::sighting::application::list_sightings_by_source::list_sightings_by_source_query_handler::ListSightingsBySourceQueryHandler;
+use kernel::sighting::application::list_sightings_by_source::sightings_by_source_lister::SightingsBySourceLister;
+use kernel::sighting::application::observe_sighting::observe_sighting_command_handler::ObserveSightingCommandHandler;
+use kernel::sighting::application::observe_sighting::sighting_observer::SightingObserver;
+use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
+use kernel::sighting::infrastructure::persistence::in_memory::in_memory_sighting_repository::InMemorySightingRepository;
 use shared_cqrs::command::domain::command_bus::CommandBus;
 use shared_cqrs::command::infrastructure::in_memory::in_memory_command_bus::InMemoryCommandBus;
 use shared_cqrs::query::domain::query_bus::QueryBus;
@@ -97,19 +97,15 @@ pub fn build_state() -> web::Data<AppState> {
     let ioc_deleter = IocDeleter::new(Arc::clone(&ioc_repo), Arc::clone(&event_bus));
 
     // --- sighting ---
-    let sighting_repo: Arc<dyn SightingRepository> =
-        Arc::new(InMemorySightingRepository::new());
+    let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
 
-    let sighting_creator =
-        SightingCreator::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
+    let sighting_creator = SightingCreator::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_observer =
         SightingObserver::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
-    let sighting_deleter =
-        SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
+    let sighting_deleter = SightingDeleter::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_finder = SightingFinder::new(Arc::clone(&sighting_repo));
     let sightings_by_ioc_lister = SightingsByIocLister::new(Arc::clone(&sighting_repo));
-    let sightings_by_source_lister =
-        SightingsBySourceLister::new(Arc::clone(&sighting_repo));
+    let sightings_by_source_lister = SightingsBySourceLister::new(Arc::clone(&sighting_repo));
 
     // --- command bus ---
     let mut command_bus = InMemoryCommandBus::new();
@@ -172,7 +168,10 @@ pub fn build_state() -> web::Data<AppState> {
         .expect("Failed to register ListSightingsBySourceQueryHandler");
     let query_bus: Arc<dyn QueryBus> = Arc::new(query_bus);
 
-    web::Data::new(AppState { command_bus, query_bus })
+    web::Data::new(AppState {
+        command_bus,
+        query_bus,
+    })
 }
 
 /// Registers all HTTP routes onto an Actix-Web [`ServiceConfig`].

@@ -6,14 +6,16 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_returns_201_when_ioc_is_created() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/iocs")
         .set_json(json!({
-            "id": "550e8400-e29b-41d4-a716-446655440000",
+            "id": "550e8400-e29b-41d4-8716-446655440000",
             "ioc_type": "ipv4",
             "value": "203.0.113.10"
         }))
@@ -26,20 +28,28 @@ async fn it_returns_201_when_ioc_is_created() {
 #[tokio::test]
 async fn it_returns_409_when_creating_a_duplicate_id() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let body = json!({
-        "id": "deadbeef-dead-beef-dead-beefdeadbeef",
+        "id": "deadbeef-dead-4eef-8ead-beefdeadbeef",
         "ioc_type": "domain",
         "value": "malicious.example.com"
     });
 
-    let first = test::TestRequest::post().uri("/iocs").set_json(&body).to_request();
+    let first = test::TestRequest::post()
+        .uri("/iocs")
+        .set_json(&body)
+        .to_request();
     let _: ServiceResponse = test::call_service(&app, first).await;
 
-    let second = test::TestRequest::post().uri("/iocs").set_json(&body).to_request();
+    let second = test::TestRequest::post()
+        .uri("/iocs")
+        .set_json(&body)
+        .to_request();
     let resp: ServiceResponse = test::call_service(&app, second).await;
 
     assert_eq!(resp.status(), 409);
@@ -48,7 +58,9 @@ async fn it_returns_409_when_creating_a_duplicate_id() {
 #[tokio::test]
 async fn it_returns_400_for_invalid_uuid() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
@@ -68,14 +80,16 @@ async fn it_returns_400_for_invalid_uuid() {
 #[tokio::test]
 async fn it_returns_400_for_unknown_ioc_type() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/iocs")
         .set_json(json!({
-            "id": "550e8400-e29b-41d4-a716-446655440001",
+            "id": "550e8400-e29b-41d4-8716-446655440001",
             "ioc_type": "cidr",
             "value": "203.0.113.0/24"
         }))
@@ -88,14 +102,16 @@ async fn it_returns_400_for_unknown_ioc_type() {
 #[tokio::test]
 async fn it_returns_400_for_empty_value() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::post()
         .uri("/iocs")
         .set_json(json!({
-            "id": "550e8400-e29b-41d4-a716-446655440002",
+            "id": "550e8400-e29b-41d4-8716-446655440002",
             "ioc_type": "ipv4",
             "value": ""
         }))

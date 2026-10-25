@@ -1,8 +1,10 @@
 //! Domain event raised when a url source is updated.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::url_source::domain::value_objects::url_source_format::UrlSourceFormat;
 use crate::url_source::domain::value_objects::url_source_id::UrlSourceId;
@@ -26,7 +28,7 @@ pub struct UrlSourceUpdatedEvent {
 }
 
 impl UrlSourceUpdatedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.updated";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.updated";
 
     pub fn new(
         id: UrlSourceId,
@@ -67,5 +69,39 @@ impl DomainEvent for UrlSourceUpdatedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([
+            ("id".to_string(), PrimitiveValue::Text(self.id.to_string())),
+            (
+                "new_url".to_string(),
+                PrimitiveValue::Text(self.new_url.value().to_string()),
+            ),
+            (
+                "old_url".to_string(),
+                PrimitiveValue::Text(self.old_url.value().to_string()),
+            ),
+            (
+                "new_format".to_string(),
+                PrimitiveValue::Text(self.new_format.as_str().to_string()),
+            ),
+            (
+                "old_format".to_string(),
+                PrimitiveValue::Text(self.old_format.as_str().to_string()),
+            ),
+            (
+                "new_polling_interval".to_string(),
+                PrimitiveValue::UnsignedInteger(u64::from(self.new_polling_interval.seconds())),
+            ),
+            (
+                "old_polling_interval".to_string(),
+                PrimitiveValue::UnsignedInteger(u64::from(self.old_polling_interval.seconds())),
+            ),
+            (
+                "updated_at".to_string(),
+                PrimitiveValue::Timestamp(self.updated_at.value()),
+            ),
+        ])
     }
 }

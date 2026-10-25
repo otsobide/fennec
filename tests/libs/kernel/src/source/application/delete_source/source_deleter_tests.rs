@@ -11,10 +11,7 @@ use crate::src::mocks::source_repository_mock::SourceRepositoryMock;
 use crate::src::source::domain::entities::mothers::source_mother::SourceMother;
 use crate::src::source::domain::value_objects::mothers::source_id_mother::SourceIdMother;
 
-fn make_deleter(
-    repo: Arc<SourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> SourceDeleter {
+fn make_deleter(repo: Arc<SourceRepositoryMock>, bus: Arc<EventBusMock>) -> SourceDeleter {
     let repo: Arc<dyn SourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     SourceDeleter::new(repo, bus)

@@ -6,10 +6,10 @@ pub struct SourceIdMother;
 #[allow(dead_code)]
 impl SourceIdMother {
     pub fn create(value: Uuid) -> SourceId {
-        SourceId::from_uuid(value)
+        SourceId::from_uuid(value).expect("mother must build a valid UUID v4")
     }
 
     pub fn random() -> SourceId {
-        SourceId::from_uuid(Uuid::new_v4())
+        SourceId::generate()
     }
 }

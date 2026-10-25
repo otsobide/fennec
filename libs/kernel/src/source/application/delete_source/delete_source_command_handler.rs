@@ -27,7 +27,10 @@ impl DeleteSourceCommandHandler {
 impl CommandHandler<DeleteSourceCommand> for DeleteSourceCommandHandler {
     type Response = DeleteSourceResponse;
 
-    async fn handle(&self, command: DeleteSourceCommand) -> Result<Self::Response, CommandBusError> {
+    async fn handle(
+        &self,
+        command: DeleteSourceCommand,
+    ) -> Result<Self::Response, CommandBusError> {
         match self.deleter.execute(command.id).await {
             Ok(()) => Ok(DeleteSourceResponse { error: None }),
             Err(e) => {

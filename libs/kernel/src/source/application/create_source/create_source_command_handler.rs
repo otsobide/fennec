@@ -27,10 +27,18 @@ impl CreateSourceCommandHandler {
 impl CommandHandler<CreateSourceCommand> for CreateSourceCommandHandler {
     type Response = CreateSourceResponse;
 
-    async fn handle(&self, command: CreateSourceCommand) -> Result<Self::Response, CommandBusError> {
+    async fn handle(
+        &self,
+        command: CreateSourceCommand,
+    ) -> Result<Self::Response, CommandBusError> {
         match self
             .creator
-            .execute(command.id, command.source_type, command.status, command.description)
+            .execute(
+                command.id,
+                command.source_type,
+                command.status,
+                command.description,
+            )
             .await
         {
             Ok(()) => Ok(CreateSourceResponse { error: None }),

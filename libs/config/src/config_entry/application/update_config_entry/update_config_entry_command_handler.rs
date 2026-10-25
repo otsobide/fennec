@@ -7,9 +7,9 @@ use shared_cqrs::command::domain::command_handler::CommandHandler;
 use crate::config_entry::application::find_config_entry::find_config_entry_response::ConfigEntryErrorEntry;
 use crate::config_entry::domain::errors::config_entry_repository_error::ConfigEntryRepositoryError;
 
+use super::config_entry_updater::ConfigEntryUpdater;
 use super::update_config_entry_command::UpdateConfigEntryCommand;
 use super::update_config_entry_response::UpdateConfigEntryResponse;
-use super::config_entry_updater::ConfigEntryUpdater;
 
 /// [`CommandHandler`] that processes [`UpdateConfigEntryCommand`]s by
 /// delegating to [`ConfigEntryUpdater`].
@@ -27,7 +27,10 @@ impl UpdateConfigEntryCommandHandler {
 impl CommandHandler<UpdateConfigEntryCommand> for UpdateConfigEntryCommandHandler {
     type Response = UpdateConfigEntryResponse;
 
-    async fn handle(&self, command: UpdateConfigEntryCommand) -> Result<Self::Response, CommandBusError> {
+    async fn handle(
+        &self,
+        command: UpdateConfigEntryCommand,
+    ) -> Result<Self::Response, CommandBusError> {
         match self.updater.execute(command.key, command.value).await {
             Ok(()) => Ok(UpdateConfigEntryResponse { error: None }),
             Err(e) => {

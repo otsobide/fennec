@@ -1,0 +1,39 @@
+name: Gitflow
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  branch-name:
+    name: gitflow branch name
+    if: github.base_ref == 'dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the head branch follows gitflow
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            feature/*|hotfix/*|main)
+              echo "ok: $HEAD_REF" ;;
+            *)
+              echo "PRs into dev must come from a feature/* or hotfix/* branch (got: $HEAD_REF)"
+              exit 1 ;;
+          esac
+
+  release-source:
+    name: release source branch
+    if: github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the release comes from dev
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" = "dev" ]; then
+            echo "ok: release PR from dev"
+          else
+            echo "PRs into main are releases and must come from dev (got: $HEAD_REF)"
+            exit 1
+          fi

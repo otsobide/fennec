@@ -64,7 +64,10 @@ pub fn build_state() -> web::Data<AppState> {
         .expect("Failed to register FindConfigEntryQueryHandler");
     let query_bus: Arc<dyn QueryBus> = Arc::new(query_bus);
 
-    web::Data::new(AppState { command_bus, query_bus })
+    web::Data::new(AppState {
+        command_bus,
+        query_bus,
+    })
 }
 
 /// Registers all HTTP routes onto an Actix-Web [`ServiceConfig`].

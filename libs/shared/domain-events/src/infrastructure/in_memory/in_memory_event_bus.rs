@@ -31,6 +31,7 @@ type HandlerFn = Box<dyn Fn(&dyn Any) -> Result<(), EventBusError> + Send + Sync
 /// #     fn aggregate_id(&self) -> &str { &self.base.aggregate_id }
 /// #     fn event_id(&self) -> &str { &self.base.event_id }
 /// #     fn occurred_on(&self) -> SystemTime { self.base.occurred_on }
+/// #     fn to_primitives(&self) -> std::collections::BTreeMap<String, shared_domain_events::domain::primitive_value::PrimitiveValue> { Default::default() }
 /// # }
 /// # struct SendWelcomeEmailOnUserCreated;
 /// # impl DomainEventSubscriber<UserCreatedEvent> for SendWelcomeEmailOnUserCreated {

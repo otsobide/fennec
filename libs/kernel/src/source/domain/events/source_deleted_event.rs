@@ -1,8 +1,10 @@
 //! Domain event raised when a source is deleted.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::source::domain::value_objects::source_id::SourceId;
 
@@ -42,5 +44,9 @@ impl DomainEvent for SourceDeletedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([("id".to_string(), PrimitiveValue::Text(self.id.to_string()))])
     }
 }

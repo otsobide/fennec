@@ -7,9 +7,9 @@ use shared_cqrs::command::domain::command_handler::CommandHandler;
 use crate::config_entry::application::find_config_entry::find_config_entry_response::ConfigEntryErrorEntry;
 use crate::config_entry::domain::errors::config_entry_repository_error::ConfigEntryRepositoryError;
 
+use super::config_entry_deleter::ConfigEntryDeleter;
 use super::delete_config_entry_command::DeleteConfigEntryCommand;
 use super::delete_config_entry_response::DeleteConfigEntryResponse;
-use super::config_entry_deleter::ConfigEntryDeleter;
 
 /// [`CommandHandler`] that processes [`DeleteConfigEntryCommand`]s by
 /// delegating to [`ConfigEntryDeleter`].
@@ -27,7 +27,10 @@ impl DeleteConfigEntryCommandHandler {
 impl CommandHandler<DeleteConfigEntryCommand> for DeleteConfigEntryCommandHandler {
     type Response = DeleteConfigEntryResponse;
 
-    async fn handle(&self, command: DeleteConfigEntryCommand) -> Result<Self::Response, CommandBusError> {
+    async fn handle(
+        &self,
+        command: DeleteConfigEntryCommand,
+    ) -> Result<Self::Response, CommandBusError> {
         match self.deleter.execute(command.key).await {
             Ok(()) => Ok(DeleteConfigEntryResponse { error: None }),
             Err(e) => {

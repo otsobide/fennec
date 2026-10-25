@@ -1,8 +1,10 @@
 //! Domain event raised when a url source is deleted.
 
+use std::collections::BTreeMap;
 use std::time::SystemTime;
 
 use shared_domain_events::domain::domain_event::{DomainEvent, DomainEventBase};
+use shared_domain_events::domain::primitive_value::PrimitiveValue;
 
 use crate::url_source::domain::value_objects::url_source_id::UrlSourceId;
 
@@ -15,7 +17,7 @@ pub struct UrlSourceDeletedEvent {
 }
 
 impl UrlSourceDeletedEvent {
-    pub const EVENT_NAME: &'static str = "fennec.url_source.url_source.deleted";
+    pub const EVENT_NAME: &'static str = "fennec.kernel.url_source.deleted";
 
     pub fn new(id: UrlSourceId) -> Self {
         Self {
@@ -40,5 +42,9 @@ impl DomainEvent for UrlSourceDeletedEvent {
 
     fn occurred_on(&self) -> SystemTime {
         self.base.occurred_on
+    }
+
+    fn to_primitives(&self) -> BTreeMap<String, PrimitiveValue> {
+        BTreeMap::from([("id".to_string(), PrimitiveValue::Text(self.id.to_string()))])
     }
 }

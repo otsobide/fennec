@@ -26,11 +26,11 @@ pub struct UrlSourceCreator {
 }
 
 impl UrlSourceCreator {
-    pub fn new(
-        repository: Arc<dyn UrlSourceRepository>,
-        event_bus: Arc<dyn EventBus>,
-    ) -> Self {
-        Self { repository, event_bus }
+    pub fn new(repository: Arc<dyn UrlSourceRepository>, event_bus: Arc<dyn EventBus>) -> Self {
+        Self {
+            repository,
+            event_bus,
+        }
     }
 
     pub async fn execute(

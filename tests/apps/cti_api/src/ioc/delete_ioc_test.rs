@@ -6,11 +6,13 @@ use cti_api::{build_state, configure_routes};
 #[tokio::test]
 async fn it_deletes_an_existing_ioc() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
-    let id = "e3e3e3e3-e3e3-e3e3-e3e3-e3e3e3e3e3e3";
+    let id = "e3e3e3e3-e3e3-43e3-83e3-e3e3e3e3e3e3";
 
     let post = test::TestRequest::post()
         .uri("/iocs")
@@ -38,12 +40,14 @@ async fn it_deletes_an_existing_ioc() {
 #[tokio::test]
 async fn it_returns_404_when_deleting_unknown_ioc() {
     let app = test::init_service(
-        App::new().app_data(build_state()).configure(configure_routes),
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
     )
     .await;
 
     let req = test::TestRequest::delete()
-        .uri("/iocs/00000000-0000-0000-0000-000000000000")
+        .uri("/iocs/00000000-0000-4000-8000-000000000000")
         .to_request();
 
     let resp: ServiceResponse = test::call_service(&app, req).await;

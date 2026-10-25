@@ -13,10 +13,7 @@ use crate::src::source::domain::value_objects::mothers::source_description_mothe
 use crate::src::source::domain::value_objects::mothers::source_id_mother::SourceIdMother;
 use crate::src::source::domain::value_objects::mothers::source_status_mother::SourceStatusMother;
 
-fn make_updater(
-    repo: Arc<SourceRepositoryMock>,
-    bus: Arc<EventBusMock>,
-) -> SourceUpdater {
+fn make_updater(repo: Arc<SourceRepositoryMock>, bus: Arc<EventBusMock>) -> SourceUpdater {
     let repo: Arc<dyn SourceRepository> = repo;
     let bus: Arc<dyn EventBus> = bus;
     SourceUpdater::new(repo, bus)
@@ -83,7 +80,9 @@ async fn it_returns_not_found_when_source_does_not_exist() {
 #[tokio::test]
 async fn it_does_not_publish_event_when_update_fails() {
     let source = SourceMother::random();
-    let repo = Arc::new(SourceRepositoryMock::that_returns_source_but_update_fails(source));
+    let repo = Arc::new(SourceRepositoryMock::that_returns_source_but_update_fails(
+        source,
+    ));
     let bus = Arc::new(EventBusMock::new());
     let updater = make_updater(repo.clone(), bus.clone());
 
