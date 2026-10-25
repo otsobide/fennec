@@ -42,3 +42,42 @@ jobs:
 
       - name: Build (release)
         run: cargo build --workspace --release
+
+  postgres:
+    name: PostgreSQL 18
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: fennec
+          POSTGRES_PASSWORD: fennec
+          POSTGRES_DB: fennec
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fennec -d fennec"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://fennec:fennec@localhost:5432/fennec
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      # Every test that needs a database is #[ignore]d so the default suite
+      # runs without one; this job runs exactly those.
+      - name: Run the database tests
+        run: cargo test --workspace -- --ignored

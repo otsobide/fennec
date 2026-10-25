@@ -8,5 +8,6 @@ members = [
     "libs/kernel",
     "libs/shared/cqrs",
     "libs/shared/domain-events",
+    "libs/shared/persistence-postgres",
     "libs/shared/valueobject",
 ]

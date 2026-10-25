@@ -81,12 +81,14 @@ CREATE INDEX domain_event_event_id_idx
 The table is range-partitioned by month and has no default partition, so a
 missing partition fails the write loudly instead of hiding rows. The first
 migration defines `event_store.ensure_partitions(months_ahead integer)`,
-which creates each missing month as a standalone table and attaches it with
-`ALTER TABLE ... ATTACH PARTITION` (a weaker lock than `CREATE TABLE ...
-PARTITION OF` on the live parent), serialised across instances with
-`pg_advisory_xact_lock`. The migration calls it for twelve months ahead, and
-the maintenance step that runs with the migrations calls it again on every
-start, so a running system always has a year of partitions ready.
+which creates every missing month from the current UTC month on with
+`CREATE TABLE ... PARTITION OF`, serialised across instances with
+`pg_advisory_xact_lock`. Creating a partition briefly locks the parent, so
+it only runs where traffic is low: the migration calls it for twelve months
+ahead, and the startup maintenance step calls it again, so a running system
+always has a year of partitions ready and the live path never creates one.
+The schema and the function live in
+`libs/shared/persistence-postgres/migrations/`.
 
 ## Events as data
 
