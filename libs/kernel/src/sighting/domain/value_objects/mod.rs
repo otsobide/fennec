@@ -5,5 +5,6 @@ pub mod sighting_id;
 pub mod sighting_last_seen;
 pub mod sighting_observable_id;
 pub mod sighting_observable_kind;
+pub mod sighting_observed_at;
 pub mod sighting_source_id;
 pub mod sighting_updated_at;

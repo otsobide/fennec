@@ -6,5 +6,6 @@ mod sighting_id_tests;
 mod sighting_last_seen_tests;
 mod sighting_observable_id_tests;
 mod sighting_observable_kind_tests;
+mod sighting_observed_at_tests;
 mod sighting_source_id_tests;
 mod sighting_updated_at_tests;
