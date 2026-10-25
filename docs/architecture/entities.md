@@ -23,7 +23,7 @@ error type. Identifiers additionally expose `generate()`, which produces a fresh
 
 ## `kernel` bounded context
 
-Crate: `libs/kernel/`. Owns the whole CTI domain, one module per aggregate: `source` and `url_source` (where intelligence comes from), `ioc` (what is being tracked) and `sighting` (who reported what, and when).
+Crate: `libs/kernel/`. Owns the whole CTI domain, one module per aggregate: `source` and `url_source` (where intelligence comes from), one module per observable kind such as `ipv4_address` (what is being tracked) and `sighting` (who reported what, and when).
 
 ### `Source`
 
@@ -81,29 +81,27 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 ---
 
-### `Ioc`
+### `Ipv4Address`
 
-Module: `libs/kernel/src/ioc/`. File: `libs/kernel/src/ioc/domain/entities/ioc.rs`
+Module: `libs/kernel/src/ipv4_address/`. File: `libs/kernel/src/ipv4_address/domain/entities/ipv4_address.rs`
 
-Represents a single Indicator of Compromise: an observable (IP, domain, URL, hash, email, ...) that is considered relevant for detection or investigation.
+One IPv4 host address registered as an observable, the first typed observable kind (see [../data-model/kinds/ipv4-address.md](../data-model/kinds/ipv4-address.md)). Its identity is its value.
 
 | Field | Value Object | Inner type | Kind | Notes |
 |---|---|---|---|---|
-| `id` | `IocId` | `uuid::Uuid` | validated | Externally provided at construction; must parse as a UUID **v4**. |
-| `ioc_type` | `IocType` | enum `{ Ipv4, Ipv6, Domain, Url, Sha256, Sha1, Md5, Email }` | enum | Parsed from `"ipv4"` / `"ipv6"` / `"domain"` / `"url"` / `"sha256"` / `"sha1"` / `"md5"` / `"email"`. |
-| `value` | `IocValue` | `String` | validated | Trimmed, non-empty, at most 2048 characters. Per-type validation is intentionally deferred. |
-| `created_at` | `IocCreatedAt` | `std::time::SystemTime` | newtype | Set to `now()` on creation. |
-| `updated_at` | `IocUpdatedAt` | `std::time::SystemTime` | newtype | Set to the same instant as `created_at` on creation. |
+| `id` | `Ipv4AddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of the STIX id `ipv4-addr--<uuid>`). Never supplied by a client and has no `generate()`; a path id must be a UUID v5. |
+| `value` | `Ipv4AddressValue` | `std::net::Ipv4Addr` | validated | Dotted quad, optional `/32`; canonicalised without leading zeros or prefix. Networks, leading zeros and non-IPv4 values are rejected. |
+| `created_at` | `Ipv4AddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
 
 **Invariants**
 
-- `id`, `ioc_type`, `value`, and `created_at` are immutable after creation (no update use case is exposed).
-- `updated_at` is always `>= created_at`.
+- `id` is always `Ipv4AddressId::from_value(&value)`: `Ipv4Address::new` takes no id, so the two cannot disagree.
+- Nothing changes after creation; there is no `updated_at` and no update use case.
 
 **Errors**
 
-- `ValueObjectValidationError` — id that is not a UUID v4, unknown `ioc_type` string, or an empty/over-long value.
-- `IocRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}` — persistence-layer failures.
+- `ValueObjectValidationError`: a value that is not a single IPv4 host address, or an id that is not a UUID v5.
+- `Ipv4AddressRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}`: persistence-layer failures. Registering an already registered address, in any spelling, is `AlreadyExists`.
 
 ---
 
@@ -172,7 +170,7 @@ No module imports another module's types, whether the two live in the same crate
 | Relationship | Type | Detail |
 |---|---|---|
 | `UrlSource.id` ↔ `Source.id` | Shared identifier | Both aggregates are keyed by the same UUID. Neither imports the other. |
-| `Sighting.ioc_id` → `Ioc.id` | Shared identifier | `sighting` declares its own `SightingIocId`; it never uses `IocId`. |
+| `Sighting.ioc_id` → an observable id | Shared identifier | `sighting` declares its own `SightingIocId`. It still accepts UUID v4 only, so it cannot yet reference value-identified observables; it is replaced by a kind-qualified observable reference next (see [../data-model/README.md](../data-model/README.md#retiring-the-generic-ioc-module)). |
 | `Sighting.source_id` → `Source.id` | Shared identifier | `sighting` declares its own `SightingSourceId`; it never uses `SourceId`. |
 
 This is what keeps every module extractable: the day one of them needs its own crate (or its own service) for scale, the identifiers already match and no import has to be untangled. New links follow the same rule: identifier plus buses, never a direct import.
@@ -185,6 +183,6 @@ This is what keeps every module extractable: the day one of them needs its own c
 |---|---|---|---|
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
-| `kernel` | `Ioc` | `IocId`, `IocType`, `IocValue`, `IocCreatedAt`, `IocUpdatedAt` | `cti_api` — `/iocs[/{id}]` |
+| `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingIocId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/iocs/{ioc_id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
