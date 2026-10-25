@@ -8,9 +8,5 @@ use crate::ipv4_address::domain::events::ipv4_address_created_event::Ipv4Address
 pub fn create_ipv4_address_created_event(
     ipv4_address: &Ipv4Address,
 ) -> Result<Ipv4AddressCreatedEvent, Ipv4AddressRepositoryError> {
-    Ok(Ipv4AddressCreatedEvent::new(
-        *ipv4_address.id(),
-        *ipv4_address.value(),
-        *ipv4_address.created_at(),
-    ))
+    Ok(Ipv4AddressCreatedEvent::new(ipv4_address))
 }

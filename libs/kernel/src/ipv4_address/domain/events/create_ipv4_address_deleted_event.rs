@@ -8,8 +8,5 @@ use crate::ipv4_address::domain::events::ipv4_address_deleted_event::Ipv4Address
 pub fn create_ipv4_address_deleted_event(
     ipv4_address: &Ipv4Address,
 ) -> Result<Ipv4AddressDeletedEvent, Ipv4AddressRepositoryError> {
-    Ok(Ipv4AddressDeletedEvent::new(
-        *ipv4_address.id(),
-        *ipv4_address.value(),
-    ))
+    Ok(Ipv4AddressDeletedEvent::new(ipv4_address))
 }
