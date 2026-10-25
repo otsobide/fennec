@@ -37,10 +37,82 @@ fn it_rejects_a_network_prefix() {
 }
 
 #[test]
-fn it_rejects_an_empty_prefix() {
-    let error = Ipv4AddressValue::new("198.51.100.7/").expect_err("an empty prefix is invalid");
+fn it_reports_the_longest_network_prefix_as_a_network() {
+    let error = Ipv4AddressValue::new("198.51.100.6/31").expect_err("a /31 is a network");
 
-    assert!(error.message().contains("single host"));
+    assert!(error.message().contains("got the /31 network"));
+}
+
+#[test]
+fn it_rejects_malformed_prefixes() {
+    for prefix in ["", "33", "032", "+32", " 32", "x", "32/32"] {
+        let error = Ipv4AddressValue::new(&format!("198.51.100.7/{prefix}"))
+            .expect_err("a malformed prefix must be rejected");
+
+        assert!(
+            error
+                .message()
+                .contains("prefix must be a length from 0 to 32"),
+            "/{prefix} gave: {}",
+            error.message()
+        );
+    }
+}
+
+#[test]
+fn it_rejects_whitespace_before_the_prefix() {
+    let error = Ipv4AddressValue::new("198.51.100.7 /32").expect_err("the prefix must be attached");
+
+    assert!(error.message().contains("four decimal octets"));
+}
+
+#[test]
+fn it_accepts_the_lowest_and_highest_addresses() {
+    assert_eq!(
+        Ipv4AddressValue::new("0.0.0.0")
+            .expect("valid address")
+            .to_string(),
+        "0.0.0.0"
+    );
+    assert_eq!(
+        Ipv4AddressValue::new("255.255.255.255")
+            .expect("valid address")
+            .to_string(),
+        "255.255.255.255"
+    );
+}
+
+#[test]
+fn it_rejects_more_than_four_octets() {
+    let error =
+        Ipv4AddressValue::new("198.51.100.7.1").expect_err("five octets are not an address");
+
+    assert!(error.message().contains("four decimal octets"));
+}
+
+#[test]
+fn it_rejects_a_trailing_dot() {
+    let error =
+        Ipv4AddressValue::new("198.51.100.7.").expect_err("a trailing dot is not an address");
+
+    assert!(error.message().contains("four decimal octets"));
+}
+
+#[test]
+fn it_rejects_non_ascii_digits() {
+    let error =
+        Ipv4AddressValue::new("\u{ff11}98.51.100.7").expect_err("fullwidth digits are not octets");
+
+    assert!(error.message().contains("four decimal octets"));
+}
+
+#[test]
+fn it_trims_only_ascii_whitespace() {
+    for spaced in ["\u{a0}198.51.100.7", "198.51.100.7\u{3000}"] {
+        let error = Ipv4AddressValue::new(spaced).expect_err("non-ASCII spaces are not trimmed");
+
+        assert!(error.message().contains("four decimal octets"));
+    }
 }
 
 #[test]
