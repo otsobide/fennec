@@ -1,18 +1,20 @@
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: template_postgres
+    image: postgres:18-alpine
+    container_name: fennec_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-template}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-template}
-      POSTGRES_DB: ${POSTGRES_DB:-template}
+      POSTGRES_USER: ${POSTGRES_USER:-fennec}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fennec}
+      POSTGRES_DB: ${POSTGRES_DB:-fennec}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # PostgreSQL 18 images keep PGDATA under /var/lib/postgresql/18/docker,
+      # so the volume is mounted one level up.
+      - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-template} -d ${POSTGRES_DB:-template}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fennec} -d ${POSTGRES_DB:-fennec}"]
       interval: 5s
       timeout: 5s
       retries: 5
