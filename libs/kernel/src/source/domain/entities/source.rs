@@ -14,7 +14,7 @@ use crate::source::domain::value_objects::source_type::SourceType;
 use crate::source::domain::value_objects::source_updated_at::SourceUpdatedAt;
 
 /// Aggregate root representing a source of intelligence.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Source {
     id: SourceId,
     source_type: SourceType,
