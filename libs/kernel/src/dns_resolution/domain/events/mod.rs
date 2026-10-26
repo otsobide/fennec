@@ -1,0 +1,8 @@
+pub mod create_dns_resolution_created_event;
+pub mod create_dns_resolution_deleted_event;
+pub mod create_dns_resolution_observed_event;
+pub mod create_dns_resolution_retracted_event;
+pub mod dns_resolution_created_event;
+pub mod dns_resolution_deleted_event;
+pub mod dns_resolution_observed_event;
+pub mod dns_resolution_retracted_event;
