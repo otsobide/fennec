@@ -10,7 +10,7 @@ Fennec is a CTI platform whose goal is to ingest, normalise, correlate, and serv
 
 The project is **early in its life**, but the core of the model is in place. The `kernel` context owns the CTI domain and holds one module per aggregate: `source` and the URL-specific `url_source` (where intelligence comes from), one module per observable kind (what is being tracked: `ipv4_address` is the first of the more than a hundred kinds in the [catalogue](docs/data-model/observable-catalogue.md)) and `sighting` (which source reported which observable, with first/last seen timestamps and an observation counter). All of them are exposed by `cti_api`. There are no generic types: every observable kind is its own aggregate with value objects that validate and canonicalise its exact syntax. The aggregates still to come (the other observable kinds, threat actors, campaigns, enrichment) plug in alongside them following exactly the same recipe.
 
-The architecture is uncompromising on one principle: business logic depends on traits, never on concrete infrastructure. The same domain code runs against an in-memory `HashMap` in tests and (eventually) a PostgreSQL store in production, with zero conditional compilation and no code changes in the domain or application layers.
+The architecture is uncompromising on one principle: business logic depends on traits, never on concrete infrastructure. The same domain code runs against in-memory repositories in tests and PostgreSQL in production, with zero conditional compilation and no code changes in the domain or application layers. On PostgreSQL every command commits its state change and its domain events in one transaction, into an append-only event log that projections and other contexts are built from.
 
 ## Bounded contexts
 
@@ -33,13 +33,13 @@ Each context is a crate under `libs/<context>/`, and each module inside it owns 
 | Language | Rust 2021 |
 | HTTP framework | Actix-Web 4 |
 | Async runtime | Tokio |
-| Persistence | In-memory (HashMap + Mutex) — pluggable via repository traits |
+| Persistence | PostgreSQL 18 through `sqlx` (one table per aggregate kind plus the `event_store` log), or in memory; both behind the same repository traits |
 | Logging | `tracing` + `tracing-subscriber` (env-filtered) |
 | Errors | `thiserror` for domain and repository errors |
 | Validation | Value objects validated at construction, reporting through a single shared `ValueObjectValidationError` |
 | Architecture | DDD + Hexagonal (Ports & Adapters) + CQRS + Domain Events |
 
-No database is required to develop, test, or run the project locally — the default repositories are all in-memory.
+No database is required to develop, test, or run the project: without `DATABASE_URL` everything runs in memory.
 
 ## Architecture overview
 
@@ -144,13 +144,25 @@ make test/summary       # cargo test with empty-suite noise stripped
 cargo test -p kernel    # One context's unit tests
 ```
 
-No database needed — the e2e suites use the in-memory repositories.
+The default suites need no database. Tests that do are `#[ignore]`d and run with a PostgreSQL 18 server:
+
+```bash
+docker compose up -d postgres
+DATABASE_URL=postgres://fennec:fennec@localhost:5432/fennec cargo test --workspace -- --ignored
+```
 
 ### Run
 
 ```bash
 make cti_api/run        # Start cti_api on port 8081
 make config_api/run     # Start config_api on port 8080
+```
+
+With `DATABASE_URL` set, `cti_api` persists in PostgreSQL: it runs the event store and kernel migrations at startup and keeps a year of event log partitions ready.
+
+```bash
+docker compose up -d postgres
+DATABASE_URL=postgres://fennec:fennec@localhost:5432/fennec make cti_api/run
 ```
 
 Log level defaults to `info`. Override with `RUST_LOG`:

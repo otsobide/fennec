@@ -55,10 +55,11 @@ each rule are in
 - `build_state()` stays synchronous, takes no arguments, never reads the
   environment and always wires the in-memory repositories and the in-memory
   event bus. Unit and e2e tests use it and need no database.
-- `build_postgres_state(pool: PgPool)` is async and wires the PostgreSQL
-  repositories, the outbox event bus and the transactional decorator around
-  the command bus. It exists once every kernel module has a PostgreSQL
-  repository (rule 7).
+- `build_postgres_state(pool: PgPool)` wires the PostgreSQL repositories of
+  every kernel module, the outbox event bus and the transactional decorator
+  around the command bus, with an in-memory event bus for after-commit
+  subscribers. Both functions share one private `build_buses`, so the two
+  states differ only in their repositories and event bus (rule 7).
 - `main.rs` reads `DATABASE_URL`. When it is set, it builds the pool once
   before `HttpServer::new`, runs the event store and kernel migrators, calls
   `event_store.ensure_partitions(12)`, and calls `build_postgres_state`.

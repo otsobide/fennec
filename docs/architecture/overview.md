@@ -110,7 +110,7 @@ Nothing in the domain imports from `actix-web`, `sqlx`, or any other framework.
 
 ### Infrastructure (`libs/*/infrastructure/`)
 
-Concrete repository implementations. Today every bounded context ships an in-memory `HashMap`-backed repo behind a `Mutex`. A PostgreSQL implementation can be added under `infrastructure/persistence/sqlx_postgres/` without touching any other layer.
+Concrete repository implementations. Every kernel module ships an in-memory `HashMap`-backed repository behind a `Mutex` and a PostgreSQL one under `infrastructure/persistence/sqlx_postgres/`, and both run the same repository contract tests. See [persistence.md](persistence.md) and [event-store.md](event-store.md).
 
 ## Dependency direction
 
