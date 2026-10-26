@@ -18,6 +18,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 |---|---|---|---|---|
 | `kernel` | `source` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
 | `kernel` | `url_source` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
+| `kernel` | `domain_name` | `DomainName` | Register, find (by id or value) and delete DNS domain names, canonicalised to lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `ipv4_address` | `Ipv4Address` | Register, find (by id or value) and delete IPv4 host addresses; the id is the STIX deterministic id | `cti_api` (:8081) |
 | `kernel` | `sighting` | `Sighting` | Records that a source reported an observable, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `config_entry` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
@@ -182,6 +183,7 @@ RUST_LOG=debug make cti_api/run
 | `GET` `PUT` `DELETE` | `/sources/{id}` | Read, update (`status`, `description`) or delete a source |
 | `POST` | `/url-sources` | Create the URL payload of a source (`id`, `url`, `format`, `polling_interval_seconds`) |
 | `GET` `PUT` `DELETE` | `/url-sources/{id}` | Read, update or delete it. The id is the parent source's id |
+| `POST` `GET` `DELETE` | `/domain-names`, `/domain-names?value=`, `/domain-names/{id}` | The same contract as IPv4 addresses, for domain names |
 | `POST` | `/ipv4-addresses` | Register an IPv4 address (`value` only); answers `201` with `{id, stix_id}`, or `409` with the same body if it is already registered |
 | `GET` | `/ipv4-addresses?value=<address>` | Find an IPv4 address by value |
 | `GET` `DELETE` | `/ipv4-addresses/{id}` | Read or delete an IPv4 address |
