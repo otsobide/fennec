@@ -10,6 +10,7 @@
 //! is therefore a move, not a redesign.
 
 pub mod autonomous_system;
+pub mod dns_resolution;
 pub mod domain_name;
 pub mod email_address;
 pub mod hostname;

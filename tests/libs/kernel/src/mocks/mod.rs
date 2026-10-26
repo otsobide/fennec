@@ -1,4 +1,5 @@
 pub mod autonomous_system_repository_mock;
+pub mod dns_resolution_repository_mock;
 pub mod domain_name_repository_mock;
 pub mod email_address_repository_mock;
 pub mod event_bus_mock;
