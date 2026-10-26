@@ -1,0 +1,2 @@
+mod domain_name_created_event_tests;
+mod domain_name_deleted_event_tests;
