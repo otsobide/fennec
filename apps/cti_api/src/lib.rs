@@ -96,6 +96,15 @@ use kernel::ipv6_network::application::find_ipv6_network::ipv6_network_finder::I
 use kernel::ipv6_network::domain::repositories::ipv6_network_repository::Ipv6NetworkRepository;
 use kernel::ipv6_network::infrastructure::persistence::in_memory::in_memory_ipv6_network_repository::InMemoryIpv6NetworkRepository;
 use kernel::ipv6_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_network_repository::SqlxPostgresIpv6NetworkRepository;
+use kernel::autonomous_system::application::create_autonomous_system::create_autonomous_system_command_handler::CreateAutonomousSystemCommandHandler;
+use kernel::autonomous_system::application::create_autonomous_system::autonomous_system_creator::AutonomousSystemCreator;
+use kernel::autonomous_system::application::delete_autonomous_system::delete_autonomous_system_command_handler::DeleteAutonomousSystemCommandHandler;
+use kernel::autonomous_system::application::delete_autonomous_system::autonomous_system_deleter::AutonomousSystemDeleter;
+use kernel::autonomous_system::application::find_autonomous_system::find_autonomous_system_query_handler::FindAutonomousSystemQueryHandler;
+use kernel::autonomous_system::application::find_autonomous_system::autonomous_system_finder::AutonomousSystemFinder;
+use kernel::autonomous_system::domain::repositories::autonomous_system_repository::AutonomousSystemRepository;
+use kernel::autonomous_system::infrastructure::persistence::in_memory::in_memory_autonomous_system_repository::InMemoryAutonomousSystemRepository;
+use kernel::autonomous_system::infrastructure::persistence::sqlx_postgres::sqlx_postgres_autonomous_system_repository::SqlxPostgresAutonomousSystemRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -121,6 +130,7 @@ use shared_persistence_postgres::infrastructure::postgres::outbox_event_bus::Out
 use shared_persistence_postgres::infrastructure::postgres::transactional_command_bus::TransactionalCommandBus;
 use sqlx::PgPool;
 
+pub mod autonomous_system;
 pub mod domain_name;
 pub mod email_address;
 pub mod health;
@@ -153,6 +163,7 @@ struct Repositories {
     mac_address: Arc<dyn MacAddressRepository>,
     ipv4_network: Arc<dyn Ipv4NetworkRepository>,
     ipv6_network: Arc<dyn Ipv6NetworkRepository>,
+    autonomous_system: Arc<dyn AutonomousSystemRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -172,6 +183,7 @@ pub fn build_state() -> web::Data<AppState> {
         mac_address: Arc::new(InMemoryMacAddressRepository::new()),
         ipv4_network: Arc::new(InMemoryIpv4NetworkRepository::new()),
         ipv6_network: Arc::new(InMemoryIpv6NetworkRepository::new()),
+        autonomous_system: Arc::new(InMemoryAutonomousSystemRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -200,6 +212,7 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         mac_address: Arc::new(SqlxPostgresMacAddressRepository::new(pool.clone())),
         ipv4_network: Arc::new(SqlxPostgresIpv4NetworkRepository::new(pool.clone())),
         ipv6_network: Arc::new(SqlxPostgresIpv6NetworkRepository::new(pool.clone())),
+        autonomous_system: Arc::new(SqlxPostgresAutonomousSystemRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -309,6 +322,15 @@ fn build_buses(
     let ipv6_network_deleter =
         Ipv6NetworkDeleter::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
 
+    // --- autonomous_system ---
+    let autonomous_system_repo = repositories.autonomous_system;
+
+    let autonomous_system_creator =
+        AutonomousSystemCreator::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+    let autonomous_system_finder = AutonomousSystemFinder::new(Arc::clone(&autonomous_system_repo));
+    let autonomous_system_deleter =
+        AutonomousSystemDeleter::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -390,6 +412,16 @@ fn build_buses(
         .register(DeleteIpv6NetworkCommandHandler::new(ipv6_network_deleter))
         .expect("Failed to register DeleteIpv6NetworkCommandHandler");
     command_bus
+        .register(CreateAutonomousSystemCommandHandler::new(
+            autonomous_system_creator,
+        ))
+        .expect("Failed to register CreateAutonomousSystemCommandHandler");
+    command_bus
+        .register(DeleteAutonomousSystemCommandHandler::new(
+            autonomous_system_deleter,
+        ))
+        .expect("Failed to register DeleteAutonomousSystemCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -431,6 +463,11 @@ fn build_buses(
     query_bus
         .register(FindIpv6NetworkQueryHandler::new(ipv6_network_finder))
         .expect("Failed to register FindIpv6NetworkQueryHandler");
+    query_bus
+        .register(FindAutonomousSystemQueryHandler::new(
+            autonomous_system_finder,
+        ))
+        .expect("Failed to register FindAutonomousSystemQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -492,6 +529,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(ipv6_network::controllers::get_by_value::handler)
         .service(ipv6_network::controllers::get::handler)
         .service(ipv6_network::controllers::delete::handler)
+        .service(autonomous_system::controllers::post::handler)
+        .service(autonomous_system::controllers::get_by_value::handler)
+        .service(autonomous_system::controllers::get::handler)
+        .service(autonomous_system::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
