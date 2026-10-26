@@ -25,6 +25,9 @@ designed from is in [../research/](../research/README.md).
   grammar, canonical form, identity, events, API and storage.
 - [interoperability.md](interoperability.md): how Fennec observables map to
   and from STIX 2.1 bundles, OpenCTI and MISP, including what is lossy.
+- [links.md](links.md): how observables are connected. Intrinsic links are
+  derived, asserted links are one module per fact with one observation per
+  source, their deterministic ids and the link catalogue.
 
 ## Non-negotiables
 
