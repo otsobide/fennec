@@ -3,6 +3,7 @@ mod email_address;
 mod health;
 mod hostname;
 mod ipv4_address;
+mod ipv4_network;
 mod ipv6_address;
 mod mac_address;
 mod postgres;

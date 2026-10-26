@@ -78,6 +78,15 @@ use kernel::mac_address::application::find_mac_address::mac_address_finder::MacA
 use kernel::mac_address::domain::repositories::mac_address_repository::MacAddressRepository;
 use kernel::mac_address::infrastructure::persistence::in_memory::in_memory_mac_address_repository::InMemoryMacAddressRepository;
 use kernel::mac_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_mac_address_repository::SqlxPostgresMacAddressRepository;
+use kernel::ipv4_network::application::create_ipv4_network::create_ipv4_network_command_handler::CreateIpv4NetworkCommandHandler;
+use kernel::ipv4_network::application::create_ipv4_network::ipv4_network_creator::Ipv4NetworkCreator;
+use kernel::ipv4_network::application::delete_ipv4_network::delete_ipv4_network_command_handler::DeleteIpv4NetworkCommandHandler;
+use kernel::ipv4_network::application::delete_ipv4_network::ipv4_network_deleter::Ipv4NetworkDeleter;
+use kernel::ipv4_network::application::find_ipv4_network::find_ipv4_network_query_handler::FindIpv4NetworkQueryHandler;
+use kernel::ipv4_network::application::find_ipv4_network::ipv4_network_finder::Ipv4NetworkFinder;
+use kernel::ipv4_network::domain::repositories::ipv4_network_repository::Ipv4NetworkRepository;
+use kernel::ipv4_network::infrastructure::persistence::in_memory::in_memory_ipv4_network_repository::InMemoryIpv4NetworkRepository;
+use kernel::ipv4_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv4_network_repository::SqlxPostgresIpv4NetworkRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -108,6 +117,7 @@ pub mod email_address;
 pub mod health;
 pub mod hostname;
 pub mod ipv4_address;
+pub mod ipv4_network;
 pub mod ipv6_address;
 pub mod mac_address;
 pub mod sighting;
@@ -131,6 +141,7 @@ struct Repositories {
     email_address: Arc<dyn EmailAddressRepository>,
     ipv6_address: Arc<dyn Ipv6AddressRepository>,
     mac_address: Arc<dyn MacAddressRepository>,
+    ipv4_network: Arc<dyn Ipv4NetworkRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -148,6 +159,7 @@ pub fn build_state() -> web::Data<AppState> {
         email_address: Arc::new(InMemoryEmailAddressRepository::new()),
         ipv6_address: Arc::new(InMemoryIpv6AddressRepository::new()),
         mac_address: Arc::new(InMemoryMacAddressRepository::new()),
+        ipv4_network: Arc::new(InMemoryIpv4NetworkRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -174,6 +186,7 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         email_address: Arc::new(SqlxPostgresEmailAddressRepository::new(pool.clone())),
         ipv6_address: Arc::new(SqlxPostgresIpv6AddressRepository::new(pool.clone())),
         mac_address: Arc::new(SqlxPostgresMacAddressRepository::new(pool.clone())),
+        ipv4_network: Arc::new(SqlxPostgresIpv4NetworkRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -265,6 +278,15 @@ fn build_buses(
     let mac_address_deleter =
         MacAddressDeleter::new(Arc::clone(&mac_address_repo), Arc::clone(&event_bus));
 
+    // --- ipv4_network ---
+    let ipv4_network_repo = repositories.ipv4_network;
+
+    let ipv4_network_creator =
+        Ipv4NetworkCreator::new(Arc::clone(&ipv4_network_repo), Arc::clone(&event_bus));
+    let ipv4_network_finder = Ipv4NetworkFinder::new(Arc::clone(&ipv4_network_repo));
+    let ipv4_network_deleter =
+        Ipv4NetworkDeleter::new(Arc::clone(&ipv4_network_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -334,6 +356,12 @@ fn build_buses(
         .register(DeleteMacAddressCommandHandler::new(mac_address_deleter))
         .expect("Failed to register DeleteMacAddressCommandHandler");
     command_bus
+        .register(CreateIpv4NetworkCommandHandler::new(ipv4_network_creator))
+        .expect("Failed to register CreateIpv4NetworkCommandHandler");
+    command_bus
+        .register(DeleteIpv4NetworkCommandHandler::new(ipv4_network_deleter))
+        .expect("Failed to register DeleteIpv4NetworkCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -369,6 +397,9 @@ fn build_buses(
     query_bus
         .register(FindMacAddressQueryHandler::new(mac_address_finder))
         .expect("Failed to register FindMacAddressQueryHandler");
+    query_bus
+        .register(FindIpv4NetworkQueryHandler::new(ipv4_network_finder))
+        .expect("Failed to register FindIpv4NetworkQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -422,6 +453,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(mac_address::controllers::get_by_value::handler)
         .service(mac_address::controllers::get::handler)
         .service(mac_address::controllers::delete::handler)
+        .service(ipv4_network::controllers::post::handler)
+        .service(ipv4_network::controllers::get_by_value::handler)
+        .service(ipv4_network::controllers::get::handler)
+        .service(ipv4_network::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
