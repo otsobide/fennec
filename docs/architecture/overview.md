@@ -228,7 +228,7 @@ SourceUpdatedAt(SystemTime)
 
 Timestamps are the only newtypes left without validation: they are produced inside the domain services, never parsed from input.
 
-Generic primitives live in `shared-valueobject/domain/` and are composed into context-specific value objects via the newtype pattern: `ValueObjectValidationError`, `CanonicalJsonValue` and `StixDeterministicUuid` (identifiers), `MicrosecondTimestamp`, and `DnsName`, the canonical DNS name that domain names and hostnames wrap with their own rules. Third-party algorithms the domain needs, such as UTS #46 processing (`idna`), are reached only through these primitives, so the domain layer depends on shared kernel crates alone.
+Generic primitives live in `shared-valueobject/domain/` and are composed into context-specific value objects via the newtype pattern: `ValueObjectValidationError`, `CanonicalJsonValue` and `StixDeterministicUuid` (identifiers), `MicrosecondTimestamp`, and `DnsName`, the canonical DNS name that domain names, hostnames and the domains of email addresses wrap with their own rules. `lowercase_nfc` gives caseless, composed Unicode text (email local parts). Third-party algorithms the domain needs, such as UTS #46 processing (`idna`) and Unicode normalisation (`unicode-normalization`), are reached only through these primitives, so the domain layer depends on shared kernel crates alone.
 
 ### Entities
 

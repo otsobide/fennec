@@ -97,6 +97,22 @@ Invariants and errors follow `Ipv4Address`: the id is always derived from the va
 
 ---
 
+### `EmailAddress`
+
+Module: `libs/kernel/src/email_address/`. File: `libs/kernel/src/email_address/domain/entities/email_address.rs`
+
+One email address registered as an observable (see [../data-model/kinds/email-address.md](../data-model/kinds/email-address.md)). Its identity is its value. Personal data.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `EmailAddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `email-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `EmailAddressValue` | `String` | validated | Local part lowercased and in NFC, a dot-atom of RFC 5322 and RFC 6531 characters, at most 64 octets; domain parsed as a shared `DnsName` with at least two labels; at most 254 octets in all. No quoted local parts or address literals. |
+| `created_at` | `EmailAddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`: the id is always derived from the value, nothing changes after creation, and registering an already registered address in any spelling is `AlreadyExists`.
+
+---
+
 ### `Hostname`
 
 Module: `libs/kernel/src/hostname/`. File: `libs/kernel/src/hostname/domain/entities/hostname.rs`
@@ -217,6 +233,7 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
 | `kernel` | `DomainName` | `DomainNameId`, `DomainNameValue`, `DomainNameCreatedAt` | `cti_api`: `/domain-names[/{id}]`, `/domain-names?value=` |
+| `kernel` | `EmailAddress` | `EmailAddressId`, `EmailAddressValue`, `EmailAddressCreatedAt` | `cti_api`: `/email-addresses[/{id}]`, `/email-addresses?value=` |
 | `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
