@@ -86,3 +86,21 @@ async fn it_stores_the_canonical_value(pool: PgPool) {
 
     assert_eq!(stored, "update.example-cdn.net");
 }
+
+#[sqlx::test(migrator = "kernel::kernel_migrator::KERNEL_MIGRATOR")]
+#[ignore = "requires DATABASE_URL"]
+async fn it_refuses_a_non_canonical_value_in_the_table(pool: PgPool) {
+    let result = sqlx::query(
+        "INSERT INTO kernel.domain_name (id, value, created_at) VALUES ($1, $2, now())",
+    )
+    .bind(*DomainNameIdMother::create("hostelhotels.net").value())
+    .bind("HostelHotels.NET.")
+    .execute(&pool)
+    .await;
+
+    let error = result.expect_err("the table must refuse a non-canonical value");
+    assert_eq!(
+        error.as_database_error().and_then(|e| e.constraint()),
+        Some("domain_name_value_is_canonical")
+    );
+}

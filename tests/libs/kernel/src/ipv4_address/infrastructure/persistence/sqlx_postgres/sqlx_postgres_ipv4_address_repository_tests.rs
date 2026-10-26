@@ -87,3 +87,24 @@ async fn it_stores_the_address_as_a_host_inet(pool: PgPool) {
 
     assert_eq!(stored, "198.51.100.7/32");
 }
+
+#[sqlx::test(migrator = "kernel::kernel_migrator::KERNEL_MIGRATOR")]
+#[ignore = "requires DATABASE_URL"]
+async fn it_refuses_a_value_that_is_not_an_ipv4_host_in_the_table(pool: PgPool) {
+    for value in ["198.51.100.0/24", "2001:db8::1"] {
+        let result = sqlx::query(
+            "INSERT INTO kernel.ipv4_address (id, value, created_at) VALUES ($1, $2::inet, now())",
+        )
+        .bind(*Ipv4AddressIdMother::create("198.51.100.7").value())
+        .bind(value)
+        .execute(&pool)
+        .await;
+
+        let error = result.expect_err("the table must refuse a value that is not an IPv4 host");
+        assert_eq!(
+            error.as_database_error().and_then(|e| e.constraint()),
+            Some("ipv4_address_value_is_host"),
+            "{value}"
+        );
+    }
+}
