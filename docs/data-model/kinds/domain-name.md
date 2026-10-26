@@ -37,7 +37,7 @@ One DNS domain name that Fennec has registered as an observable. Module
   `is_internationalised()`.
 - **Implementation**: steps 1 and 2 and the label rules are the shared
   `DnsName` (`libs/shared/valueobject/src/domain/dns/`), which hostnames and
-  later kinds with a DNS name reuse; `DomainNameValue` trims the input and
+  the domains of email addresses reuse; `DomainNameValue` trims the input and
   adds the second-label rule.
 
 Changing any of these rules changes identifiers and follows the rekey

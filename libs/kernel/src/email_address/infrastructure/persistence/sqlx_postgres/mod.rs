@@ -1,0 +1,1 @@
+pub mod sqlx_postgres_email_address_repository;

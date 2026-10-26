@@ -10,7 +10,8 @@
 //! ## Main modules
 //!
 //! - [`domain`]: canonical JSON, DNS names, STIX identifiers, timestamps,
-//!   strings and the validation error every value object returns.
+//!   caseless Unicode text, strings and the validation error every value
+//!   object returns.
 //! - [`application`]: (Reserved for future use.)
 //! - [`infrastructure`]: (Reserved for future use.)
 //!

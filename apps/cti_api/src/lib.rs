@@ -51,6 +51,15 @@ use kernel::hostname::application::find_hostname::hostname_finder::HostnameFinde
 use kernel::hostname::domain::repositories::hostname_repository::HostnameRepository;
 use kernel::hostname::infrastructure::persistence::in_memory::in_memory_hostname_repository::InMemoryHostnameRepository;
 use kernel::hostname::infrastructure::persistence::sqlx_postgres::sqlx_postgres_hostname_repository::SqlxPostgresHostnameRepository;
+use kernel::email_address::application::create_email_address::create_email_address_command_handler::CreateEmailAddressCommandHandler;
+use kernel::email_address::application::create_email_address::email_address_creator::EmailAddressCreator;
+use kernel::email_address::application::delete_email_address::delete_email_address_command_handler::DeleteEmailAddressCommandHandler;
+use kernel::email_address::application::delete_email_address::email_address_deleter::EmailAddressDeleter;
+use kernel::email_address::application::find_email_address::find_email_address_query_handler::FindEmailAddressQueryHandler;
+use kernel::email_address::application::find_email_address::email_address_finder::EmailAddressFinder;
+use kernel::email_address::domain::repositories::email_address_repository::EmailAddressRepository;
+use kernel::email_address::infrastructure::persistence::in_memory::in_memory_email_address_repository::InMemoryEmailAddressRepository;
+use kernel::email_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_email_address_repository::SqlxPostgresEmailAddressRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -77,6 +86,7 @@ use shared_persistence_postgres::infrastructure::postgres::transactional_command
 use sqlx::PgPool;
 
 pub mod domain_name;
+pub mod email_address;
 pub mod health;
 pub mod hostname;
 pub mod ipv4_address;
@@ -98,6 +108,7 @@ struct Repositories {
     ipv4_address: Arc<dyn Ipv4AddressRepository>,
     domain_name: Arc<dyn DomainNameRepository>,
     hostname: Arc<dyn HostnameRepository>,
+    email_address: Arc<dyn EmailAddressRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -112,6 +123,7 @@ pub fn build_state() -> web::Data<AppState> {
         ipv4_address: Arc::new(InMemoryIpv4AddressRepository::new()),
         domain_name: Arc::new(InMemoryDomainNameRepository::new()),
         hostname: Arc::new(InMemoryHostnameRepository::new()),
+        email_address: Arc::new(InMemoryEmailAddressRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -135,6 +147,7 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         ipv4_address: Arc::new(SqlxPostgresIpv4AddressRepository::new(pool.clone())),
         domain_name: Arc::new(SqlxPostgresDomainNameRepository::new(pool.clone())),
         hostname: Arc::new(SqlxPostgresHostnameRepository::new(pool.clone())),
+        email_address: Arc::new(SqlxPostgresEmailAddressRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -199,6 +212,15 @@ fn build_buses(
     let hostname_finder = HostnameFinder::new(Arc::clone(&hostname_repo));
     let hostname_deleter = HostnameDeleter::new(Arc::clone(&hostname_repo), Arc::clone(&event_bus));
 
+    // --- email_address ---
+    let email_address_repo = repositories.email_address;
+
+    let email_address_creator =
+        EmailAddressCreator::new(Arc::clone(&email_address_repo), Arc::clone(&event_bus));
+    let email_address_finder = EmailAddressFinder::new(Arc::clone(&email_address_repo));
+    let email_address_deleter =
+        EmailAddressDeleter::new(Arc::clone(&email_address_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -250,6 +272,12 @@ fn build_buses(
         .register(DeleteHostnameCommandHandler::new(hostname_deleter))
         .expect("Failed to register DeleteHostnameCommandHandler");
     command_bus
+        .register(CreateEmailAddressCommandHandler::new(email_address_creator))
+        .expect("Failed to register CreateEmailAddressCommandHandler");
+    command_bus
+        .register(DeleteEmailAddressCommandHandler::new(email_address_deleter))
+        .expect("Failed to register DeleteEmailAddressCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -276,6 +304,9 @@ fn build_buses(
     query_bus
         .register(FindHostnameQueryHandler::new(hostname_finder))
         .expect("Failed to register FindHostnameQueryHandler");
+    query_bus
+        .register(FindEmailAddressQueryHandler::new(email_address_finder))
+        .expect("Failed to register FindEmailAddressQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -317,6 +348,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(hostname::controllers::get_by_value::handler)
         .service(hostname::controllers::get::handler)
         .service(hostname::controllers::delete::handler)
+        .service(email_address::controllers::post::handler)
+        .service(email_address::controllers::get_by_value::handler)
+        .service(email_address::controllers::get::handler)
+        .service(email_address::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)

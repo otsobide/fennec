@@ -1,4 +1,5 @@
 mod domain_name;
+mod email_address;
 mod health;
 mod hostname;
 mod ipv4_address;
