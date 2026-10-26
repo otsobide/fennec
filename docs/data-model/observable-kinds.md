@@ -106,7 +106,7 @@ for the order):
 | Application | `create_<kind>`, `find_<kind>` and `delete_<kind>`, plus any use case the kind needs (updating the name of an autonomous system, adding a hash to a file). |
 | Infrastructure | The in-memory repository, the PostgreSQL repository (`SqlxPostgres<Kind>Repository` under `infrastructure/persistence/sqlx_postgres/`) and the table migration. Until the PostgreSQL foundation exists, kinds ship in memory only and the foundation adds the PostgreSQL slice of every kind built before it. |
 | Delivery | `POST /<kinds>`, `GET /<kinds>/{id}`, `GET /<kinds>?value=<value>` and `DELETE /<kinds>/{id}` in `cti_api`, with the create semantics in [identity.md](identity.md#create-semantics). |
-| Tests | Value object tests (every accepted spelling, every rejection, both sides of every boundary, the canonical form, the identifier test vectors), the standard service tests per use case including the persistence failure paths, one repository contract (`tests/libs/kernel/src/<kind>/infrastructure/persistence/<kind>_repository_contract.rs`) that the in-memory and the PostgreSQL adapters both run, and the e2e tests. |
+| Tests | Value object tests (every accepted spelling, every rejection, both sides of every boundary, the canonical form, the identifier test vectors), the standard service tests per use case including the persistence failure paths, one repository contract (`tests/libs/kernel/src/<kind>/infrastructure/persistence/<kind>_repository_contract.rs`) that the in-memory and the PostgreSQL adapters both run, a PostgreSQL test that inserts a non-canonical value directly and expects the table's canonical-form `CHECK` by name, and the e2e tests. |
 
 Events follow the shared payload conventions:
 
