@@ -18,6 +18,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 |---|---|---|---|---|
 | `kernel` | `source` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
 | `kernel` | `url_source` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
+| `kernel` | `autonomous_system` | `AutonomousSystem` | Register, find (by id or number), describe (name and Regional Internet Registry) and delete autonomous systems; the id is the STIX id over the integer number | `cti_api` (:8081) |
 | `kernel` | `domain_name` | `DomainName` | Register, find (by id or value) and delete DNS domain names, canonicalised to lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `email_address` | `EmailAddress` | Register, find (by id or value) and delete email addresses: lowercase NFC local part, domain as lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `hostname` | `Hostname` | Register, find (by id or value) and delete hostnames, with or without a domain, canonicalised to lowercase A-labels | `cti_api` (:8081) |
@@ -189,6 +190,7 @@ RUST_LOG=debug make cti_api/run
 | `GET` `PUT` `DELETE` | `/sources/{id}` | Read, update (`status`, `description`) or delete a source |
 | `POST` | `/url-sources` | Create the URL payload of a source (`id`, `url`, `format`, `polling_interval_seconds`) |
 | `GET` `PUT` `DELETE` | `/url-sources/{id}` | Read, update or delete it. The id is the parent source's id |
+| `POST` `GET` `PUT` `DELETE` | `/autonomous-systems`, `/autonomous-systems?value=`, `/autonomous-systems/{id}` | Register an AS number (`15169`, `AS15169`, asdot `1.10`), find it, replace its `name` and `rir` with `PUT`, or delete it |
 | `POST` `GET` `DELETE` | `/domain-names`, `/domain-names?value=`, `/domain-names/{id}` | The same contract as IPv4 addresses, for domain names |
 | `POST` `GET` `DELETE` | `/email-addresses`, `/email-addresses?value=`, `/email-addresses/{id}` | The same contract as IPv4 addresses, for email addresses (`@` percent-encoded in the query) |
 | `POST` `GET` `DELETE` | `/hostnames`, `/hostnames?value=`, `/hostnames/{id}` | The same contract as IPv4 addresses, for hostnames |

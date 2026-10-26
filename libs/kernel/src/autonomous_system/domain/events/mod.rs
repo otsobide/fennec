@@ -1,4 +1,6 @@
 pub mod autonomous_system_created_event;
 pub mod autonomous_system_deleted_event;
+pub mod autonomous_system_updated_event;
 pub mod create_autonomous_system_created_event;
 pub mod create_autonomous_system_deleted_event;
+pub mod create_autonomous_system_updated_event;

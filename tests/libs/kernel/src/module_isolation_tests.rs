@@ -8,7 +8,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const MODULES: [&str; 11] = [
+const MODULES: [&str; 12] = [
+    "autonomous_system",
     "domain_name",
     "email_address",
     "hostname",

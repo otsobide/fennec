@@ -47,7 +47,7 @@ format; their sources are in
 | `url` | `url` | Url | `url`, `uri`, `link` | WHATWG serialisation | `text COLLATE "C"` plus a `bytea` SHA-256 unique key | A | | planned |
 | `email_address` | `email-addr` | Email-Addr | `email`, `email-src`, `email-dst` | Lowercase NFC local part, domain as A-label | `text COLLATE "C"` | A | PD | [postgres](kinds/email-address.md) |
 | `mac_address` | `mac-addr` | Mac-Addr | `mac-address` | EUI-48, lowercase, colon separated | `macaddr` | A | PD | [postgres](kinds/mac-address.md) |
-| `autonomous_system` | `autonomous-system` | Autonomous-System | `AS` | Number `0..=4294967295` (the `AS` prefix and asdot notation are accepted on input); optional name and RIR | `bigint` | A | | planned |
+| `autonomous_system` | `autonomous-system` | Autonomous-System | `AS` | Number `0..=4294967295` (the `AS` prefix and asdot notation are accepted on input); optional name and RIR | `bigint` | A | | [postgres](kinds/autonomous-system.md) |
 
 ## Wave 2: web tracking and site ownership identifiers
 

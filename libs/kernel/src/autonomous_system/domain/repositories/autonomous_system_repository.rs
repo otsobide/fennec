@@ -29,6 +29,19 @@ pub trait AutonomousSystemRepository: Send + Sync {
         id: &AutonomousSystemId,
     ) -> Result<Option<AutonomousSystem>, AutonomousSystemRepositoryError>;
 
+    /// Replaces the description (name, registry, update instant) of a
+    /// registered autonomous system; its number and id never change.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AutonomousSystemRepositoryError::NotFound`] if the autonomous
+    /// system is not registered, or [`AutonomousSystemRepositoryError::Unexpected`]
+    /// on storage failure.
+    async fn update(
+        &self,
+        autonomous_system: &AutonomousSystem,
+    ) -> Result<(), AutonomousSystemRepositoryError>;
+
     /// Deletes an autonomous system by its [`AutonomousSystemId`].
     ///
     /// # Errors
