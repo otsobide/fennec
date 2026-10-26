@@ -5,9 +5,12 @@
 
 use kernel::autonomous_system::domain::errors::autonomous_system_repository_error::AutonomousSystemRepositoryError;
 use kernel::autonomous_system::domain::repositories::autonomous_system_repository::AutonomousSystemRepository;
+use kernel::autonomous_system::domain::value_objects::autonomous_system_rir::AutonomousSystemRir;
+use kernel::autonomous_system::domain::value_objects::autonomous_system_updated_at::AutonomousSystemUpdatedAt;
 
 use crate::src::autonomous_system::domain::entities::mothers::autonomous_system_mother::AutonomousSystemMother;
 use crate::src::autonomous_system::domain::value_objects::mothers::autonomous_system_id_mother::AutonomousSystemIdMother;
+use crate::src::autonomous_system::domain::value_objects::mothers::autonomous_system_name_mother::AutonomousSystemNameMother;
 
 pub async fn it_finds_a_saved_autonomous_system(repository: &dyn AutonomousSystemRepository) {
     let autonomous_system = AutonomousSystemMother::random();
@@ -78,4 +81,51 @@ pub async fn it_accepts_a_deleted_autonomous_system_again(
     let result = repository.save(&autonomous_system).await;
 
     assert!(result.is_ok());
+}
+
+pub async fn it_keeps_the_description_of_a_saved_autonomous_system(
+    repository: &dyn AutonomousSystemRepository,
+) {
+    let autonomous_system = AutonomousSystemMother::random().describe(
+        Some(AutonomousSystemNameMother::create("GOOGLE")),
+        Some(AutonomousSystemRir::RipeNcc),
+        AutonomousSystemUpdatedAt::now(),
+    );
+
+    repository.save(&autonomous_system).await.unwrap();
+
+    assert_eq!(
+        repository.find_by_id(autonomous_system.id()).await.unwrap(),
+        Some(autonomous_system)
+    );
+}
+
+pub async fn it_replaces_the_description_on_update(repository: &dyn AutonomousSystemRepository) {
+    let registered = AutonomousSystemMother::random();
+    repository.save(&registered).await.unwrap();
+    let described = registered.describe(
+        Some(AutonomousSystemNameMother::create("CLOUDFLARENET")),
+        Some(AutonomousSystemRir::Arin),
+        AutonomousSystemUpdatedAt::now(),
+    );
+
+    repository.update(&described).await.unwrap();
+    let cleared = described.describe(None, None, AutonomousSystemUpdatedAt::now());
+    repository.update(&cleared).await.unwrap();
+
+    assert_eq!(
+        repository.find_by_id(registered.id()).await.unwrap(),
+        Some(cleared)
+    );
+}
+
+pub async fn it_returns_not_found_when_updating_an_unknown_autonomous_system(
+    repository: &dyn AutonomousSystemRepository,
+) {
+    let result = repository.update(&AutonomousSystemMother::random()).await;
+
+    assert!(matches!(
+        result,
+        Err(AutonomousSystemRepositoryError::NotFound)
+    ));
 }

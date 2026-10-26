@@ -19,6 +19,11 @@ pub enum DeleteBehavior {
     FailsWithUnexpected(String),
 }
 
+pub enum UpdateBehavior {
+    Succeeds,
+    FailsWithUnexpected(String),
+}
+
 #[allow(dead_code)]
 pub enum FindByIdBehavior {
     ReturnsNone,
@@ -30,7 +35,9 @@ pub struct AutonomousSystemRepositoryMock {
     save_behavior: SaveBehavior,
     find_by_id_behavior: FindByIdBehavior,
     delete_behavior: DeleteBehavior,
+    update_behavior: UpdateBehavior,
     saved_ids: Mutex<Vec<Uuid>>,
+    updated: Mutex<Vec<AutonomousSystem>>,
     delete_call_count: Mutex<u32>,
 }
 
@@ -71,6 +78,16 @@ impl AutonomousSystemRepositoryMock {
         }
     }
 
+    pub fn that_returns_autonomous_system_but_update_fails(
+        autonomous_system: AutonomousSystem,
+        message: String,
+    ) -> Self {
+        Self {
+            update_behavior: UpdateBehavior::FailsWithUnexpected(message),
+            ..Self::that_returns_autonomous_system(autonomous_system)
+        }
+    }
+
     pub fn that_finds_nothing() -> Self {
         Self::with(SaveBehavior::Succeeds, FindByIdBehavior::ReturnsNone)
     }
@@ -87,13 +104,19 @@ impl AutonomousSystemRepositoryMock {
             save_behavior,
             find_by_id_behavior,
             delete_behavior: DeleteBehavior::Succeeds,
+            update_behavior: UpdateBehavior::Succeeds,
             saved_ids: Mutex::new(vec![]),
+            updated: Mutex::new(vec![]),
             delete_call_count: Mutex::new(0),
         }
     }
 
     pub fn saved_ids(&self) -> Vec<Uuid> {
         self.saved_ids.lock().unwrap().clone()
+    }
+
+    pub fn updated(&self) -> Vec<AutonomousSystem> {
+        self.updated.lock().unwrap().clone()
     }
 
     pub fn delete_call_count(&self) -> u32 {
@@ -132,6 +155,21 @@ impl AutonomousSystemRepository for AutonomousSystemRepositoryMock {
             FindByIdBehavior::ReturnsNone => Ok(None),
             FindByIdBehavior::ReturnsAutonomousSystem(cell) => Ok(cell.lock().unwrap().take()),
             FindByIdBehavior::FailsWithUnexpected(message) => {
+                Err(AutonomousSystemRepositoryError::Unexpected(message.clone()))
+            }
+        }
+    }
+
+    async fn update(
+        &self,
+        autonomous_system: &AutonomousSystem,
+    ) -> Result<(), AutonomousSystemRepositoryError> {
+        match &self.update_behavior {
+            UpdateBehavior::Succeeds => {
+                self.updated.lock().unwrap().push(autonomous_system.clone());
+                Ok(())
+            }
+            UpdateBehavior::FailsWithUnexpected(message) => {
                 Err(AutonomousSystemRepositoryError::Unexpected(message.clone()))
             }
         }

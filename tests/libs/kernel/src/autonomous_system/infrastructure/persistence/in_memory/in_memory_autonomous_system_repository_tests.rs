@@ -41,3 +41,25 @@ async fn it_accepts_a_deleted_autonomous_system_again() {
     )
     .await;
 }
+
+#[tokio::test]
+async fn it_keeps_the_description_of_a_saved_autonomous_system() {
+    contract::it_keeps_the_description_of_a_saved_autonomous_system(
+        &InMemoryAutonomousSystemRepository::new(),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn it_replaces_the_description_on_update() {
+    contract::it_replaces_the_description_on_update(&InMemoryAutonomousSystemRepository::new())
+        .await;
+}
+
+#[tokio::test]
+async fn it_returns_not_found_when_updating_an_unknown_autonomous_system() {
+    contract::it_returns_not_found_when_updating_an_unknown_autonomous_system(
+        &InMemoryAutonomousSystemRepository::new(),
+    )
+    .await;
+}

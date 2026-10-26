@@ -58,6 +58,19 @@ impl AutonomousSystemRepository for InMemoryAutonomousSystemRepository {
         Ok(store.get(id.value()).cloned())
     }
 
+    async fn update(
+        &self,
+        autonomous_system: &AutonomousSystem,
+    ) -> Result<(), AutonomousSystemRepositoryError> {
+        let mut store = self.store.lock().unwrap();
+        let id = *autonomous_system.id().value();
+        if !store.contains_key(&id) {
+            return Err(AutonomousSystemRepositoryError::NotFound);
+        }
+        store.insert(id, autonomous_system.clone());
+        Ok(())
+    }
+
     async fn delete(&self, id: &AutonomousSystemId) -> Result<(), AutonomousSystemRepositoryError> {
         let mut store = self.store.lock().unwrap();
         if store.remove(id.value()).is_none() {
