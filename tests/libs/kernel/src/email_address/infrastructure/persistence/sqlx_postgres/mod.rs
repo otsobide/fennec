@@ -1,0 +1,1 @@
+mod sqlx_postgres_email_address_repository_tests;
