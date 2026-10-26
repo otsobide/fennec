@@ -9,6 +9,8 @@
 //! query and event buses of `libs/shared/`. Promoting a module to its own crate
 //! is therefore a move, not a redesign.
 
+pub mod domain_name;
+pub mod hostname;
 pub mod ipv4_address;
 pub mod kernel_migrator;
 pub mod sighting;

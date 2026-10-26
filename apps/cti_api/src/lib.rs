@@ -33,6 +33,24 @@ use kernel::url_source::application::update_url_source::url_source_updater::UrlS
 use kernel::url_source::domain::repositories::url_source_repository::UrlSourceRepository;
 use kernel::url_source::infrastructure::persistence::in_memory::in_memory_url_source_repository::InMemoryUrlSourceRepository;
 use kernel::url_source::infrastructure::persistence::sqlx_postgres::sqlx_postgres_url_source_repository::SqlxPostgresUrlSourceRepository;
+use kernel::domain_name::application::create_domain_name::create_domain_name_command_handler::CreateDomainNameCommandHandler;
+use kernel::domain_name::application::create_domain_name::domain_name_creator::DomainNameCreator;
+use kernel::domain_name::application::delete_domain_name::delete_domain_name_command_handler::DeleteDomainNameCommandHandler;
+use kernel::domain_name::application::delete_domain_name::domain_name_deleter::DomainNameDeleter;
+use kernel::domain_name::application::find_domain_name::find_domain_name_query_handler::FindDomainNameQueryHandler;
+use kernel::domain_name::application::find_domain_name::domain_name_finder::DomainNameFinder;
+use kernel::domain_name::domain::repositories::domain_name_repository::DomainNameRepository;
+use kernel::domain_name::infrastructure::persistence::in_memory::in_memory_domain_name_repository::InMemoryDomainNameRepository;
+use kernel::domain_name::infrastructure::persistence::sqlx_postgres::sqlx_postgres_domain_name_repository::SqlxPostgresDomainNameRepository;
+use kernel::hostname::application::create_hostname::create_hostname_command_handler::CreateHostnameCommandHandler;
+use kernel::hostname::application::create_hostname::hostname_creator::HostnameCreator;
+use kernel::hostname::application::delete_hostname::delete_hostname_command_handler::DeleteHostnameCommandHandler;
+use kernel::hostname::application::delete_hostname::hostname_deleter::HostnameDeleter;
+use kernel::hostname::application::find_hostname::find_hostname_query_handler::FindHostnameQueryHandler;
+use kernel::hostname::application::find_hostname::hostname_finder::HostnameFinder;
+use kernel::hostname::domain::repositories::hostname_repository::HostnameRepository;
+use kernel::hostname::infrastructure::persistence::in_memory::in_memory_hostname_repository::InMemoryHostnameRepository;
+use kernel::hostname::infrastructure::persistence::sqlx_postgres::sqlx_postgres_hostname_repository::SqlxPostgresHostnameRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -58,7 +76,9 @@ use shared_persistence_postgres::infrastructure::postgres::outbox_event_bus::Out
 use shared_persistence_postgres::infrastructure::postgres::transactional_command_bus::TransactionalCommandBus;
 use sqlx::PgPool;
 
+pub mod domain_name;
 pub mod health;
+pub mod hostname;
 pub mod ipv4_address;
 pub mod sighting;
 pub mod source;
@@ -76,6 +96,8 @@ struct Repositories {
     source: Arc<dyn SourceRepository>,
     url_source: Arc<dyn UrlSourceRepository>,
     ipv4_address: Arc<dyn Ipv4AddressRepository>,
+    domain_name: Arc<dyn DomainNameRepository>,
+    hostname: Arc<dyn HostnameRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -88,6 +110,8 @@ pub fn build_state() -> web::Data<AppState> {
         source: Arc::new(InMemorySourceRepository::new()),
         url_source: Arc::new(InMemoryUrlSourceRepository::new()),
         ipv4_address: Arc::new(InMemoryIpv4AddressRepository::new()),
+        domain_name: Arc::new(InMemoryDomainNameRepository::new()),
+        hostname: Arc::new(InMemoryHostnameRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -109,6 +133,8 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         source: Arc::new(SqlxPostgresSourceRepository::new(pool.clone())),
         url_source: Arc::new(SqlxPostgresUrlSourceRepository::new(pool.clone())),
         ipv4_address: Arc::new(SqlxPostgresIpv4AddressRepository::new(pool.clone())),
+        domain_name: Arc::new(SqlxPostgresDomainNameRepository::new(pool.clone())),
+        hostname: Arc::new(SqlxPostgresHostnameRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -157,6 +183,22 @@ fn build_buses(
     let ipv4_address_deleter =
         Ipv4AddressDeleter::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
 
+    // --- domain_name ---
+    let domain_name_repo = repositories.domain_name;
+
+    let domain_name_creator =
+        DomainNameCreator::new(Arc::clone(&domain_name_repo), Arc::clone(&event_bus));
+    let domain_name_finder = DomainNameFinder::new(Arc::clone(&domain_name_repo));
+    let domain_name_deleter =
+        DomainNameDeleter::new(Arc::clone(&domain_name_repo), Arc::clone(&event_bus));
+
+    // --- hostname ---
+    let hostname_repo = repositories.hostname;
+
+    let hostname_creator = HostnameCreator::new(Arc::clone(&hostname_repo), Arc::clone(&event_bus));
+    let hostname_finder = HostnameFinder::new(Arc::clone(&hostname_repo));
+    let hostname_deleter = HostnameDeleter::new(Arc::clone(&hostname_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -196,6 +238,18 @@ fn build_buses(
         .register(DeleteIpv4AddressCommandHandler::new(ipv4_address_deleter))
         .expect("Failed to register DeleteIpv4AddressCommandHandler");
     command_bus
+        .register(CreateDomainNameCommandHandler::new(domain_name_creator))
+        .expect("Failed to register CreateDomainNameCommandHandler");
+    command_bus
+        .register(DeleteDomainNameCommandHandler::new(domain_name_deleter))
+        .expect("Failed to register DeleteDomainNameCommandHandler");
+    command_bus
+        .register(CreateHostnameCommandHandler::new(hostname_creator))
+        .expect("Failed to register CreateHostnameCommandHandler");
+    command_bus
+        .register(DeleteHostnameCommandHandler::new(hostname_deleter))
+        .expect("Failed to register DeleteHostnameCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -216,6 +270,12 @@ fn build_buses(
     query_bus
         .register(FindIpv4AddressQueryHandler::new(ipv4_address_finder))
         .expect("Failed to register FindIpv4AddressQueryHandler");
+    query_bus
+        .register(FindDomainNameQueryHandler::new(domain_name_finder))
+        .expect("Failed to register FindDomainNameQueryHandler");
+    query_bus
+        .register(FindHostnameQueryHandler::new(hostname_finder))
+        .expect("Failed to register FindHostnameQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -249,6 +309,14 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(ipv4_address::controllers::get_by_value::handler)
         .service(ipv4_address::controllers::get::handler)
         .service(ipv4_address::controllers::delete::handler)
+        .service(domain_name::controllers::post::handler)
+        .service(domain_name::controllers::get_by_value::handler)
+        .service(domain_name::controllers::get::handler)
+        .service(domain_name::controllers::delete::handler)
+        .service(hostname::controllers::post::handler)
+        .service(hostname::controllers::get_by_value::handler)
+        .service(hostname::controllers::get::handler)
+        .service(hostname::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)

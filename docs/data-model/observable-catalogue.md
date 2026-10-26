@@ -42,8 +42,8 @@ format; their sources are in
 | `ipv4_network` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` (CIDR) | Network address with zero host bits, prefix `/0` to `/31` | `cidr`, `CHECK (family = 4 AND masklen < 32)` | A | | planned |
 | `ipv6_address` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` | RFC 5952 lowercase, no `/128` | `inet`, `CHECK (family = 6 AND masklen = 128)` | A | | planned |
 | `ipv6_network` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` (CIDR) | RFC 5952 network address, prefix `/0` to `/127` | `cidr`, `CHECK (family = 6 AND masklen < 128)` | A | | planned |
-| `domain_name` | `domain-name` | Domain-Name | `domain` | Lowercase A-label, no trailing dot, at least two labels | `text COLLATE "C"` | A | | planned |
-| `hostname` | `hostname` | Hostname | `hostname` | Lowercase A-label, no trailing dot | `text COLLATE "C"` | A | | planned |
+| `domain_name` | `domain-name` | Domain-Name | `domain` | Lowercase A-label, no trailing dot, at least two labels | `text COLLATE "C"` | A | | [postgres](kinds/domain-name.md) |
+| `hostname` | `hostname` | Hostname | `hostname` | Lowercase A-label, no trailing dot, one or more labels | `text COLLATE "C"` | A | | [postgres](kinds/hostname.md) |
 | `url` | `url` | Url | `url`, `uri`, `link` | WHATWG serialisation | `text COLLATE "C"` plus a `bytea` SHA-256 unique key | A | | planned |
 | `email_address` | `email-addr` | Email-Addr | `email`, `email-src`, `email-dst` | Lowercase, domain as A-label | `text COLLATE "C"` | A | PD | planned |
 | `mac_address` | `mac-addr` | Mac-Addr | `mac-address` | EUI-48, lowercase, colon separated | `macaddr` | A | PD | planned |
