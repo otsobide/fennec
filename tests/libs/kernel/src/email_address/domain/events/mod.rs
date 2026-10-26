@@ -1,0 +1,2 @@
+mod email_address_created_event_tests;
+mod email_address_deleted_event_tests;

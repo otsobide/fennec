@@ -35,6 +35,10 @@ One DNS domain name that Fennec has registered as an observable. Module
   (`example[.]com`), names or labels over the limits.
 - **Typed components**: `labels()`, `top_level_domain()` and
   `is_internationalised()`.
+- **Implementation**: steps 1 and 2 and the label rules are the shared
+  `DnsName` (`libs/shared/valueobject/src/domain/dns/`), which hostnames and
+  the domains of email addresses reuse; `DomainNameValue` trims the input and
+  adds the second-label rule.
 
 Changing any of these rules changes identifiers and follows the rekey
 procedure in [../identity.md](../identity.md#changing-a-canonical-form).

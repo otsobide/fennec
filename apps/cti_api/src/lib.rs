@@ -51,6 +51,51 @@ use kernel::hostname::application::find_hostname::hostname_finder::HostnameFinde
 use kernel::hostname::domain::repositories::hostname_repository::HostnameRepository;
 use kernel::hostname::infrastructure::persistence::in_memory::in_memory_hostname_repository::InMemoryHostnameRepository;
 use kernel::hostname::infrastructure::persistence::sqlx_postgres::sqlx_postgres_hostname_repository::SqlxPostgresHostnameRepository;
+use kernel::email_address::application::create_email_address::create_email_address_command_handler::CreateEmailAddressCommandHandler;
+use kernel::email_address::application::create_email_address::email_address_creator::EmailAddressCreator;
+use kernel::email_address::application::delete_email_address::delete_email_address_command_handler::DeleteEmailAddressCommandHandler;
+use kernel::email_address::application::delete_email_address::email_address_deleter::EmailAddressDeleter;
+use kernel::email_address::application::find_email_address::find_email_address_query_handler::FindEmailAddressQueryHandler;
+use kernel::email_address::application::find_email_address::email_address_finder::EmailAddressFinder;
+use kernel::email_address::domain::repositories::email_address_repository::EmailAddressRepository;
+use kernel::email_address::infrastructure::persistence::in_memory::in_memory_email_address_repository::InMemoryEmailAddressRepository;
+use kernel::email_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_email_address_repository::SqlxPostgresEmailAddressRepository;
+use kernel::ipv6_address::application::create_ipv6_address::create_ipv6_address_command_handler::CreateIpv6AddressCommandHandler;
+use kernel::ipv6_address::application::create_ipv6_address::ipv6_address_creator::Ipv6AddressCreator;
+use kernel::ipv6_address::application::delete_ipv6_address::delete_ipv6_address_command_handler::DeleteIpv6AddressCommandHandler;
+use kernel::ipv6_address::application::delete_ipv6_address::ipv6_address_deleter::Ipv6AddressDeleter;
+use kernel::ipv6_address::application::find_ipv6_address::find_ipv6_address_query_handler::FindIpv6AddressQueryHandler;
+use kernel::ipv6_address::application::find_ipv6_address::ipv6_address_finder::Ipv6AddressFinder;
+use kernel::ipv6_address::domain::repositories::ipv6_address_repository::Ipv6AddressRepository;
+use kernel::ipv6_address::infrastructure::persistence::in_memory::in_memory_ipv6_address_repository::InMemoryIpv6AddressRepository;
+use kernel::ipv6_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_address_repository::SqlxPostgresIpv6AddressRepository;
+use kernel::mac_address::application::create_mac_address::create_mac_address_command_handler::CreateMacAddressCommandHandler;
+use kernel::mac_address::application::create_mac_address::mac_address_creator::MacAddressCreator;
+use kernel::mac_address::application::delete_mac_address::delete_mac_address_command_handler::DeleteMacAddressCommandHandler;
+use kernel::mac_address::application::delete_mac_address::mac_address_deleter::MacAddressDeleter;
+use kernel::mac_address::application::find_mac_address::find_mac_address_query_handler::FindMacAddressQueryHandler;
+use kernel::mac_address::application::find_mac_address::mac_address_finder::MacAddressFinder;
+use kernel::mac_address::domain::repositories::mac_address_repository::MacAddressRepository;
+use kernel::mac_address::infrastructure::persistence::in_memory::in_memory_mac_address_repository::InMemoryMacAddressRepository;
+use kernel::mac_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_mac_address_repository::SqlxPostgresMacAddressRepository;
+use kernel::ipv4_network::application::create_ipv4_network::create_ipv4_network_command_handler::CreateIpv4NetworkCommandHandler;
+use kernel::ipv4_network::application::create_ipv4_network::ipv4_network_creator::Ipv4NetworkCreator;
+use kernel::ipv4_network::application::delete_ipv4_network::delete_ipv4_network_command_handler::DeleteIpv4NetworkCommandHandler;
+use kernel::ipv4_network::application::delete_ipv4_network::ipv4_network_deleter::Ipv4NetworkDeleter;
+use kernel::ipv4_network::application::find_ipv4_network::find_ipv4_network_query_handler::FindIpv4NetworkQueryHandler;
+use kernel::ipv4_network::application::find_ipv4_network::ipv4_network_finder::Ipv4NetworkFinder;
+use kernel::ipv4_network::domain::repositories::ipv4_network_repository::Ipv4NetworkRepository;
+use kernel::ipv4_network::infrastructure::persistence::in_memory::in_memory_ipv4_network_repository::InMemoryIpv4NetworkRepository;
+use kernel::ipv4_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv4_network_repository::SqlxPostgresIpv4NetworkRepository;
+use kernel::ipv6_network::application::create_ipv6_network::create_ipv6_network_command_handler::CreateIpv6NetworkCommandHandler;
+use kernel::ipv6_network::application::create_ipv6_network::ipv6_network_creator::Ipv6NetworkCreator;
+use kernel::ipv6_network::application::delete_ipv6_network::delete_ipv6_network_command_handler::DeleteIpv6NetworkCommandHandler;
+use kernel::ipv6_network::application::delete_ipv6_network::ipv6_network_deleter::Ipv6NetworkDeleter;
+use kernel::ipv6_network::application::find_ipv6_network::find_ipv6_network_query_handler::FindIpv6NetworkQueryHandler;
+use kernel::ipv6_network::application::find_ipv6_network::ipv6_network_finder::Ipv6NetworkFinder;
+use kernel::ipv6_network::domain::repositories::ipv6_network_repository::Ipv6NetworkRepository;
+use kernel::ipv6_network::infrastructure::persistence::in_memory::in_memory_ipv6_network_repository::InMemoryIpv6NetworkRepository;
+use kernel::ipv6_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_network_repository::SqlxPostgresIpv6NetworkRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -77,9 +122,14 @@ use shared_persistence_postgres::infrastructure::postgres::transactional_command
 use sqlx::PgPool;
 
 pub mod domain_name;
+pub mod email_address;
 pub mod health;
 pub mod hostname;
 pub mod ipv4_address;
+pub mod ipv4_network;
+pub mod ipv6_address;
+pub mod ipv6_network;
+pub mod mac_address;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
@@ -98,6 +148,11 @@ struct Repositories {
     ipv4_address: Arc<dyn Ipv4AddressRepository>,
     domain_name: Arc<dyn DomainNameRepository>,
     hostname: Arc<dyn HostnameRepository>,
+    email_address: Arc<dyn EmailAddressRepository>,
+    ipv6_address: Arc<dyn Ipv6AddressRepository>,
+    mac_address: Arc<dyn MacAddressRepository>,
+    ipv4_network: Arc<dyn Ipv4NetworkRepository>,
+    ipv6_network: Arc<dyn Ipv6NetworkRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -112,6 +167,11 @@ pub fn build_state() -> web::Data<AppState> {
         ipv4_address: Arc::new(InMemoryIpv4AddressRepository::new()),
         domain_name: Arc::new(InMemoryDomainNameRepository::new()),
         hostname: Arc::new(InMemoryHostnameRepository::new()),
+        email_address: Arc::new(InMemoryEmailAddressRepository::new()),
+        ipv6_address: Arc::new(InMemoryIpv6AddressRepository::new()),
+        mac_address: Arc::new(InMemoryMacAddressRepository::new()),
+        ipv4_network: Arc::new(InMemoryIpv4NetworkRepository::new()),
+        ipv6_network: Arc::new(InMemoryIpv6NetworkRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -135,6 +195,11 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         ipv4_address: Arc::new(SqlxPostgresIpv4AddressRepository::new(pool.clone())),
         domain_name: Arc::new(SqlxPostgresDomainNameRepository::new(pool.clone())),
         hostname: Arc::new(SqlxPostgresHostnameRepository::new(pool.clone())),
+        email_address: Arc::new(SqlxPostgresEmailAddressRepository::new(pool.clone())),
+        ipv6_address: Arc::new(SqlxPostgresIpv6AddressRepository::new(pool.clone())),
+        mac_address: Arc::new(SqlxPostgresMacAddressRepository::new(pool.clone())),
+        ipv4_network: Arc::new(SqlxPostgresIpv4NetworkRepository::new(pool.clone())),
+        ipv6_network: Arc::new(SqlxPostgresIpv6NetworkRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -199,6 +264,51 @@ fn build_buses(
     let hostname_finder = HostnameFinder::new(Arc::clone(&hostname_repo));
     let hostname_deleter = HostnameDeleter::new(Arc::clone(&hostname_repo), Arc::clone(&event_bus));
 
+    // --- email_address ---
+    let email_address_repo = repositories.email_address;
+
+    let email_address_creator =
+        EmailAddressCreator::new(Arc::clone(&email_address_repo), Arc::clone(&event_bus));
+    let email_address_finder = EmailAddressFinder::new(Arc::clone(&email_address_repo));
+    let email_address_deleter =
+        EmailAddressDeleter::new(Arc::clone(&email_address_repo), Arc::clone(&event_bus));
+
+    // --- ipv6_address ---
+    let ipv6_address_repo = repositories.ipv6_address;
+
+    let ipv6_address_creator =
+        Ipv6AddressCreator::new(Arc::clone(&ipv6_address_repo), Arc::clone(&event_bus));
+    let ipv6_address_finder = Ipv6AddressFinder::new(Arc::clone(&ipv6_address_repo));
+    let ipv6_address_deleter =
+        Ipv6AddressDeleter::new(Arc::clone(&ipv6_address_repo), Arc::clone(&event_bus));
+
+    // --- mac_address ---
+    let mac_address_repo = repositories.mac_address;
+
+    let mac_address_creator =
+        MacAddressCreator::new(Arc::clone(&mac_address_repo), Arc::clone(&event_bus));
+    let mac_address_finder = MacAddressFinder::new(Arc::clone(&mac_address_repo));
+    let mac_address_deleter =
+        MacAddressDeleter::new(Arc::clone(&mac_address_repo), Arc::clone(&event_bus));
+
+    // --- ipv4_network ---
+    let ipv4_network_repo = repositories.ipv4_network;
+
+    let ipv4_network_creator =
+        Ipv4NetworkCreator::new(Arc::clone(&ipv4_network_repo), Arc::clone(&event_bus));
+    let ipv4_network_finder = Ipv4NetworkFinder::new(Arc::clone(&ipv4_network_repo));
+    let ipv4_network_deleter =
+        Ipv4NetworkDeleter::new(Arc::clone(&ipv4_network_repo), Arc::clone(&event_bus));
+
+    // --- ipv6_network ---
+    let ipv6_network_repo = repositories.ipv6_network;
+
+    let ipv6_network_creator =
+        Ipv6NetworkCreator::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
+    let ipv6_network_finder = Ipv6NetworkFinder::new(Arc::clone(&ipv6_network_repo));
+    let ipv6_network_deleter =
+        Ipv6NetworkDeleter::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -250,6 +360,36 @@ fn build_buses(
         .register(DeleteHostnameCommandHandler::new(hostname_deleter))
         .expect("Failed to register DeleteHostnameCommandHandler");
     command_bus
+        .register(CreateEmailAddressCommandHandler::new(email_address_creator))
+        .expect("Failed to register CreateEmailAddressCommandHandler");
+    command_bus
+        .register(DeleteEmailAddressCommandHandler::new(email_address_deleter))
+        .expect("Failed to register DeleteEmailAddressCommandHandler");
+    command_bus
+        .register(CreateIpv6AddressCommandHandler::new(ipv6_address_creator))
+        .expect("Failed to register CreateIpv6AddressCommandHandler");
+    command_bus
+        .register(DeleteIpv6AddressCommandHandler::new(ipv6_address_deleter))
+        .expect("Failed to register DeleteIpv6AddressCommandHandler");
+    command_bus
+        .register(CreateMacAddressCommandHandler::new(mac_address_creator))
+        .expect("Failed to register CreateMacAddressCommandHandler");
+    command_bus
+        .register(DeleteMacAddressCommandHandler::new(mac_address_deleter))
+        .expect("Failed to register DeleteMacAddressCommandHandler");
+    command_bus
+        .register(CreateIpv4NetworkCommandHandler::new(ipv4_network_creator))
+        .expect("Failed to register CreateIpv4NetworkCommandHandler");
+    command_bus
+        .register(DeleteIpv4NetworkCommandHandler::new(ipv4_network_deleter))
+        .expect("Failed to register DeleteIpv4NetworkCommandHandler");
+    command_bus
+        .register(CreateIpv6NetworkCommandHandler::new(ipv6_network_creator))
+        .expect("Failed to register CreateIpv6NetworkCommandHandler");
+    command_bus
+        .register(DeleteIpv6NetworkCommandHandler::new(ipv6_network_deleter))
+        .expect("Failed to register DeleteIpv6NetworkCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -276,6 +416,21 @@ fn build_buses(
     query_bus
         .register(FindHostnameQueryHandler::new(hostname_finder))
         .expect("Failed to register FindHostnameQueryHandler");
+    query_bus
+        .register(FindEmailAddressQueryHandler::new(email_address_finder))
+        .expect("Failed to register FindEmailAddressQueryHandler");
+    query_bus
+        .register(FindIpv6AddressQueryHandler::new(ipv6_address_finder))
+        .expect("Failed to register FindIpv6AddressQueryHandler");
+    query_bus
+        .register(FindMacAddressQueryHandler::new(mac_address_finder))
+        .expect("Failed to register FindMacAddressQueryHandler");
+    query_bus
+        .register(FindIpv4NetworkQueryHandler::new(ipv4_network_finder))
+        .expect("Failed to register FindIpv4NetworkQueryHandler");
+    query_bus
+        .register(FindIpv6NetworkQueryHandler::new(ipv6_network_finder))
+        .expect("Failed to register FindIpv6NetworkQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -317,6 +472,26 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(hostname::controllers::get_by_value::handler)
         .service(hostname::controllers::get::handler)
         .service(hostname::controllers::delete::handler)
+        .service(email_address::controllers::post::handler)
+        .service(email_address::controllers::get_by_value::handler)
+        .service(email_address::controllers::get::handler)
+        .service(email_address::controllers::delete::handler)
+        .service(ipv6_address::controllers::post::handler)
+        .service(ipv6_address::controllers::get_by_value::handler)
+        .service(ipv6_address::controllers::get::handler)
+        .service(ipv6_address::controllers::delete::handler)
+        .service(mac_address::controllers::post::handler)
+        .service(mac_address::controllers::get_by_value::handler)
+        .service(mac_address::controllers::get::handler)
+        .service(mac_address::controllers::delete::handler)
+        .service(ipv4_network::controllers::post::handler)
+        .service(ipv4_network::controllers::get_by_value::handler)
+        .service(ipv4_network::controllers::get::handler)
+        .service(ipv4_network::controllers::delete::handler)
+        .service(ipv6_network::controllers::post::handler)
+        .service(ipv6_network::controllers::get_by_value::handler)
+        .service(ipv6_network::controllers::get::handler)
+        .service(ipv6_network::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)

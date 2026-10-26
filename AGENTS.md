@@ -92,8 +92,9 @@ and runs the migrations first. A new use case is registered in
 
 `libs/kernel/src/<module>/{domain,application,infrastructure}` with one
 module per aggregate: `source`, `url_source`, `sighting` and one per
-observable kind (`ipv4_address`, `domain_name` and `hostname` so far; the
-catalogue lists the rest). Modules never import each other;
+observable kind (`ipv4_address`, `ipv4_network`, `ipv6_address`,
+`ipv6_network`, `mac_address`, `domain_name`, `hostname` and
+`email_address` so far; the catalogue lists the rest). Modules never import each other;
 `tests/libs/kernel/src/module_isolation_tests.rs` fails the build if one
 does, and every new module must be added to its `MODULES` list.
 

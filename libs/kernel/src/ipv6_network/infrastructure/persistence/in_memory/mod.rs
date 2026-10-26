@@ -1,0 +1,1 @@
+pub mod in_memory_ipv6_network_repository;

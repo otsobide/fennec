@@ -9,7 +9,9 @@
 //!
 //! ## Main modules
 //!
-//! - [`domain`]: Value types for strings.
+//! - [`domain`]: canonical JSON, DNS names, STIX identifiers, timestamps,
+//!   caseless Unicode text, strings and the validation error every value
+//!   object returns.
 //! - [`application`]: (Reserved for future use.)
 //! - [`infrastructure`]: (Reserved for future use.)
 //!

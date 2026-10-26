@@ -8,5 +8,10 @@ in the pull request that implements it.
 | Kind | Module | STIX type | Persistence |
 |---|---|---|---|
 | [Domain name](domain-name.md) | `domain_name` | `domain-name` | In memory and PostgreSQL |
+| [Email address](email-address.md) | `email_address` | `email-addr` | In memory and PostgreSQL |
 | [Hostname](hostname.md) | `hostname` | `hostname` | In memory and PostgreSQL |
 | [IPv4 address](ipv4-address.md) | `ipv4_address` | `ipv4-addr` | In memory and PostgreSQL |
+| [IPv4 network](ipv4-network.md) | `ipv4_network` | `ipv4-addr` | In memory and PostgreSQL |
+| [IPv6 address](ipv6-address.md) | `ipv6_address` | `ipv6-addr` | In memory and PostgreSQL |
+| [IPv6 network](ipv6-network.md) | `ipv6_network` | `ipv6-addr` | In memory and PostgreSQL |
+| [MAC address](mac-address.md) | `mac_address` | `mac-addr` | In memory and PostgreSQL |

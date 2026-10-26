@@ -97,6 +97,22 @@ Invariants and errors follow `Ipv4Address`: the id is always derived from the va
 
 ---
 
+### `EmailAddress`
+
+Module: `libs/kernel/src/email_address/`. File: `libs/kernel/src/email_address/domain/entities/email_address.rs`
+
+One email address registered as an observable (see [../data-model/kinds/email-address.md](../data-model/kinds/email-address.md)). Its identity is its value. Personal data.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `EmailAddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `email-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `EmailAddressValue` | `String` | validated | Local part lowercased and in NFC, a dot-atom of RFC 5322 and RFC 6531 characters, at most 64 octets; domain parsed as a shared `DnsName` with at least two labels; at most 254 octets in all. No quoted local parts or address literals. |
+| `created_at` | `EmailAddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`: the id is always derived from the value, nothing changes after creation, and registering an already registered address in any spelling is `AlreadyExists`.
+
+---
+
 ### `Hostname`
 
 Module: `libs/kernel/src/hostname/`. File: `libs/kernel/src/hostname/domain/entities/hostname.rs`
@@ -134,6 +150,70 @@ One IPv4 host address registered as an observable, the first typed observable ki
 
 - `ValueObjectValidationError`: a value that is not a single IPv4 host address, or an id that is not a UUID v5.
 - `Ipv4AddressRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}`: persistence-layer failures. Registering an already registered address, in any spelling, is `AlreadyExists`.
+
+---
+
+### `Ipv4Network`
+
+Module: `libs/kernel/src/ipv4_network/`. File: `libs/kernel/src/ipv4_network/domain/entities/ipv4_network.rs`
+
+One IPv4 CIDR block registered as an observable (see [../data-model/kinds/ipv4-network.md](../data-model/kinds/ipv4-network.md)). Its identity is its value; it shares the STIX type `ipv4-addr` with `Ipv4Address`.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv4NetworkId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv4-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv4NetworkValue` | `std::net::Ipv4Addr` and `u8` | validated | Network address and prefix `/0` to `/31`, no host bits set; canonical `198.51.100.0/24`. |
+| `created_at` | `Ipv4NetworkCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
+### `Ipv6Address`
+
+Module: `libs/kernel/src/ipv6_address/`. File: `libs/kernel/src/ipv6_address/domain/entities/ipv6_address.rs`
+
+One IPv6 host address registered as an observable (see [../data-model/kinds/ipv6-address.md](../data-model/kinds/ipv6-address.md)). Its identity is its value.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv6AddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv6-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv6AddressValue` | `std::net::Ipv6Addr` | validated | Any RFC 4291 text form, optionally `/128`; canonical RFC 5952 text. No networks, zone indices or brackets. |
+| `created_at` | `Ipv6AddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
+### `Ipv6Network`
+
+Module: `libs/kernel/src/ipv6_network/`. File: `libs/kernel/src/ipv6_network/domain/entities/ipv6_network.rs`
+
+One IPv6 CIDR block registered as an observable (see [../data-model/kinds/ipv6-network.md](../data-model/kinds/ipv6-network.md)). Its identity is its value; it shares the STIX type `ipv6-addr` with `Ipv6Address`.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv6NetworkId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv6-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv6NetworkValue` | `std::net::Ipv6Addr` and `u8` | validated | Network address in any RFC 4291 form and prefix `/0` to `/127`, no host bits set; canonical RFC 5952 text, `2001:db8::/32`. |
+| `created_at` | `Ipv6NetworkCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
+### `MacAddress`
+
+Module: `libs/kernel/src/mac_address/`. File: `libs/kernel/src/mac_address/domain/entities/mac_address.rs`
+
+One EUI-48 MAC address registered as an observable (see [../data-model/kinds/mac-address.md](../data-model/kinds/mac-address.md)). Its identity is its value. Personal data.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `MacAddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `mac-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `MacAddressValue` | `[u8; 6]` | validated | Colon, hyphen, dotted or bare spellings; canonical lowercase colon-separated two-digit octets. No EUI-64, no mixed separators. |
+| `created_at` | `MacAddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
 
 ---
 
@@ -217,7 +297,12 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
 | `kernel` | `DomainName` | `DomainNameId`, `DomainNameValue`, `DomainNameCreatedAt` | `cti_api`: `/domain-names[/{id}]`, `/domain-names?value=` |
+| `kernel` | `EmailAddress` | `EmailAddressId`, `EmailAddressValue`, `EmailAddressCreatedAt` | `cti_api`: `/email-addresses[/{id}]`, `/email-addresses?value=` |
 | `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
+| `kernel` | `Ipv4Network` | `Ipv4NetworkId`, `Ipv4NetworkValue`, `Ipv4NetworkCreatedAt` | `cti_api`: `/ipv4-networks[/{id}]`, `/ipv4-networks?value=` |
+| `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
+| `kernel` | `Ipv6Network` | `Ipv6NetworkId`, `Ipv6NetworkValue`, `Ipv6NetworkCreatedAt` | `cti_api`: `/ipv6-networks[/{id}]`, `/ipv6-networks?value=` |
+| `kernel` | `MacAddress` | `MacAddressId`, `MacAddressValue`, `MacAddressCreatedAt` | `cti_api`: `/mac-addresses[/{id}]`, `/mac-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |

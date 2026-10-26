@@ -1,7 +1,12 @@
 mod domain_name;
+mod email_address;
 mod health;
 mod hostname;
 mod ipv4_address;
+mod ipv4_network;
+mod ipv6_address;
+mod ipv6_network;
+mod mac_address;
 mod postgres;
 mod readme_flow_test;
 mod sighting;

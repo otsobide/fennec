@@ -1,0 +1,4 @@
+mod create_email_address_test;
+mod delete_email_address_test;
+mod find_email_address_by_value_test;
+mod find_email_address_test;

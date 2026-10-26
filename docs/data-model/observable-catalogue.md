@@ -39,14 +39,14 @@ format; their sources are in
 | Module | STIX type | OpenCTI | MISP | Canonical form | Column | Id | PD | Status |
 |---|---|---|---|---|---|---|---|---|
 | `ipv4_address` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` | Dotted quad, no leading zeros, no `/32` | `inet`, `CHECK (family = 4 AND masklen = 32)` | A | | [postgres](kinds/ipv4-address.md) |
-| `ipv4_network` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` (CIDR) | Network address with zero host bits, prefix `/0` to `/31` | `cidr`, `CHECK (family = 4 AND masklen < 32)` | A | | planned |
-| `ipv6_address` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` | RFC 5952 lowercase, no `/128` | `inet`, `CHECK (family = 6 AND masklen = 128)` | A | | planned |
-| `ipv6_network` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` (CIDR) | RFC 5952 network address, prefix `/0` to `/127` | `cidr`, `CHECK (family = 6 AND masklen < 128)` | A | | planned |
+| `ipv4_network` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` (CIDR) | Network address with zero host bits, prefix `/0` to `/31` | `cidr`, `CHECK (family = 4 AND masklen < 32)` | A | | [postgres](kinds/ipv4-network.md) |
+| `ipv6_address` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` | RFC 5952 lowercase, no `/128` | `inet`, `CHECK (family = 6 AND masklen = 128)` | A | | [postgres](kinds/ipv6-address.md) |
+| `ipv6_network` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` (CIDR) | RFC 5952 network address, prefix `/0` to `/127` | `cidr`, `CHECK (family = 6 AND masklen < 128)` | A | | [postgres](kinds/ipv6-network.md) |
 | `domain_name` | `domain-name` | Domain-Name | `domain` | Lowercase A-label, no trailing dot, at least two labels | `text COLLATE "C"` | A | | [postgres](kinds/domain-name.md) |
 | `hostname` | `hostname` | Hostname | `hostname` | Lowercase A-label, no trailing dot, one or more labels | `text COLLATE "C"` | A | | [postgres](kinds/hostname.md) |
 | `url` | `url` | Url | `url`, `uri`, `link` | WHATWG serialisation | `text COLLATE "C"` plus a `bytea` SHA-256 unique key | A | | planned |
-| `email_address` | `email-addr` | Email-Addr | `email`, `email-src`, `email-dst` | Lowercase, domain as A-label | `text COLLATE "C"` | A | PD | planned |
-| `mac_address` | `mac-addr` | Mac-Addr | `mac-address` | EUI-48, lowercase, colon separated | `macaddr` | A | PD | planned |
+| `email_address` | `email-addr` | Email-Addr | `email`, `email-src`, `email-dst` | Lowercase NFC local part, domain as A-label | `text COLLATE "C"` | A | PD | [postgres](kinds/email-address.md) |
+| `mac_address` | `mac-addr` | Mac-Addr | `mac-address` | EUI-48, lowercase, colon separated | `macaddr` | A | PD | [postgres](kinds/mac-address.md) |
 | `autonomous_system` | `autonomous-system` | Autonomous-System | `AS` | Number `0..=4294967295` (the `AS` prefix and asdot notation are accepted on input); optional name and RIR | `bigint` | A | | planned |
 
 ## Wave 2: web tracking and site ownership identifiers

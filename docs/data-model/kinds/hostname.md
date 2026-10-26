@@ -38,6 +38,8 @@ aggregate `Hostname`.
   IPv4 addresses.
 - **Typed components**: `labels()`, `machine_name()` (the leftmost label),
   `is_single_label()` and `is_internationalised()`.
+- **Implementation**: `HostnameValue` trims the input and wraps the shared
+  `DnsName` (`libs/shared/valueobject/src/domain/dns/`) without further rules.
 
 Changing any of these rules changes identifiers and follows the rekey
 procedure in [../identity.md](../identity.md#changing-a-canonical-form).
