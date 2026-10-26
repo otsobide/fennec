@@ -153,6 +153,22 @@ One IPv4 host address registered as an observable, the first typed observable ki
 
 ---
 
+### `Ipv6Address`
+
+Module: `libs/kernel/src/ipv6_address/`. File: `libs/kernel/src/ipv6_address/domain/entities/ipv6_address.rs`
+
+One IPv6 host address registered as an observable (see [../data-model/kinds/ipv6-address.md](../data-model/kinds/ipv6-address.md)). Its identity is its value.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv6AddressId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv6-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv6AddressValue` | `std::net::Ipv6Addr` | validated | Any RFC 4291 text form, optionally `/128`; canonical RFC 5952 text. No networks, zone indices or brackets. |
+| `created_at` | `Ipv6AddressCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
 ### `Sighting`
 
 Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific observable. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
@@ -236,5 +252,6 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `EmailAddress` | `EmailAddressId`, `EmailAddressValue`, `EmailAddressCreatedAt` | `cti_api`: `/email-addresses[/{id}]`, `/email-addresses?value=` |
 | `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
+| `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |

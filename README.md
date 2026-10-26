@@ -22,6 +22,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 | `kernel` | `email_address` | `EmailAddress` | Register, find (by id or value) and delete email addresses: lowercase NFC local part, domain as lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `hostname` | `Hostname` | Register, find (by id or value) and delete hostnames, with or without a domain, canonicalised to lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `ipv4_address` | `Ipv4Address` | Register, find (by id or value) and delete IPv4 host addresses; the id is the STIX deterministic id | `cti_api` (:8081) |
+| `kernel` | `ipv6_address` | `Ipv6Address` | Register, find (by id or value) and delete IPv6 host addresses in RFC 5952 form; the id is the STIX deterministic id | `cti_api` (:8081) |
 | `kernel` | `sighting` | `Sighting` | Records that a source reported an observable, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `config_entry` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
@@ -191,6 +192,7 @@ RUST_LOG=debug make cti_api/run
 | `POST` | `/ipv4-addresses` | Register an IPv4 address (`value` only); answers `201` with `{id, stix_id}`, or `409` with the same body if it is already registered |
 | `GET` | `/ipv4-addresses?value=<address>` | Find an IPv4 address by value |
 | `GET` `DELETE` | `/ipv4-addresses/{id}` | Read or delete an IPv4 address |
+| `POST` `GET` `DELETE` | `/ipv6-addresses`, `/ipv6-addresses?value=`, `/ipv6-addresses/{id}` | The same contract as IPv4 addresses, for IPv6 addresses |
 | `POST` | `/sightings` | Record a first sighting (`id`, `observable_kind`, `observable_id`, `source_id`, `observed_at`) |
 | `POST` | `/sightings/{id}/observations` | Register another observation (`observed_at`): bumps the counter and last seen |
 | `GET` `DELETE` | `/sightings/{id}` | Read or delete a sighting |

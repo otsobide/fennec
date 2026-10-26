@@ -11,3 +11,4 @@ in the pull request that implements it.
 | [Email address](email-address.md) | `email_address` | `email-addr` | In memory and PostgreSQL |
 | [Hostname](hostname.md) | `hostname` | `hostname` | In memory and PostgreSQL |
 | [IPv4 address](ipv4-address.md) | `ipv4_address` | `ipv4-addr` | In memory and PostgreSQL |
+| [IPv6 address](ipv6-address.md) | `ipv6_address` | `ipv6-addr` | In memory and PostgreSQL |
