@@ -1,0 +1,2 @@
+pub mod create_domain_name_request;
+pub mod find_domain_name_by_value_request;
