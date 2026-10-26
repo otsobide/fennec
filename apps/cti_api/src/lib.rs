@@ -87,6 +87,15 @@ use kernel::ipv4_network::application::find_ipv4_network::ipv4_network_finder::I
 use kernel::ipv4_network::domain::repositories::ipv4_network_repository::Ipv4NetworkRepository;
 use kernel::ipv4_network::infrastructure::persistence::in_memory::in_memory_ipv4_network_repository::InMemoryIpv4NetworkRepository;
 use kernel::ipv4_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv4_network_repository::SqlxPostgresIpv4NetworkRepository;
+use kernel::ipv6_network::application::create_ipv6_network::create_ipv6_network_command_handler::CreateIpv6NetworkCommandHandler;
+use kernel::ipv6_network::application::create_ipv6_network::ipv6_network_creator::Ipv6NetworkCreator;
+use kernel::ipv6_network::application::delete_ipv6_network::delete_ipv6_network_command_handler::DeleteIpv6NetworkCommandHandler;
+use kernel::ipv6_network::application::delete_ipv6_network::ipv6_network_deleter::Ipv6NetworkDeleter;
+use kernel::ipv6_network::application::find_ipv6_network::find_ipv6_network_query_handler::FindIpv6NetworkQueryHandler;
+use kernel::ipv6_network::application::find_ipv6_network::ipv6_network_finder::Ipv6NetworkFinder;
+use kernel::ipv6_network::domain::repositories::ipv6_network_repository::Ipv6NetworkRepository;
+use kernel::ipv6_network::infrastructure::persistence::in_memory::in_memory_ipv6_network_repository::InMemoryIpv6NetworkRepository;
+use kernel::ipv6_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_network_repository::SqlxPostgresIpv6NetworkRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -119,6 +128,7 @@ pub mod hostname;
 pub mod ipv4_address;
 pub mod ipv4_network;
 pub mod ipv6_address;
+pub mod ipv6_network;
 pub mod mac_address;
 pub mod sighting;
 pub mod source;
@@ -142,6 +152,7 @@ struct Repositories {
     ipv6_address: Arc<dyn Ipv6AddressRepository>,
     mac_address: Arc<dyn MacAddressRepository>,
     ipv4_network: Arc<dyn Ipv4NetworkRepository>,
+    ipv6_network: Arc<dyn Ipv6NetworkRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -160,6 +171,7 @@ pub fn build_state() -> web::Data<AppState> {
         ipv6_address: Arc::new(InMemoryIpv6AddressRepository::new()),
         mac_address: Arc::new(InMemoryMacAddressRepository::new()),
         ipv4_network: Arc::new(InMemoryIpv4NetworkRepository::new()),
+        ipv6_network: Arc::new(InMemoryIpv6NetworkRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -187,6 +199,7 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         ipv6_address: Arc::new(SqlxPostgresIpv6AddressRepository::new(pool.clone())),
         mac_address: Arc::new(SqlxPostgresMacAddressRepository::new(pool.clone())),
         ipv4_network: Arc::new(SqlxPostgresIpv4NetworkRepository::new(pool.clone())),
+        ipv6_network: Arc::new(SqlxPostgresIpv6NetworkRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -287,6 +300,15 @@ fn build_buses(
     let ipv4_network_deleter =
         Ipv4NetworkDeleter::new(Arc::clone(&ipv4_network_repo), Arc::clone(&event_bus));
 
+    // --- ipv6_network ---
+    let ipv6_network_repo = repositories.ipv6_network;
+
+    let ipv6_network_creator =
+        Ipv6NetworkCreator::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
+    let ipv6_network_finder = Ipv6NetworkFinder::new(Arc::clone(&ipv6_network_repo));
+    let ipv6_network_deleter =
+        Ipv6NetworkDeleter::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -362,6 +384,12 @@ fn build_buses(
         .register(DeleteIpv4NetworkCommandHandler::new(ipv4_network_deleter))
         .expect("Failed to register DeleteIpv4NetworkCommandHandler");
     command_bus
+        .register(CreateIpv6NetworkCommandHandler::new(ipv6_network_creator))
+        .expect("Failed to register CreateIpv6NetworkCommandHandler");
+    command_bus
+        .register(DeleteIpv6NetworkCommandHandler::new(ipv6_network_deleter))
+        .expect("Failed to register DeleteIpv6NetworkCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -400,6 +428,9 @@ fn build_buses(
     query_bus
         .register(FindIpv4NetworkQueryHandler::new(ipv4_network_finder))
         .expect("Failed to register FindIpv4NetworkQueryHandler");
+    query_bus
+        .register(FindIpv6NetworkQueryHandler::new(ipv6_network_finder))
+        .expect("Failed to register FindIpv6NetworkQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -457,6 +488,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(ipv4_network::controllers::get_by_value::handler)
         .service(ipv4_network::controllers::get::handler)
         .service(ipv4_network::controllers::delete::handler)
+        .service(ipv6_network::controllers::post::handler)
+        .service(ipv6_network::controllers::get_by_value::handler)
+        .service(ipv6_network::controllers::get::handler)
+        .service(ipv6_network::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
