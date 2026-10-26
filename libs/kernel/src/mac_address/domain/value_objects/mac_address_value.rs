@@ -48,7 +48,7 @@ impl MacAddressValue {
 
         if groups.len() == 8 {
             return Err(invalid(
-                "mac address must have six octets, got an EUI-64",
+                "mac address must have six octets, not the eight of an EUI-64",
                 value,
             ));
         }
