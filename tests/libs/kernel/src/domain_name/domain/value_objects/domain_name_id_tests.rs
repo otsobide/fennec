@@ -29,7 +29,7 @@ fn it_derives_the_same_id_for_every_spelling_of_the_name() {
 }
 
 #[test]
-fn it_derives_different_ids_for_different_namees() {
+fn it_derives_different_ids_for_different_names() {
     assert_ne!(id_of("example.com"), id_of("example.org"));
 }
 

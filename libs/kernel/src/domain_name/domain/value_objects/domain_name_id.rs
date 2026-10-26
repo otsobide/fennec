@@ -1,4 +1,4 @@
-//! Value Object for the unique identifier of an [`DomainName`].
+//! Value Object for the unique identifier of a [`DomainName`].
 //!
 //! [`DomainName`]: crate::domain_name::domain::entities::domain_name::DomainName
 

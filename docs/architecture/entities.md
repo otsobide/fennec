@@ -97,6 +97,22 @@ Invariants and errors follow `Ipv4Address`: the id is always derived from the va
 
 ---
 
+### `Hostname`
+
+Module: `libs/kernel/src/hostname/`. File: `libs/kernel/src/hostname/domain/entities/hostname.rs`
+
+One hostname registered as an observable, the name of one machine with or without its domain (see [../data-model/kinds/hostname.md](../data-model/kinds/hostname.md)). Its identity is its value.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `HostnameId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `hostname--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `HostnameValue` | `String` | validated | UTS #46 nontransitional, lowercase A-labels, no trailing dot; one or more labels of `[a-z0-9_-]`, 1 to 63 characters each, at most 253 in all, non-numeric last label. |
+| `created_at` | `HostnameCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`: the id is always derived from the value, nothing changes after creation, and registering an already registered hostname in any spelling is `AlreadyExists`.
+
+---
+
 ### `Ipv4Address`
 
 Module: `libs/kernel/src/ipv4_address/`. File: `libs/kernel/src/ipv4_address/domain/entities/ipv4_address.rs`
@@ -201,6 +217,7 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
 | `kernel` | `DomainName` | `DomainNameId`, `DomainNameValue`, `DomainNameCreatedAt` | `cti_api`: `/domain-names[/{id}]`, `/domain-names?value=` |
+| `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |

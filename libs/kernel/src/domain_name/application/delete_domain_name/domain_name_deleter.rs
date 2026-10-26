@@ -10,7 +10,7 @@ use crate::domain_name::domain::events::create_domain_name_deleted_event::create
 use crate::domain_name::domain::repositories::domain_name_repository::DomainNameRepository;
 use crate::domain_name::domain::value_objects::domain_name_id::DomainNameId;
 
-/// Domain service that deletes an [`DomainName`] and publishes an
+/// Domain service that deletes a [`DomainName`] and publishes a
 /// [`DomainNameDeletedEvent`] via the event bus.
 ///
 /// [`DomainName`]: crate::domain_name::domain::entities::domain_name::DomainName

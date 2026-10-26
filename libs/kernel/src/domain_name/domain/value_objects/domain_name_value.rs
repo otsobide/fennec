@@ -21,8 +21,8 @@ pub const MAX_LABEL_LENGTH: usize = 63;
 ///
 /// The canonical name has at least two labels of 1 to 63 lowercase letters,
 /// digits, hyphens or underscores, none starting or ending with a hyphen, at
-/// most 253 characters, and a last label that is not numeric, so a
-/// domain name is never taken for a domain.
+/// most 253 characters, and a last label that is not numeric, so an IPv4
+/// address is never taken for a domain.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct DomainNameValue(String);
 

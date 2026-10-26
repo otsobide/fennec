@@ -1,4 +1,4 @@
-//! Domain service for registering domain namees.
+//! Domain service for registering domain names.
 
 use std::sync::Arc;
 
@@ -12,7 +12,7 @@ use crate::domain_name::domain::repositories::domain_name_repository::DomainName
 use crate::domain_name::domain::value_objects::domain_name_created_at::DomainNameCreatedAt;
 use crate::domain_name::domain::value_objects::domain_name_value::DomainNameValue;
 
-/// Domain service that persists a new [`DomainName`] and publishes an
+/// Domain service that persists a new [`DomainName`] and publishes a
 /// [`DomainNameCreatedEvent`] via the event bus.
 ///
 /// The id is derived from the value and `created_at` is generated here, so
