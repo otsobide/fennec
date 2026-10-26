@@ -23,8 +23,8 @@ pub const MAX_LABEL_LENGTH: usize = 63;
 ///
 /// The canonical name has one or more labels of 1 to 63 lowercase letters,
 /// digits, hyphens or underscores, none starting or ending with a hyphen, at
-/// most 253 characters, and a last label that is not numeric, so a
-/// hostname is never taken for a hostname.
+/// most 253 characters, and a last label that is not numeric, so an IPv4
+/// address is never taken for a hostname.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct HostnameValue(String);
 

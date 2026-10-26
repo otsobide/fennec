@@ -1,4 +1,4 @@
-//! Value Object for the unique identifier of an [`Hostname`].
+//! Value Object for the unique identifier of a [`Hostname`].
 //!
 //! [`Hostname`]: crate::hostname::domain::entities::hostname::Hostname
 

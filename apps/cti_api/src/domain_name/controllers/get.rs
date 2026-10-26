@@ -14,7 +14,7 @@ use crate::AppState;
 ///
 /// # Responses
 ///
-/// - `200 OK` – the name, as an [`DomainNameResponse`].
+/// - `200 OK` – the name, as a [`DomainNameResponse`].
 /// - `400 Bad Request` – the path id is not a UUID v5.
 /// - `404 Not Found` – no name is registered under the id.
 /// - `500 Internal Server Error` – unexpected error.

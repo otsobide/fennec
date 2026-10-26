@@ -10,7 +10,7 @@ use crate::hostname::domain::entities::hostname::Hostname;
 use crate::hostname::domain::value_objects::hostname_id::HostnameId;
 use crate::hostname::domain::value_objects::hostname_value::HostnameValue;
 
-/// Domain event raised when an [`Hostname`] is deleted.
+/// Domain event raised when a [`Hostname`] is deleted.
 ///
 /// Carries the hostname as well as the id: the id is a one-way hash of the
 /// value, so without it a subscriber could not tell which hostname went away.

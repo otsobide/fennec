@@ -10,7 +10,7 @@ use crate::hostname::domain::events::create_hostname_deleted_event::create_hostn
 use crate::hostname::domain::repositories::hostname_repository::HostnameRepository;
 use crate::hostname::domain::value_objects::hostname_id::HostnameId;
 
-/// Domain service that deletes an [`Hostname`] and publishes an
+/// Domain service that deletes a [`Hostname`] and publishes a
 /// [`HostnameDeletedEvent`] via the event bus.
 ///
 /// [`Hostname`]: crate::hostname::domain::entities::hostname::Hostname

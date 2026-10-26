@@ -104,7 +104,7 @@ fn it_rejects_a_single_label() {
 }
 
 #[test]
-fn it_rejects_an_domain_name() {
+fn it_rejects_an_ipv4_address() {
     assert!(rejection("10.0.0.10").contains("numeric label"));
 }
 

@@ -86,7 +86,7 @@ fn it_rejects_an_empty_hostname() {
 }
 
 #[test]
-fn it_rejects_an_hostname() {
+fn it_rejects_an_ipv4_address() {
     assert!(rejection("203.0.113.9").contains("numeric label"));
 }
 

@@ -1,4 +1,4 @@
-//! Value Object for the creation timestamp of an [`Hostname`].
+//! Value Object for the creation timestamp of a [`Hostname`].
 //!
 //! [`Hostname`]: crate::hostname::domain::entities::hostname::Hostname
 
@@ -7,7 +7,7 @@ use std::time::SystemTime;
 use shared_valueobject::domain::errors::value_object_validation_error::ValueObjectValidationError;
 use shared_valueobject::domain::timestamps::microsecond_timestamp::MicrosecondTimestamp;
 
-/// An immutable Value Object recording when Fennec first registered an
+/// An immutable Value Object recording when Fennec first registered a
 /// [`Hostname`](crate::hostname::domain::entities::hostname::Hostname),
 /// with microsecond precision.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

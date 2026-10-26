@@ -10,7 +10,7 @@ use crate::domain_name::domain::entities::domain_name::DomainName;
 use crate::domain_name::domain::value_objects::domain_name_id::DomainNameId;
 use crate::domain_name::domain::value_objects::domain_name_value::DomainNameValue;
 
-/// Domain event raised when an [`DomainName`] is deleted.
+/// Domain event raised when a [`DomainName`] is deleted.
 ///
 /// Carries the name as well as the id: the id is a one-way hash of the
 /// value, so without it a subscriber could not tell which name went away.

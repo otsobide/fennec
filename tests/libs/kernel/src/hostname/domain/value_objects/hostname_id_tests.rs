@@ -32,7 +32,7 @@ fn it_derives_the_same_id_for_every_spelling_of_the_hostname() {
 }
 
 #[test]
-fn it_derives_different_ids_for_different_hostnamees() {
+fn it_derives_different_ids_for_different_hostnames() {
     assert_ne!(id_of("build-agent-7"), id_of("localhost"));
 }
 
