@@ -1,0 +1,4 @@
+pub mod create_email_address_created_event;
+pub mod create_email_address_deleted_event;
+pub mod email_address_created_event;
+pub mod email_address_deleted_event;
