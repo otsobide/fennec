@@ -73,8 +73,9 @@ the same fact converges on one aggregate.
 - **Name**: the RFC 8785 serialisation of
   `{"answer": {"id": "<uuid>", "kind": "<module>"}, "kind": "<link module>", "subject": {"id": "<uuid>", "kind": "<module>"}}`.
 - Time and source are not part of the id: "resolved in 2019 and again in
-  2024" is one link whose observations and `observed` events keep the
-  history.
+  2024" is one link. Its observation keeps the window that covers both, and
+  each `observed` event carries the reported window next to the merged one,
+  so the event log keeps the history.
 
 | Link | Identifier |
 |---|---|
@@ -105,7 +106,7 @@ link that cannot say what it means is not a fact Fennec can reason about.
 
 | Module | Meaning | Subject | Answer or target | STIX `relationship_type` | OpenCTI | MISP | Status |
 |---|---|---|---|---|---|---|---|
-| `dns_resolution` | A domain name resolved to an address | `domain_name` | `ipv4_address`, `ipv6_address` | `resolves-to` | `resolves-to` | `domain\|ip`, `a-record` objects | planned |
+| `dns_resolution` | A domain name resolved to an address | `domain_name` | `ipv4_address`, `ipv6_address` | `resolves-to` | `resolves-to` | `domain\|ip`, `a-record` objects | [postgres](links/dns-resolution.md) |
 | `dns_alias` | A domain name is a CNAME of another | `domain_name` | `domain_name` | `resolves-to` | `resolves-to` | `cname` in `dns-record` objects | planned |
 | `autonomous_system_announcement` | An autonomous system announced a network | `autonomous_system` | `ipv4_network`, `ipv6_network` | `belongs-to` (inverse) | `belongs-to` | `asn` objects | planned |
 

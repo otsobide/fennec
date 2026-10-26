@@ -244,6 +244,33 @@ Invariants and errors follow `Ipv4Address`.
 
 ---
 
+### `DnsResolution`
+
+Module: `libs/kernel/src/dns_resolution/`. File: `libs/kernel/src/dns_resolution/domain/entities/dns_resolution.rs`
+
+The first asserted link between observables (see [../data-model/links.md](../data-model/links.md) and [../data-model/links/dns-resolution.md](../data-model/links/dns-resolution.md)): a domain name resolved to an address. One aggregate per fact, with one observation per source as a child entity.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `DnsResolutionId` | `uuid::Uuid` | validated | **UUID v5** in the link namespace over the kind-qualified endpoints; exported as `relationship--<uuid>`. |
+| `subject` | `DnsResolutionSubject` | `DnsName` | validated | A `domain_name`, parsed with that module's rules. |
+| `answer` | `DnsResolutionAnswer` | `Ipv4Addr` or `Ipv6Addr` | validated | An `ipv4_address` or `ipv6_address`, parsed with those modules' rules. |
+| `created_at` | `DnsResolutionCreatedAt` | `MicrosecondTimestamp` | newtype | When Fennec first recorded the link. |
+| `observations` | `Vec<DnsResolutionObservation>` | entity | validated | At least one, at most one per `DnsResolutionSourceId`; each holds a `DnsResolutionWindow`, a `DnsResolutionCount` and its created and updated instants. |
+
+**Invariants**
+
+- The id is always derived from the endpoints, and the endpoints never change.
+- Merging a report widens the window and keeps the larger count; a report that changes nothing produces no write and no event.
+- Retracting the last observation deletes the link.
+
+**Errors**
+
+- `ValueObjectValidationError`: invalid endpoints, source id, window or count.
+- `DnsResolutionRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}`.
+
+---
+
 ### `Sighting`
 
 Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific observable. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
@@ -332,5 +359,6 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
 | `kernel` | `Ipv6Network` | `Ipv6NetworkId`, `Ipv6NetworkValue`, `Ipv6NetworkCreatedAt` | `cti_api`: `/ipv6-networks[/{id}]`, `/ipv6-networks?value=` |
 | `kernel` | `MacAddress` | `MacAddressId`, `MacAddressValue`, `MacAddressCreatedAt` | `cti_api`: `/mac-addresses[/{id}]`, `/mac-addresses?value=` |
+| `kernel` | `DnsResolution` | `DnsResolutionId`, `DnsResolutionSubject`, `DnsResolutionAnswer`, `DnsResolutionSourceId`, `DnsResolutionWindow`, `DnsResolutionCount`, `DnsResolutionCreatedAt`, `DnsResolutionUpdatedAt` | `cti_api`: `/dns-resolutions[/{id}]`, `/dns-resolutions?domain_name= \| ipv4_address= \| ipv6_address=`, `/dns-resolutions/co-resolved`, `/dns-resolutions/{id}/observations/{source_id}` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
