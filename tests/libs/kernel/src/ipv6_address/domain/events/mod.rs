@@ -1,0 +1,2 @@
+mod ipv6_address_created_event_tests;
+mod ipv6_address_deleted_event_tests;
