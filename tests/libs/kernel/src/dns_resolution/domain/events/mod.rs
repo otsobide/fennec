@@ -1,0 +1,4 @@
+mod dns_resolution_created_event_tests;
+mod dns_resolution_deleted_event_tests;
+mod dns_resolution_observed_event_tests;
+mod dns_resolution_retracted_event_tests;
