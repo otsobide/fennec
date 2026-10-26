@@ -1,4 +1,7 @@
 mod autonomous_system_created_at_tests;
 mod autonomous_system_id_tests;
+mod autonomous_system_name_tests;
+mod autonomous_system_rir_tests;
+mod autonomous_system_updated_at_tests;
 mod autonomous_system_value_tests;
 pub mod mothers;
