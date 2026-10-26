@@ -3,6 +3,7 @@ pub mod email_address_repository_mock;
 pub mod event_bus_mock;
 pub mod hostname_repository_mock;
 pub mod ipv4_address_repository_mock;
+pub mod ipv4_network_repository_mock;
 pub mod ipv6_address_repository_mock;
 pub mod mac_address_repository_mock;
 pub mod sighting_repository_mock;
