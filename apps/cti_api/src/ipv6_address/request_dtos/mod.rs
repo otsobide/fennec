@@ -1,0 +1,2 @@
+pub mod create_ipv6_address_request;
+pub mod find_ipv6_address_by_value_request;
