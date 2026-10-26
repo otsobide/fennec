@@ -15,6 +15,7 @@ pub mod hostname;
 pub mod ipv4_address;
 pub mod ipv6_address;
 pub mod kernel_migrator;
+pub mod mac_address;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
