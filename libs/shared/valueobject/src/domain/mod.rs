@@ -4,3 +4,4 @@ pub mod errors;
 pub mod stix;
 pub mod strings;
 pub mod timestamps;
+pub mod unicode;
