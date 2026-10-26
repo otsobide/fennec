@@ -60,6 +60,15 @@ use kernel::email_address::application::find_email_address::email_address_finder
 use kernel::email_address::domain::repositories::email_address_repository::EmailAddressRepository;
 use kernel::email_address::infrastructure::persistence::in_memory::in_memory_email_address_repository::InMemoryEmailAddressRepository;
 use kernel::email_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_email_address_repository::SqlxPostgresEmailAddressRepository;
+use kernel::ipv6_address::application::create_ipv6_address::create_ipv6_address_command_handler::CreateIpv6AddressCommandHandler;
+use kernel::ipv6_address::application::create_ipv6_address::ipv6_address_creator::Ipv6AddressCreator;
+use kernel::ipv6_address::application::delete_ipv6_address::delete_ipv6_address_command_handler::DeleteIpv6AddressCommandHandler;
+use kernel::ipv6_address::application::delete_ipv6_address::ipv6_address_deleter::Ipv6AddressDeleter;
+use kernel::ipv6_address::application::find_ipv6_address::find_ipv6_address_query_handler::FindIpv6AddressQueryHandler;
+use kernel::ipv6_address::application::find_ipv6_address::ipv6_address_finder::Ipv6AddressFinder;
+use kernel::ipv6_address::domain::repositories::ipv6_address_repository::Ipv6AddressRepository;
+use kernel::ipv6_address::infrastructure::persistence::in_memory::in_memory_ipv6_address_repository::InMemoryIpv6AddressRepository;
+use kernel::ipv6_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_address_repository::SqlxPostgresIpv6AddressRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -90,6 +99,7 @@ pub mod email_address;
 pub mod health;
 pub mod hostname;
 pub mod ipv4_address;
+pub mod ipv6_address;
 pub mod sighting;
 pub mod source;
 pub mod url_source;
@@ -109,6 +119,7 @@ struct Repositories {
     domain_name: Arc<dyn DomainNameRepository>,
     hostname: Arc<dyn HostnameRepository>,
     email_address: Arc<dyn EmailAddressRepository>,
+    ipv6_address: Arc<dyn Ipv6AddressRepository>,
     sighting: Arc<dyn SightingRepository>,
 }
 
@@ -124,6 +135,7 @@ pub fn build_state() -> web::Data<AppState> {
         domain_name: Arc::new(InMemoryDomainNameRepository::new()),
         hostname: Arc::new(InMemoryHostnameRepository::new()),
         email_address: Arc::new(InMemoryEmailAddressRepository::new()),
+        ipv6_address: Arc::new(InMemoryIpv6AddressRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
@@ -148,6 +160,7 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         domain_name: Arc::new(SqlxPostgresDomainNameRepository::new(pool.clone())),
         hostname: Arc::new(SqlxPostgresHostnameRepository::new(pool.clone())),
         email_address: Arc::new(SqlxPostgresEmailAddressRepository::new(pool.clone())),
+        ipv6_address: Arc::new(SqlxPostgresIpv6AddressRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
@@ -221,6 +234,15 @@ fn build_buses(
     let email_address_deleter =
         EmailAddressDeleter::new(Arc::clone(&email_address_repo), Arc::clone(&event_bus));
 
+    // --- ipv6_address ---
+    let ipv6_address_repo = repositories.ipv6_address;
+
+    let ipv6_address_creator =
+        Ipv6AddressCreator::new(Arc::clone(&ipv6_address_repo), Arc::clone(&event_bus));
+    let ipv6_address_finder = Ipv6AddressFinder::new(Arc::clone(&ipv6_address_repo));
+    let ipv6_address_deleter =
+        Ipv6AddressDeleter::new(Arc::clone(&ipv6_address_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -278,6 +300,12 @@ fn build_buses(
         .register(DeleteEmailAddressCommandHandler::new(email_address_deleter))
         .expect("Failed to register DeleteEmailAddressCommandHandler");
     command_bus
+        .register(CreateIpv6AddressCommandHandler::new(ipv6_address_creator))
+        .expect("Failed to register CreateIpv6AddressCommandHandler");
+    command_bus
+        .register(DeleteIpv6AddressCommandHandler::new(ipv6_address_deleter))
+        .expect("Failed to register DeleteIpv6AddressCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -307,6 +335,9 @@ fn build_buses(
     query_bus
         .register(FindEmailAddressQueryHandler::new(email_address_finder))
         .expect("Failed to register FindEmailAddressQueryHandler");
+    query_bus
+        .register(FindIpv6AddressQueryHandler::new(ipv6_address_finder))
+        .expect("Failed to register FindIpv6AddressQueryHandler");
     query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
@@ -352,6 +383,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(email_address::controllers::get_by_value::handler)
         .service(email_address::controllers::get::handler)
         .service(email_address::controllers::delete::handler)
+        .service(ipv6_address::controllers::post::handler)
+        .service(ipv6_address::controllers::get_by_value::handler)
+        .service(ipv6_address::controllers::get::handler)
+        .service(ipv6_address::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)

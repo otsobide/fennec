@@ -1,0 +1,1 @@
+pub mod sqlx_postgres_ipv6_address_repository;
