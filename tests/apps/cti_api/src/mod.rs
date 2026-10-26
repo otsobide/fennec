@@ -1,4 +1,5 @@
 mod autonomous_system;
+mod dns_resolution;
 mod domain_name;
 mod email_address;
 mod health;

@@ -1,0 +1,7 @@
+pub mod co_resolved_domain_name_response;
+pub mod co_resolved_domain_names_response;
+pub mod dns_resolution_endpoint_response;
+pub mod dns_resolution_list_response;
+pub mod dns_resolution_observation_response;
+pub mod dns_resolution_recording_response;
+pub mod dns_resolution_response;

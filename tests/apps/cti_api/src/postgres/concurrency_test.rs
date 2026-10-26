@@ -86,3 +86,80 @@ async fn it_loses_no_concurrent_observation_of_a_sighting(pool: PgPool) {
         10
     );
 }
+
+#[sqlx::test(migrator = "kernel::kernel_migrator::KERNEL_MIGRATOR")]
+#[ignore = "requires DATABASE_URL"]
+async fn it_converges_two_sources_recording_a_new_dns_resolution_on_one_link(pool: PgPool) {
+    migrate_event_store(&pool).await;
+    let app = test::init_service(
+        App::new()
+            .app_data(build_postgres_state(pool.clone()))
+            .configure(configure_routes),
+    )
+    .await;
+
+    let responses = join_all(
+        [
+            "aaaaaaaa-1111-4111-8111-111111111111",
+            "bbbbbbbb-2222-4222-8222-222222222222",
+        ]
+        .map(|source_id| {
+            test::TestRequest::post()
+                .uri("/dns-resolutions")
+                .set_json(json!({
+                    "domain_name": "example.com",
+                    "ipv4_address": "93.184.216.34",
+                    "source_id": source_id,
+                    "first_seen": 1_700_000_000u64,
+                    "last_seen": 1_700_086_400u64
+                }))
+                .send_request(&app)
+        }),
+    )
+    .await;
+    let mut outcomes = Vec::new();
+    for resp in responses {
+        let status = resp.status().as_u16();
+        let body: serde_json::Value = test::read_body_json(resp).await;
+        assert_eq!(body["id"], "2da44331-2011-5539-b65e-9ff44db9c139");
+        outcomes.push((status, body["outcome"].as_str().unwrap().to_string()));
+    }
+    outcomes.sort();
+
+    assert_eq!(
+        outcomes,
+        vec![(200, "observed".to_string()), (201, "created".to_string())]
+    );
+    assert_eq!(
+        count(&pool, "SELECT count(*) FROM kernel.dns_resolution").await,
+        1
+    );
+    assert_eq!(
+        count(
+            &pool,
+            "SELECT count(*) FROM kernel.dns_resolution_observation"
+        )
+        .await,
+        2
+    );
+    assert_eq!(
+        count(
+            &pool,
+            "SELECT count(*) FROM event_store.domain_event WHERE event_name = 'fennec.kernel.dns_resolution.created'"
+        )
+        .await,
+        1
+    );
+    assert_eq!(
+        count(
+            &pool,
+            "SELECT count(*) FROM event_store.domain_event WHERE event_name = 'fennec.kernel.dns_resolution.observed'"
+        )
+        .await,
+        2
+    );
+    assert_eq!(
+        count(&pool, "SELECT count(*) FROM event_store.domain_event").await,
+        3
+    );
+}

@@ -1,0 +1,7 @@
+mod delete_dns_resolution_test;
+mod find_dns_resolution_test;
+mod list_co_resolved_domain_names_test;
+mod list_dns_resolutions_test;
+mod record_dns_resolution_test;
+mod retract_dns_resolution_test;
+mod support;
