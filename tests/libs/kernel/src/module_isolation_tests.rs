@@ -8,12 +8,13 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const MODULES: [&str; 8] = [
+const MODULES: [&str; 9] = [
     "domain_name",
     "email_address",
     "hostname",
     "ipv4_address",
     "ipv6_address",
+    "mac_address",
     "sighting",
     "source",
     "url_source",

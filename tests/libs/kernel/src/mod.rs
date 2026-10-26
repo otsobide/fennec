@@ -3,6 +3,7 @@ mod email_address;
 mod hostname;
 mod ipv4_address;
 mod ipv6_address;
+mod mac_address;
 mod mocks;
 mod module_isolation_tests;
 mod sighting;
