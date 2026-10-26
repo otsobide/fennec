@@ -185,6 +185,22 @@ Invariants and errors follow `Ipv4Address`.
 
 ---
 
+### `Ipv6Network`
+
+Module: `libs/kernel/src/ipv6_network/`. File: `libs/kernel/src/ipv6_network/domain/entities/ipv6_network.rs`
+
+One IPv6 CIDR block registered as an observable (see [../data-model/kinds/ipv6-network.md](../data-model/kinds/ipv6-network.md)). Its identity is its value; it shares the STIX type `ipv6-addr` with `Ipv6Address`.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv6NetworkId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv6-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv6NetworkValue` | `std::net::Ipv6Addr` and `u8` | validated | Network address in any RFC 4291 form and prefix `/0` to `/127`, no host bits set; canonical RFC 5952 text, `2001:db8::/32`. |
+| `created_at` | `Ipv6NetworkCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
 ### `MacAddress`
 
 Module: `libs/kernel/src/mac_address/`. File: `libs/kernel/src/mac_address/domain/entities/mac_address.rs`
@@ -286,6 +302,7 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
 | `kernel` | `Ipv4Network` | `Ipv4NetworkId`, `Ipv4NetworkValue`, `Ipv4NetworkCreatedAt` | `cti_api`: `/ipv4-networks[/{id}]`, `/ipv4-networks?value=` |
 | `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
+| `kernel` | `Ipv6Network` | `Ipv6NetworkId`, `Ipv6NetworkValue`, `Ipv6NetworkCreatedAt` | `cti_api`: `/ipv6-networks[/{id}]`, `/ipv6-networks?value=` |
 | `kernel` | `MacAddress` | `MacAddressId`, `MacAddressValue`, `MacAddressCreatedAt` | `cti_api`: `/mac-addresses[/{id}]`, `/mac-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |
