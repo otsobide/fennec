@@ -102,6 +102,8 @@ use kernel::autonomous_system::application::delete_autonomous_system::delete_aut
 use kernel::autonomous_system::application::delete_autonomous_system::autonomous_system_deleter::AutonomousSystemDeleter;
 use kernel::autonomous_system::application::find_autonomous_system::find_autonomous_system_query_handler::FindAutonomousSystemQueryHandler;
 use kernel::autonomous_system::application::find_autonomous_system::autonomous_system_finder::AutonomousSystemFinder;
+use kernel::autonomous_system::application::update_autonomous_system::autonomous_system_updater::AutonomousSystemUpdater;
+use kernel::autonomous_system::application::update_autonomous_system::update_autonomous_system_command_handler::UpdateAutonomousSystemCommandHandler;
 use kernel::autonomous_system::domain::repositories::autonomous_system_repository::AutonomousSystemRepository;
 use kernel::autonomous_system::infrastructure::persistence::in_memory::in_memory_autonomous_system_repository::InMemoryAutonomousSystemRepository;
 use kernel::autonomous_system::infrastructure::persistence::sqlx_postgres::sqlx_postgres_autonomous_system_repository::SqlxPostgresAutonomousSystemRepository;
@@ -330,6 +332,8 @@ fn build_buses(
     let autonomous_system_finder = AutonomousSystemFinder::new(Arc::clone(&autonomous_system_repo));
     let autonomous_system_deleter =
         AutonomousSystemDeleter::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+    let autonomous_system_updater =
+        AutonomousSystemUpdater::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
 
     // --- sighting ---
     let sighting_repo = repositories.sighting;
@@ -421,6 +425,11 @@ fn build_buses(
             autonomous_system_deleter,
         ))
         .expect("Failed to register DeleteAutonomousSystemCommandHandler");
+    command_bus
+        .register(UpdateAutonomousSystemCommandHandler::new(
+            autonomous_system_updater,
+        ))
+        .expect("Failed to register UpdateAutonomousSystemCommandHandler");
     command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
@@ -532,6 +541,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(autonomous_system::controllers::post::handler)
         .service(autonomous_system::controllers::get_by_value::handler)
         .service(autonomous_system::controllers::get::handler)
+        .service(autonomous_system::controllers::put::handler)
         .service(autonomous_system::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)

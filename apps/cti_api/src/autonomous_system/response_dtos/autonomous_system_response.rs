@@ -11,7 +11,10 @@ pub struct AutonomousSystemResponse {
     pub id: String,
     pub stix_id: String,
     pub value: String,
+    pub name: Option<String>,
+    pub rir: Option<String>,
     pub created_at: u64,
+    pub updated_at: u64,
 }
 
 impl AutonomousSystemResponse {
@@ -20,7 +23,10 @@ impl AutonomousSystemResponse {
             id: entry.id.clone(),
             stix_id: entry.stix_id.clone(),
             value: entry.value.clone(),
+            name: entry.name.clone(),
+            rir: entry.rir.clone(),
             created_at: to_unix_secs(entry.created_at),
+            updated_at: to_unix_secs(entry.updated_at),
         }
     }
 }

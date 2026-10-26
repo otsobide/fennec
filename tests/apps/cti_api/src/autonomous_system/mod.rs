@@ -2,3 +2,4 @@ mod create_autonomous_system_test;
 mod delete_autonomous_system_test;
 mod find_autonomous_system_by_value_test;
 mod find_autonomous_system_test;
+mod update_autonomous_system_test;
