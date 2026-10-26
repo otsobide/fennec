@@ -18,13 +18,18 @@ use crate::dns_resolution::domain::value_objects::dns_resolution_window::DnsReso
 /// Domain event raised when a source's observation of a [`DnsResolution`]
 /// is added or widened. A report that changes nothing raises no event.
 ///
-/// Carries the observation as it now stands, so the sequence of these
-/// events keeps the history the merged window summarises ("seen in 2019 and
+/// Carries both the report the source sent (`reported_first_seen`,
+/// `reported_last_seen` and `reported_count`, null when the source does not
+/// count) and the observation as it stands after the merge (`first_seen`,
+/// `last_seen` and `count`). The merged window only summarises; the
+/// sequence of reported windows keeps the history ("resolved in 2019 and
 /// again in 2024").
 pub struct DnsResolutionObservedEvent {
     base: DomainEventBase,
     id: DnsResolutionId,
     source_id: DnsResolutionSourceId,
+    reported_window: DnsResolutionWindow,
+    reported_count: Option<DnsResolutionCount>,
     window: DnsResolutionWindow,
     count: DnsResolutionCount,
     updated_at: DnsResolutionUpdatedAt,
@@ -34,11 +39,20 @@ impl DnsResolutionObservedEvent {
     /// Canonical event name used to identify this event type on the bus.
     pub const EVENT_NAME: &'static str = "fennec.kernel.dns_resolution.observed";
 
-    pub fn new(dns_resolution: &DnsResolution, observation: &DnsResolutionObservation) -> Self {
+    /// Builds the event from the resolution, the observation after the
+    /// merge, and the window and count the source reported.
+    pub fn new(
+        dns_resolution: &DnsResolution,
+        observation: &DnsResolutionObservation,
+        reported_window: &DnsResolutionWindow,
+        reported_count: Option<DnsResolutionCount>,
+    ) -> Self {
         Self {
             base: DomainEventBase::new(dns_resolution.id().to_string()),
             id: *dns_resolution.id(),
             source_id: observation.source_id().clone(),
+            reported_window: *reported_window,
+            reported_count,
             window: *observation.window(),
             count: observation.count(),
             updated_at: *observation.updated_at(),
@@ -89,6 +103,20 @@ impl DomainEvent for DnsResolutionObservedEvent {
             (
                 "count".to_string(),
                 PrimitiveValue::UnsignedInteger(self.count.value()),
+            ),
+            (
+                "reported_first_seen".to_string(),
+                PrimitiveValue::Timestamp(self.reported_window.first_seen()),
+            ),
+            (
+                "reported_last_seen".to_string(),
+                PrimitiveValue::Timestamp(self.reported_window.last_seen()),
+            ),
+            (
+                "reported_count".to_string(),
+                self.reported_count.map_or(PrimitiveValue::Null, |count| {
+                    PrimitiveValue::UnsignedInteger(count.value())
+                }),
             ),
             (
                 "updated_at".to_string(),

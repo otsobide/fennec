@@ -46,7 +46,7 @@ pub trait DnsResolutionRepository: Send + Sync {
     ) -> Result<Option<DnsResolution>, DnsResolutionRepositoryError>;
 
     /// Lists at most `limit` resolutions of `subject`, ordered by the
-    /// canonical value of their answer.
+    /// address of their answer with IPv4 before IPv6 (the order of `inet`).
     async fn list_by_subject(
         &self,
         subject: &DnsResolutionSubject,

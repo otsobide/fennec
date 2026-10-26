@@ -8,6 +8,7 @@
 //! observable module.
 
 use crate::dns_resolution::domain::entities::dns_resolution_observation::DnsResolutionObservation;
+use crate::dns_resolution::domain::entities::dns_resolution_retraction::DnsResolutionRetraction;
 use crate::dns_resolution::domain::value_objects::dns_resolution_answer::DnsResolutionAnswer;
 use crate::dns_resolution::domain::value_objects::dns_resolution_count::DnsResolutionCount;
 use crate::dns_resolution::domain::value_objects::dns_resolution_created_at::DnsResolutionCreatedAt;
@@ -30,18 +31,6 @@ pub struct DnsResolution {
     answer: DnsResolutionAnswer,
     created_at: DnsResolutionCreatedAt,
     observations: Vec<DnsResolutionObservation>,
-}
-
-/// What retracting one source's observation did to a [`DnsResolution`].
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum DnsResolutionRetraction {
-    /// The observation was removed and other sources still assert the
-    /// resolution, which is returned without it.
-    Retracted(DnsResolution),
-    /// It was the last observation, so the resolution no longer exists.
-    LastObservationRetracted,
-    /// The source had not observed the resolution.
-    NotObserved,
 }
 
 impl DnsResolution {
@@ -128,7 +117,8 @@ impl DnsResolution {
         ))
     }
 
-    /// Removes the observation of `source_id`.
+    /// Removes the observation of `source_id` and says what that did to the
+    /// resolution ([`DnsResolutionRetraction`]).
     pub fn retract(&self, source_id: &DnsResolutionSourceId) -> DnsResolutionRetraction {
         let remaining: Vec<_> = self
             .observations

@@ -24,6 +24,14 @@ impl DnsResolutionId {
     /// The link kind that feeds the id.
     pub const KIND: &'static str = "dns_resolution";
 
+    /// The STIX 2.1 type a resolution is exported as: a relationship
+    /// between its two endpoints, not a cyber-observable.
+    pub const STIX_TYPE: &'static str = "relationship";
+
+    /// The STIX 2.1 `relationship_type` of a resolution: its subject
+    /// `resolves-to` its answer.
+    pub const RELATIONSHIP_TYPE: &'static str = "resolves-to";
+
     /// Derives the id of the resolution of `subject` to `answer`.
     pub fn from_endpoints(subject: &DnsResolutionSubject, answer: &DnsResolutionAnswer) -> Self {
         let name = CanonicalJsonValue::object([
@@ -59,6 +67,14 @@ impl DnsResolutionId {
     /// Returns the underlying UUID.
     pub fn value(&self) -> &Uuid {
         &self.0
+    }
+
+    /// Returns the STIX 2.1 identifier, `relationship--<uuid>`. The UUID is
+    /// the link's own, a UUID v5 in the link namespace: STIX lets a
+    /// relationship use UUID v5 with any namespace but the OASIS one
+    /// (`docs/data-model/links.md`).
+    pub fn stix_id(&self) -> String {
+        format!("{}--{}", Self::STIX_TYPE, self.0)
     }
 }
 
