@@ -1,0 +1,7 @@
+mod delete_dns_resolution;
+mod find_dns_resolution;
+mod list_co_resolved_domain_names;
+mod list_dns_resolutions_by_address;
+mod list_dns_resolutions_by_domain_name;
+mod record_dns_resolution;
+mod retract_dns_resolution;

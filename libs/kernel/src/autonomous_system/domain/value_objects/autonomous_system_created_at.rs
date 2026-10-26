@@ -35,6 +35,11 @@ impl AutonomousSystemCreatedAt {
         self.0.value()
     }
 
+    /// Returns the underlying [`MicrosecondTimestamp`].
+    pub fn timestamp(&self) -> MicrosecondTimestamp {
+        self.0
+    }
+
     /// Returns the number of whole microseconds since the Unix epoch.
     pub fn unix_micros(&self) -> u64 {
         self.0.unix_micros()

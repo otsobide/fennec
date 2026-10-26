@@ -96,6 +96,17 @@ use kernel::ipv6_network::application::find_ipv6_network::ipv6_network_finder::I
 use kernel::ipv6_network::domain::repositories::ipv6_network_repository::Ipv6NetworkRepository;
 use kernel::ipv6_network::infrastructure::persistence::in_memory::in_memory_ipv6_network_repository::InMemoryIpv6NetworkRepository;
 use kernel::ipv6_network::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv6_network_repository::SqlxPostgresIpv6NetworkRepository;
+use kernel::autonomous_system::application::create_autonomous_system::create_autonomous_system_command_handler::CreateAutonomousSystemCommandHandler;
+use kernel::autonomous_system::application::create_autonomous_system::autonomous_system_creator::AutonomousSystemCreator;
+use kernel::autonomous_system::application::delete_autonomous_system::delete_autonomous_system_command_handler::DeleteAutonomousSystemCommandHandler;
+use kernel::autonomous_system::application::delete_autonomous_system::autonomous_system_deleter::AutonomousSystemDeleter;
+use kernel::autonomous_system::application::find_autonomous_system::find_autonomous_system_query_handler::FindAutonomousSystemQueryHandler;
+use kernel::autonomous_system::application::find_autonomous_system::autonomous_system_finder::AutonomousSystemFinder;
+use kernel::autonomous_system::application::update_autonomous_system::autonomous_system_updater::AutonomousSystemUpdater;
+use kernel::autonomous_system::application::update_autonomous_system::update_autonomous_system_command_handler::UpdateAutonomousSystemCommandHandler;
+use kernel::autonomous_system::domain::repositories::autonomous_system_repository::AutonomousSystemRepository;
+use kernel::autonomous_system::infrastructure::persistence::in_memory::in_memory_autonomous_system_repository::InMemoryAutonomousSystemRepository;
+use kernel::autonomous_system::infrastructure::persistence::sqlx_postgres::sqlx_postgres_autonomous_system_repository::SqlxPostgresAutonomousSystemRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -111,6 +122,23 @@ use kernel::sighting::application::observe_sighting::sighting_observer::Sighting
 use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
 use kernel::sighting::infrastructure::persistence::in_memory::in_memory_sighting_repository::InMemorySightingRepository;
 use kernel::sighting::infrastructure::persistence::sqlx_postgres::sqlx_postgres_sighting_repository::SqlxPostgresSightingRepository;
+use kernel::dns_resolution::application::delete_dns_resolution::delete_dns_resolution_command_handler::DeleteDnsResolutionCommandHandler;
+use kernel::dns_resolution::application::delete_dns_resolution::dns_resolution_deleter::DnsResolutionDeleter;
+use kernel::dns_resolution::application::find_dns_resolution::dns_resolution_finder::DnsResolutionFinder;
+use kernel::dns_resolution::application::find_dns_resolution::find_dns_resolution_query_handler::FindDnsResolutionQueryHandler;
+use kernel::dns_resolution::application::list_co_resolved_domain_names::co_resolved_domain_names_lister::CoResolvedDomainNamesLister;
+use kernel::dns_resolution::application::list_co_resolved_domain_names::list_co_resolved_domain_names_query_handler::ListCoResolvedDomainNamesQueryHandler;
+use kernel::dns_resolution::application::list_dns_resolutions_by_address::dns_resolutions_by_address_lister::DnsResolutionsByAddressLister;
+use kernel::dns_resolution::application::list_dns_resolutions_by_address::list_dns_resolutions_by_address_query_handler::ListDnsResolutionsByAddressQueryHandler;
+use kernel::dns_resolution::application::list_dns_resolutions_by_domain_name::dns_resolutions_by_domain_name_lister::DnsResolutionsByDomainNameLister;
+use kernel::dns_resolution::application::list_dns_resolutions_by_domain_name::list_dns_resolutions_by_domain_name_query_handler::ListDnsResolutionsByDomainNameQueryHandler;
+use kernel::dns_resolution::application::record_dns_resolution::dns_resolution_recorder::DnsResolutionRecorder;
+use kernel::dns_resolution::application::record_dns_resolution::record_dns_resolution_command_handler::RecordDnsResolutionCommandHandler;
+use kernel::dns_resolution::application::retract_dns_resolution::dns_resolution_retracter::DnsResolutionRetracter;
+use kernel::dns_resolution::application::retract_dns_resolution::retract_dns_resolution_command_handler::RetractDnsResolutionCommandHandler;
+use kernel::dns_resolution::domain::repositories::dns_resolution_repository::DnsResolutionRepository;
+use kernel::dns_resolution::infrastructure::persistence::in_memory::in_memory_dns_resolution_repository::InMemoryDnsResolutionRepository;
+use kernel::dns_resolution::infrastructure::persistence::sqlx_postgres::sqlx_postgres_dns_resolution_repository::SqlxPostgresDnsResolutionRepository;
 use shared_cqrs::command::domain::command_bus::CommandBus;
 use shared_cqrs::command::infrastructure::in_memory::in_memory_command_bus::InMemoryCommandBus;
 use shared_cqrs::query::domain::query_bus::QueryBus;
@@ -121,6 +149,8 @@ use shared_persistence_postgres::infrastructure::postgres::outbox_event_bus::Out
 use shared_persistence_postgres::infrastructure::postgres::transactional_command_bus::TransactionalCommandBus;
 use sqlx::PgPool;
 
+pub mod autonomous_system;
+pub mod dns_resolution;
 pub mod domain_name;
 pub mod email_address;
 pub mod health;
@@ -153,7 +183,9 @@ struct Repositories {
     mac_address: Arc<dyn MacAddressRepository>,
     ipv4_network: Arc<dyn Ipv4NetworkRepository>,
     ipv6_network: Arc<dyn Ipv6NetworkRepository>,
+    autonomous_system: Arc<dyn AutonomousSystemRepository>,
     sighting: Arc<dyn SightingRepository>,
+    dns_resolution: Arc<dyn DnsResolutionRepository>,
 }
 
 /// Wires all repositories, services and buses together in memory and returns
@@ -172,7 +204,9 @@ pub fn build_state() -> web::Data<AppState> {
         mac_address: Arc::new(InMemoryMacAddressRepository::new()),
         ipv4_network: Arc::new(InMemoryIpv4NetworkRepository::new()),
         ipv6_network: Arc::new(InMemoryIpv6NetworkRepository::new()),
+        autonomous_system: Arc::new(InMemoryAutonomousSystemRepository::new()),
         sighting: Arc::new(InMemorySightingRepository::new()),
+        dns_resolution: Arc::new(InMemoryDnsResolutionRepository::new()),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
 
@@ -200,7 +234,9 @@ pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
         mac_address: Arc::new(SqlxPostgresMacAddressRepository::new(pool.clone())),
         ipv4_network: Arc::new(SqlxPostgresIpv4NetworkRepository::new(pool.clone())),
         ipv6_network: Arc::new(SqlxPostgresIpv6NetworkRepository::new(pool.clone())),
+        autonomous_system: Arc::new(SqlxPostgresAutonomousSystemRepository::new(pool.clone())),
         sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
+        dns_resolution: Arc::new(SqlxPostgresDnsResolutionRepository::new(pool.clone())),
     };
     let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
     let after_commit: Arc<dyn EventBus> = Arc::new(InMemoryEventBus::new());
@@ -309,6 +345,17 @@ fn build_buses(
     let ipv6_network_deleter =
         Ipv6NetworkDeleter::new(Arc::clone(&ipv6_network_repo), Arc::clone(&event_bus));
 
+    // --- autonomous_system ---
+    let autonomous_system_repo = repositories.autonomous_system;
+
+    let autonomous_system_creator =
+        AutonomousSystemCreator::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+    let autonomous_system_finder = AutonomousSystemFinder::new(Arc::clone(&autonomous_system_repo));
+    let autonomous_system_deleter =
+        AutonomousSystemDeleter::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+    let autonomous_system_updater =
+        AutonomousSystemUpdater::new(Arc::clone(&autonomous_system_repo), Arc::clone(&event_bus));
+
     // --- sighting ---
     let sighting_repo = repositories.sighting;
 
@@ -320,6 +367,23 @@ fn build_buses(
     let sightings_by_observable_lister =
         SightingsByObservableLister::new(Arc::clone(&sighting_repo));
     let sightings_by_source_lister = SightingsBySourceLister::new(Arc::clone(&sighting_repo));
+
+    // --- dns_resolution ---
+    let dns_resolution_repo = repositories.dns_resolution;
+
+    let dns_resolution_recorder =
+        DnsResolutionRecorder::new(Arc::clone(&dns_resolution_repo), Arc::clone(&event_bus));
+    let dns_resolution_retracter =
+        DnsResolutionRetracter::new(Arc::clone(&dns_resolution_repo), Arc::clone(&event_bus));
+    let dns_resolution_deleter =
+        DnsResolutionDeleter::new(Arc::clone(&dns_resolution_repo), Arc::clone(&event_bus));
+    let dns_resolution_finder = DnsResolutionFinder::new(Arc::clone(&dns_resolution_repo));
+    let dns_resolutions_by_domain_name_lister =
+        DnsResolutionsByDomainNameLister::new(Arc::clone(&dns_resolution_repo));
+    let dns_resolutions_by_address_lister =
+        DnsResolutionsByAddressLister::new(Arc::clone(&dns_resolution_repo));
+    let co_resolved_domain_names_lister =
+        CoResolvedDomainNamesLister::new(Arc::clone(&dns_resolution_repo));
 
     // --- command bus ---
     let mut command_bus = InMemoryCommandBus::new();
@@ -390,6 +454,21 @@ fn build_buses(
         .register(DeleteIpv6NetworkCommandHandler::new(ipv6_network_deleter))
         .expect("Failed to register DeleteIpv6NetworkCommandHandler");
     command_bus
+        .register(CreateAutonomousSystemCommandHandler::new(
+            autonomous_system_creator,
+        ))
+        .expect("Failed to register CreateAutonomousSystemCommandHandler");
+    command_bus
+        .register(DeleteAutonomousSystemCommandHandler::new(
+            autonomous_system_deleter,
+        ))
+        .expect("Failed to register DeleteAutonomousSystemCommandHandler");
+    command_bus
+        .register(UpdateAutonomousSystemCommandHandler::new(
+            autonomous_system_updater,
+        ))
+        .expect("Failed to register UpdateAutonomousSystemCommandHandler");
+    command_bus
         .register(CreateSightingCommandHandler::new(sighting_creator))
         .expect("Failed to register CreateSightingCommandHandler");
     command_bus
@@ -398,6 +477,21 @@ fn build_buses(
     command_bus
         .register(DeleteSightingCommandHandler::new(sighting_deleter))
         .expect("Failed to register DeleteSightingCommandHandler");
+    command_bus
+        .register(RecordDnsResolutionCommandHandler::new(
+            dns_resolution_recorder,
+        ))
+        .expect("Failed to register RecordDnsResolutionCommandHandler");
+    command_bus
+        .register(RetractDnsResolutionCommandHandler::new(
+            dns_resolution_retracter,
+        ))
+        .expect("Failed to register RetractDnsResolutionCommandHandler");
+    command_bus
+        .register(DeleteDnsResolutionCommandHandler::new(
+            dns_resolution_deleter,
+        ))
+        .expect("Failed to register DeleteDnsResolutionCommandHandler");
 
     // --- query bus ---
     let mut query_bus = InMemoryQueryBus::new();
@@ -432,6 +526,11 @@ fn build_buses(
         .register(FindIpv6NetworkQueryHandler::new(ipv6_network_finder))
         .expect("Failed to register FindIpv6NetworkQueryHandler");
     query_bus
+        .register(FindAutonomousSystemQueryHandler::new(
+            autonomous_system_finder,
+        ))
+        .expect("Failed to register FindAutonomousSystemQueryHandler");
+    query_bus
         .register(FindSightingQueryHandler::new(sighting_finder))
         .expect("Failed to register FindSightingQueryHandler");
     query_bus
@@ -444,12 +543,32 @@ fn build_buses(
             sightings_by_source_lister,
         ))
         .expect("Failed to register ListSightingsBySourceQueryHandler");
+    query_bus
+        .register(FindDnsResolutionQueryHandler::new(dns_resolution_finder))
+        .expect("Failed to register FindDnsResolutionQueryHandler");
+    query_bus
+        .register(ListDnsResolutionsByDomainNameQueryHandler::new(
+            dns_resolutions_by_domain_name_lister,
+        ))
+        .expect("Failed to register ListDnsResolutionsByDomainNameQueryHandler");
+    query_bus
+        .register(ListDnsResolutionsByAddressQueryHandler::new(
+            dns_resolutions_by_address_lister,
+        ))
+        .expect("Failed to register ListDnsResolutionsByAddressQueryHandler");
+    query_bus
+        .register(ListCoResolvedDomainNamesQueryHandler::new(
+            co_resolved_domain_names_lister,
+        ))
+        .expect("Failed to register ListCoResolvedDomainNamesQueryHandler");
     let query_bus: Arc<dyn QueryBus> = Arc::new(query_bus);
 
     (command_bus, query_bus)
 }
 
 /// Registers all HTTP routes onto an Actix-Web [`ServiceConfig`].
+///
+/// [`ServiceConfig`]: web::ServiceConfig
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(health::get::handler)
         .service(source::controllers::post::handler)
@@ -492,10 +611,22 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         .service(ipv6_network::controllers::get_by_value::handler)
         .service(ipv6_network::controllers::get::handler)
         .service(ipv6_network::controllers::delete::handler)
+        .service(autonomous_system::controllers::post::handler)
+        .service(autonomous_system::controllers::get_by_value::handler)
+        .service(autonomous_system::controllers::get::handler)
+        .service(autonomous_system::controllers::put::handler)
+        .service(autonomous_system::controllers::delete::handler)
         .service(crate::sighting::controllers::post::handler)
         .service(crate::sighting::controllers::post_observation::handler)
         .service(crate::sighting::controllers::get::handler)
         .service(crate::sighting::controllers::delete::handler)
         .service(crate::sighting::controllers::list_by_observable::handler)
-        .service(crate::sighting::controllers::list_by_source::handler);
+        .service(crate::sighting::controllers::list_by_source::handler)
+        .service(dns_resolution::controllers::post::handler)
+        .service(dns_resolution::controllers::list::handler)
+        // Before `get`, which would take `co-resolved` for an id.
+        .service(dns_resolution::controllers::list_co_resolved::handler)
+        .service(dns_resolution::controllers::get::handler)
+        .service(dns_resolution::controllers::delete_observation::handler)
+        .service(dns_resolution::controllers::delete::handler);
 }

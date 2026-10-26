@@ -39,7 +39,12 @@ impl QueryHandler<FindAutonomousSystemQuery> for FindAutonomousSystemQueryHandle
                     id: autonomous_system.id().to_string(),
                     stix_id: autonomous_system.id().stix_id(),
                     value: autonomous_system.value().to_string(),
+                    name: autonomous_system
+                        .name()
+                        .map(|name| name.value().to_string()),
+                    rir: autonomous_system.rir().map(|rir| rir.as_str().to_string()),
                     created_at: autonomous_system.created_at().value(),
+                    updated_at: autonomous_system.updated_at().value(),
                 }),
                 error: None,
             }),

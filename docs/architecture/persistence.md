@@ -16,7 +16,10 @@ each rule are in
    log.
 2. **One table per aggregate kind.** There is no shared observable table and
    no `type` column. A kind's table is named after its module
-   (`kernel.ipv4_address`).
+   (`kernel.ipv4_address`). An aggregate with child entities adds one table
+   per child, named after it and deleted with its root by `ON DELETE
+   CASCADE` (`kernel.dns_resolution` and
+   `kernel.dns_resolution_observation`); no other module touches either.
 3. **Native column types.** Addresses are `inet` and `cidr`, MAC addresses
    `macaddr`, digests `bytea`, numbers the narrowest integer that holds them,
    timestamps `timestamptz`, case-folded text `text COLLATE "C"`. Never store

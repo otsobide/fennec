@@ -81,6 +81,33 @@ Payload-specific aggregate for a `Source` whose type is `Url`. Its identifier is
 
 ---
 
+### `AutonomousSystem`
+
+Module: `libs/kernel/src/autonomous_system/`. File: `libs/kernel/src/autonomous_system/domain/entities/autonomous_system.rs`
+
+One autonomous system registered as an observable (see [../data-model/kinds/autonomous-system.md](../data-model/kinds/autonomous-system.md)). Its identity is its number; its name and registry describe it and can change.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `AutonomousSystemId` | `uuid::Uuid` | validated | **UUID v5** over `{"number": <integer>}` (the UUID part of `autonomous-system--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `AutonomousSystemValue` | `u32` | validated | Decimal, `AS` prefix in any case or RFC 5396 asdot; 0 to 4294967295. |
+| `name` | `Option<AutonomousSystemName>` | `String` | validated | Registered name, case kept, no control characters, at most 255 characters. Empty until described. |
+| `rir` | `Option<AutonomousSystemRir>` | enum | validated | `AFRINIC`, `APNIC`, `ARIN`, `LACNIC` or `RIPE NCC`. Empty until described. |
+| `created_at` | `AutonomousSystemCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+| `updated_at` | `AutonomousSystemUpdatedAt` | `MicrosecondTimestamp` | newtype | When the description last changed; the creation instant until then. |
+
+**Invariants**
+
+- `id` is always derived from the number: `new` and `restore` take no id, and `describe` keeps it.
+- The description never changes the identity; `PUT` rejects a body that tries to send `value`.
+
+**Errors**
+
+- `ValueObjectValidationError`: an invalid number, name, registry or path id.
+- `AutonomousSystemRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}`: registering a known number in any spelling is `AlreadyExists`; updating or deleting an unknown one is `NotFound`.
+
+---
+
 ### `DomainName`
 
 Module: `libs/kernel/src/domain_name/`. File: `libs/kernel/src/domain_name/domain/entities/domain_name.rs`
@@ -217,6 +244,33 @@ Invariants and errors follow `Ipv4Address`.
 
 ---
 
+### `DnsResolution`
+
+Module: `libs/kernel/src/dns_resolution/`. File: `libs/kernel/src/dns_resolution/domain/entities/dns_resolution.rs`
+
+The first asserted link between observables (see [../data-model/links.md](../data-model/links.md) and [../data-model/links/dns-resolution.md](../data-model/links/dns-resolution.md)): a domain name resolved to an address. One aggregate per fact, with one observation per source as a child entity.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `DnsResolutionId` | `uuid::Uuid` | validated | **UUID v5** in the link namespace over the kind-qualified endpoints; exported as `relationship--<uuid>`. |
+| `subject` | `DnsResolutionSubject` | `DnsName` | validated | A `domain_name`, parsed with that module's rules. |
+| `answer` | `DnsResolutionAnswer` | `Ipv4Addr` or `Ipv6Addr` | validated | An `ipv4_address` or `ipv6_address`, parsed with those modules' rules. |
+| `created_at` | `DnsResolutionCreatedAt` | `MicrosecondTimestamp` | newtype | When Fennec first recorded the link. |
+| `observations` | `Vec<DnsResolutionObservation>` | entity | validated | At least one, at most one per `DnsResolutionSourceId`; each holds a `DnsResolutionWindow`, a `DnsResolutionCount` and its created and updated instants. |
+
+**Invariants**
+
+- The id is always derived from the endpoints, and the endpoints never change.
+- Merging a report widens the window and keeps the larger count; a report that changes nothing produces no write and no event.
+- Retracting the last observation deletes the link.
+
+**Errors**
+
+- `ValueObjectValidationError`: invalid endpoints, source id, window or count.
+- `DnsResolutionRepositoryError::{NotFound, AlreadyExists, Unexpected(String)}`.
+
+---
+
 ### `Sighting`
 
 Module: `libs/kernel/src/sighting/`. Records the fact that a specific `Source` reported a specific observable. File: `libs/kernel/src/sighting/domain/entities/sighting.rs`
@@ -296,6 +350,7 @@ This is what keeps every module extractable: the day one of them needs its own c
 |---|---|---|---|
 | `kernel` | `Source` | `SourceId`, `SourceType`, `SourceStatus`, `SourceDescription`, `SourceCreatedAt`, `SourceUpdatedAt` | `cti_api` — `/sources[/{id}]` |
 | `kernel` | `UrlSource` | `UrlSourceId`, `UrlSourceUrl`, `UrlSourceFormat`, `UrlSourcePollingInterval`, `UrlSourceCreatedAt`, `UrlSourceUpdatedAt` | `cti_api` — `/url-sources[/{id}]` |
+| `kernel` | `AutonomousSystem` | `AutonomousSystemId`, `AutonomousSystemValue`, `AutonomousSystemName`, `AutonomousSystemRir`, `AutonomousSystemCreatedAt`, `AutonomousSystemUpdatedAt` | `cti_api`: `/autonomous-systems[/{id}]`, `/autonomous-systems?value=` |
 | `kernel` | `DomainName` | `DomainNameId`, `DomainNameValue`, `DomainNameCreatedAt` | `cti_api`: `/domain-names[/{id}]`, `/domain-names?value=` |
 | `kernel` | `EmailAddress` | `EmailAddressId`, `EmailAddressValue`, `EmailAddressCreatedAt` | `cti_api`: `/email-addresses[/{id}]`, `/email-addresses?value=` |
 | `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
@@ -304,5 +359,6 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
 | `kernel` | `Ipv6Network` | `Ipv6NetworkId`, `Ipv6NetworkValue`, `Ipv6NetworkCreatedAt` | `cti_api`: `/ipv6-networks[/{id}]`, `/ipv6-networks?value=` |
 | `kernel` | `MacAddress` | `MacAddressId`, `MacAddressValue`, `MacAddressCreatedAt` | `cti_api`: `/mac-addresses[/{id}]`, `/mac-addresses?value=` |
+| `kernel` | `DnsResolution` | `DnsResolutionId`, `DnsResolutionSubject`, `DnsResolutionAnswer`, `DnsResolutionSourceId`, `DnsResolutionWindow`, `DnsResolutionCount`, `DnsResolutionCreatedAt`, `DnsResolutionUpdatedAt` | `cti_api`: `/dns-resolutions[/{id}]`, `/dns-resolutions?domain_name= \| ipv4_address= \| ipv6_address=`, `/dns-resolutions/co-resolved`, `/dns-resolutions/{id}/observations/{source_id}` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |
 | `config` | `ConfigEntry` | `ConfigKey`, `ConfigValue` | `config_api` — `/config[/{key}]` |

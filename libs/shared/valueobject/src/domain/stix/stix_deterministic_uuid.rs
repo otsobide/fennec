@@ -3,13 +3,15 @@
 use uuid::Uuid;
 
 use crate::domain::canonical_json::canonical_json_value::CanonicalJsonValue;
+use crate::domain::identity::deterministic_uuid::DeterministicUuid;
 
 /// An immutable Value Object holding the UUID part of a deterministic STIX
 /// 2.1 identifier (`<stix-type>--<uuid>`).
 ///
 /// STIX 2.1 section 2.9 derives it as a UUID v5 in the OASIS namespace
 /// ([`StixDeterministicUuid::NAMESPACE`]) over the RFC 8785 serialisation of
-/// the object's ID contributing properties. The STIX type is not part of the
+/// the object's ID contributing properties: the [`DeterministicUuid`] of
+/// those properties in that namespace. The STIX type is not part of the
 /// hashed name, so callers that need to tell kinds apart must keep the kind
 /// next to the UUID.
 ///
@@ -35,10 +37,7 @@ impl StixDeterministicUuid {
     /// Derives the UUID from the ID contributing properties of an object,
     /// given as the JSON object STIX hashes.
     pub fn from_contributing_properties(properties: &CanonicalJsonValue) -> Self {
-        Self(Uuid::new_v5(
-            &Self::NAMESPACE,
-            properties.to_canonical_string().as_bytes(),
-        ))
+        Self(*DeterministicUuid::derive(&Self::NAMESPACE, properties).value())
     }
 
     /// Returns the underlying UUID.

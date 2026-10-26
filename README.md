@@ -18,6 +18,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 |---|---|---|---|---|
 | `kernel` | `source` | `Source` | Full CRUD over the common fields of any intelligence source | `cti_api` (:8081) |
 | `kernel` | `url_source` | `UrlSource` | Full CRUD over the URL-specific payload of a source, keyed by the same id | `cti_api` (:8081) |
+| `kernel` | `autonomous_system` | `AutonomousSystem` | Register, find (by id or number), describe (name and Regional Internet Registry) and delete autonomous systems; the id is the STIX id over the integer number | `cti_api` (:8081) |
 | `kernel` | `domain_name` | `DomainName` | Register, find (by id or value) and delete DNS domain names, canonicalised to lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `email_address` | `EmailAddress` | Register, find (by id or value) and delete email addresses: lowercase NFC local part, domain as lowercase A-labels | `cti_api` (:8081) |
 | `kernel` | `hostname` | `Hostname` | Register, find (by id or value) and delete hostnames, with or without a domain, canonicalised to lowercase A-labels | `cti_api` (:8081) |
@@ -26,6 +27,7 @@ The architecture is uncompromising on one principle: business logic depends on t
 | `kernel` | `ipv6_address` | `Ipv6Address` | Register, find (by id or value) and delete IPv6 host addresses in RFC 5952 form; the id is the STIX deterministic id | `cti_api` (:8081) |
 | `kernel` | `ipv6_network` | `Ipv6Network` | Register, find (by id or value) and delete IPv6 CIDR blocks from `/0` to `/127` with no host bits set | `cti_api` (:8081) |
 | `kernel` | `mac_address` | `MacAddress` | Register, find (by id or value) and delete EUI-48 MAC addresses in any common spelling, stored as lowercase colon-separated octets | `cti_api` (:8081) |
+| `kernel` | `dns_resolution` | `DnsResolution` | The asserted link "a domain name resolved to an address", one per fact with one observation per source; record, find, list by name or address, the co-resolution pivot, retract and delete | `cti_api` (:8081) |
 | `kernel` | `sighting` | `Sighting` | Records that a source reported an observable, with first/last seen and an observation counter | `cti_api` (:8081) |
 | `config` | `config_entry` | `ConfigEntry` | Generic key/value store kept as a reference example | `config_api` (:8080) |
 
@@ -189,6 +191,7 @@ RUST_LOG=debug make cti_api/run
 | `GET` `PUT` `DELETE` | `/sources/{id}` | Read, update (`status`, `description`) or delete a source |
 | `POST` | `/url-sources` | Create the URL payload of a source (`id`, `url`, `format`, `polling_interval_seconds`) |
 | `GET` `PUT` `DELETE` | `/url-sources/{id}` | Read, update or delete it. The id is the parent source's id |
+| `POST` `GET` `PUT` `DELETE` | `/autonomous-systems`, `/autonomous-systems?value=`, `/autonomous-systems/{id}` | Register an AS number (`15169`, `AS15169`, asdot `1.10`), find it, replace its `name` and `rir` with `PUT`, or delete it |
 | `POST` `GET` `DELETE` | `/domain-names`, `/domain-names?value=`, `/domain-names/{id}` | The same contract as IPv4 addresses, for domain names |
 | `POST` `GET` `DELETE` | `/email-addresses`, `/email-addresses?value=`, `/email-addresses/{id}` | The same contract as IPv4 addresses, for email addresses (`@` percent-encoded in the query) |
 | `POST` `GET` `DELETE` | `/hostnames`, `/hostnames?value=`, `/hostnames/{id}` | The same contract as IPv4 addresses, for hostnames |
@@ -199,6 +202,11 @@ RUST_LOG=debug make cti_api/run
 | `POST` `GET` `DELETE` | `/ipv6-addresses`, `/ipv6-addresses?value=`, `/ipv6-addresses/{id}` | The same contract as IPv4 addresses, for IPv6 addresses |
 | `POST` `GET` `DELETE` | `/ipv6-networks`, `/ipv6-networks?value=`, `/ipv6-networks/{id}` | The same contract as IPv4 addresses, for IPv6 networks |
 | `POST` `GET` `DELETE` | `/mac-addresses`, `/mac-addresses?value=`, `/mac-addresses/{id}` | The same contract as IPv4 addresses, for MAC addresses |
+| `POST` | `/dns-resolutions` | Record a source's report that a domain name resolved to an address (`domain_name`, `ipv4_address` or `ipv6_address`, `source_id`, `first_seen`, `last_seen`?, `count`?) |
+| `GET` | `/dns-resolutions?domain_name=` \| `?ipv4_address=` \| `?ipv6_address=` | List the resolutions of a name or to an address |
+| `GET` | `/dns-resolutions/co-resolved?domain_name=` | Domain names sharing an address with the given one in overlapping windows |
+| `GET` `DELETE` | `/dns-resolutions/{id}` | Read or delete a resolution |
+| `DELETE` | `/dns-resolutions/{id}/observations/{source_id}` | Retract one source's observation |
 | `POST` | `/sightings` | Record a first sighting (`id`, `observable_kind`, `observable_id`, `source_id`, `observed_at`) |
 | `POST` | `/sightings/{id}/observations` | Register another observation (`observed_at`): bumps the counter and last seen |
 | `GET` `DELETE` | `/sightings/{id}` | Read or delete a sighting |

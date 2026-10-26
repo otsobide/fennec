@@ -177,9 +177,15 @@ type is not a Fennec kind:
 Inside one module this is harmless: each kind has its own aggregate, its own
 id value object and its own table. Outside a module, every reference carries
 the **module kind** (`ipv4_network`, `litecoin_address`) next to the UUID:
-the sighting's observable reference, the event log's `aggregate_type`, any
-future relationship. The `<stix-type>--<uuid>` form is used only on export
-and import.
+the sighting's observable reference, the event log's `aggregate_type`, the
+endpoints of every link. The `<stix-type>--<uuid>` form is used only on
+export and import.
+
+Links between observables are value-identified too, under their own
+namespace (`eda8415d-6a75-5fdc-9eb0-72698098a92f`, the UUID v5 of
+`urn:fennec:link`), because STIX forbids the OASIS namespace outside
+cyber-observables; [links.md](links.md#identity) gives the name they are
+derived from and a test vector.
 
 ## Canonical forms that feed the identifier
 

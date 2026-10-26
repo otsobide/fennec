@@ -7,7 +7,10 @@ pub struct AutonomousSystemEntry {
     pub id: String,
     pub stix_id: String,
     pub value: String,
+    pub name: Option<String>,
+    pub rir: Option<String>,
     pub created_at: SystemTime,
+    pub updated_at: SystemTime,
 }
 
 /// Structured error DTO for autonomous system operations.

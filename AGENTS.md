@@ -91,10 +91,12 @@ and runs the migrations first. A new use case is registered in
 ### Modules
 
 `libs/kernel/src/<module>/{domain,application,infrastructure}` with one
-module per aggregate: `source`, `url_source`, `sighting` and one per
+module per aggregate: `source`, `url_source`, `sighting`, one per
 observable kind (`ipv4_address`, `ipv4_network`, `ipv6_address`,
-`ipv6_network`, `mac_address`, `domain_name`, `hostname` and
-`email_address` so far; the catalogue lists the rest). Modules never import each other;
+`ipv6_network`, `mac_address`, `autonomous_system`, `domain_name`,
+`hostname` and `email_address` so far; the catalogue lists the rest) and
+one per asserted link (`dns_resolution`; see
+`docs/data-model/links.md`). Modules never import each other;
 `tests/libs/kernel/src/module_isolation_tests.rs` fails the build if one
 does, and every new module must be added to its `MODULES` list.
 
@@ -153,5 +155,4 @@ under `docs/data-model/kinds/` and its status in the catalogue.
   to `dev` or `main` directly, never force-push them.
 - Commits are small and use `<area>: <imperative summary>` with areas such as
   `kernel:`, `shared:`, `cti-api:`, `tests:`, `docs:`, `ci:`, `chore:`.
-- The user wants a five-minute pause (`sleep 300`, run in the background)
-  after every commit.
+- Commits never carry a `Co-Authored-By` trailer naming an AI assistant.
