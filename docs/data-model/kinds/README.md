@@ -8,4 +8,5 @@ in the pull request that implements it.
 | Kind | Module | STIX type | Persistence |
 |---|---|---|---|
 | [Domain name](domain-name.md) | `domain_name` | `domain-name` | In memory and PostgreSQL |
+| [Hostname](hostname.md) | `hostname` | `hostname` | In memory and PostgreSQL |
 | [IPv4 address](ipv4-address.md) | `ipv4_address` | `ipv4-addr` | In memory and PostgreSQL |
