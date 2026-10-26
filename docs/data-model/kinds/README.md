@@ -7,6 +7,7 @@ in the pull request that implements it.
 
 | Kind | Module | STIX type | Persistence |
 |---|---|---|---|
+| [Autonomous system](autonomous-system.md) | `autonomous_system` | `autonomous-system` | In memory and PostgreSQL |
 | [Domain name](domain-name.md) | `domain_name` | `domain-name` | In memory and PostgreSQL |
 | [Email address](email-address.md) | `email_address` | `email-addr` | In memory and PostgreSQL |
 | [Hostname](hostname.md) | `hostname` | `hostname` | In memory and PostgreSQL |
