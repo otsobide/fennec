@@ -10,6 +10,7 @@ use kernel::ipv4_address::application::find_ipv4_address::find_ipv4_address_quer
 use kernel::ipv4_address::application::find_ipv4_address::ipv4_address_finder::Ipv4AddressFinder;
 use kernel::ipv4_address::domain::repositories::ipv4_address_repository::Ipv4AddressRepository;
 use kernel::ipv4_address::infrastructure::persistence::in_memory::in_memory_ipv4_address_repository::InMemoryIpv4AddressRepository;
+use kernel::ipv4_address::infrastructure::persistence::sqlx_postgres::sqlx_postgres_ipv4_address_repository::SqlxPostgresIpv4AddressRepository;
 use kernel::source::application::create_source::create_source_command_handler::CreateSourceCommandHandler;
 use kernel::source::application::create_source::source_creator::SourceCreator;
 use kernel::source::application::delete_source::delete_source_command_handler::DeleteSourceCommandHandler;
@@ -20,6 +21,7 @@ use kernel::source::application::update_source::source_updater::SourceUpdater;
 use kernel::source::application::update_source::update_source_command_handler::UpdateSourceCommandHandler;
 use kernel::source::domain::repositories::source_repository::SourceRepository;
 use kernel::source::infrastructure::persistence::in_memory::in_memory_source_repository::InMemorySourceRepository;
+use kernel::source::infrastructure::persistence::sqlx_postgres::sqlx_postgres_source_repository::SqlxPostgresSourceRepository;
 use kernel::url_source::application::create_url_source::create_url_source_command_handler::CreateUrlSourceCommandHandler;
 use kernel::url_source::application::create_url_source::url_source_creator::UrlSourceCreator;
 use kernel::url_source::application::delete_url_source::delete_url_source_command_handler::DeleteUrlSourceCommandHandler;
@@ -30,6 +32,7 @@ use kernel::url_source::application::update_url_source::update_url_source_comman
 use kernel::url_source::application::update_url_source::url_source_updater::UrlSourceUpdater;
 use kernel::url_source::domain::repositories::url_source_repository::UrlSourceRepository;
 use kernel::url_source::infrastructure::persistence::in_memory::in_memory_url_source_repository::InMemoryUrlSourceRepository;
+use kernel::url_source::infrastructure::persistence::sqlx_postgres::sqlx_postgres_url_source_repository::SqlxPostgresUrlSourceRepository;
 use kernel::sighting::application::create_sighting::create_sighting_command_handler::CreateSightingCommandHandler;
 use kernel::sighting::application::create_sighting::sighting_creator::SightingCreator;
 use kernel::sighting::application::delete_sighting::delete_sighting_command_handler::DeleteSightingCommandHandler;
@@ -44,12 +47,16 @@ use kernel::sighting::application::observe_sighting::observe_sighting_command_ha
 use kernel::sighting::application::observe_sighting::sighting_observer::SightingObserver;
 use kernel::sighting::domain::repositories::sighting_repository::SightingRepository;
 use kernel::sighting::infrastructure::persistence::in_memory::in_memory_sighting_repository::InMemorySightingRepository;
+use kernel::sighting::infrastructure::persistence::sqlx_postgres::sqlx_postgres_sighting_repository::SqlxPostgresSightingRepository;
 use shared_cqrs::command::domain::command_bus::CommandBus;
 use shared_cqrs::command::infrastructure::in_memory::in_memory_command_bus::InMemoryCommandBus;
 use shared_cqrs::query::domain::query_bus::QueryBus;
 use shared_cqrs::query::infrastructure::in_memory::in_memory_query_bus::InMemoryQueryBus;
 use shared_domain_events::domain::event_bus::EventBus;
 use shared_domain_events::infrastructure::in_memory::in_memory_event_bus::InMemoryEventBus;
+use shared_persistence_postgres::infrastructure::postgres::outbox_event_bus::OutboxEventBus;
+use shared_persistence_postgres::infrastructure::postgres::transactional_command_bus::TransactionalCommandBus;
+use sqlx::PgPool;
 
 pub mod health;
 pub mod ipv4_address;
@@ -63,14 +70,67 @@ pub struct AppState {
     pub query_bus: Arc<dyn QueryBus>,
 }
 
-/// Wires all repositories, services and buses together and returns the shared
-/// application state. Each call produces an isolated in-memory store, making
-/// this function safe to call once per test.
-pub fn build_state() -> web::Data<AppState> {
-    let event_bus: Arc<dyn EventBus> = Arc::new(InMemoryEventBus::new());
+/// The repository of every kernel module, in memory or in PostgreSQL. There
+/// is no mixed mode: a state is built from one family only.
+struct Repositories {
+    source: Arc<dyn SourceRepository>,
+    url_source: Arc<dyn UrlSourceRepository>,
+    ipv4_address: Arc<dyn Ipv4AddressRepository>,
+    sighting: Arc<dyn SightingRepository>,
+}
 
+/// Wires all repositories, services and buses together in memory and returns
+/// the shared application state. It never reads the environment, and each
+/// call produces isolated in-memory stores, making it safe to call once per
+/// test.
+pub fn build_state() -> web::Data<AppState> {
+    let repositories = Repositories {
+        source: Arc::new(InMemorySourceRepository::new()),
+        url_source: Arc::new(InMemoryUrlSourceRepository::new()),
+        ipv4_address: Arc::new(InMemoryIpv4AddressRepository::new()),
+        sighting: Arc::new(InMemorySightingRepository::new()),
+    };
+    let (command_bus, query_bus) = build_buses(repositories, Arc::new(InMemoryEventBus::new()));
+
+    web::Data::new(AppState {
+        command_bus: Arc::new(command_bus),
+        query_bus,
+    })
+}
+
+/// Wires all repositories, services and buses together on PostgreSQL.
+///
+/// Services publish to the outbox event bus, and the command bus is wrapped
+/// in the transactional decorator, so every command commits its state and
+/// its events together (`docs/architecture/event-store.md`). The pool's
+/// database must already be migrated.
+pub fn build_postgres_state(pool: PgPool) -> web::Data<AppState> {
+    let repositories = Repositories {
+        source: Arc::new(SqlxPostgresSourceRepository::new(pool.clone())),
+        url_source: Arc::new(SqlxPostgresUrlSourceRepository::new(pool.clone())),
+        ipv4_address: Arc::new(SqlxPostgresIpv4AddressRepository::new(pool.clone())),
+        sighting: Arc::new(SqlxPostgresSightingRepository::new(pool.clone())),
+    };
+    let (command_bus, query_bus) = build_buses(repositories, Arc::new(OutboxEventBus::new()));
+    let after_commit: Arc<dyn EventBus> = Arc::new(InMemoryEventBus::new());
+
+    web::Data::new(AppState {
+        command_bus: Arc::new(TransactionalCommandBus::new(
+            Arc::new(command_bus),
+            pool,
+            after_commit,
+        )),
+        query_bus,
+    })
+}
+
+/// Builds every service and registers every handler on fresh buses.
+fn build_buses(
+    repositories: Repositories,
+    event_bus: Arc<dyn EventBus>,
+) -> (InMemoryCommandBus, Arc<dyn QueryBus>) {
     // --- source (kernel) ---
-    let source_repo: Arc<dyn SourceRepository> = Arc::new(InMemorySourceRepository::new());
+    let source_repo = repositories.source;
 
     let source_creator = SourceCreator::new(Arc::clone(&source_repo), Arc::clone(&event_bus));
     let source_finder = SourceFinder::new(Arc::clone(&source_repo));
@@ -78,8 +138,7 @@ pub fn build_state() -> web::Data<AppState> {
     let source_deleter = SourceDeleter::new(Arc::clone(&source_repo), Arc::clone(&event_bus));
 
     // --- url_source (kernel) ---
-    let url_source_repo: Arc<dyn UrlSourceRepository> =
-        Arc::new(InMemoryUrlSourceRepository::new());
+    let url_source_repo = repositories.url_source;
 
     let url_source_creator =
         UrlSourceCreator::new(Arc::clone(&url_source_repo), Arc::clone(&event_bus));
@@ -90,8 +149,7 @@ pub fn build_state() -> web::Data<AppState> {
         UrlSourceDeleter::new(Arc::clone(&url_source_repo), Arc::clone(&event_bus));
 
     // --- ipv4_address ---
-    let ipv4_address_repo: Arc<dyn Ipv4AddressRepository> =
-        Arc::new(InMemoryIpv4AddressRepository::new());
+    let ipv4_address_repo = repositories.ipv4_address;
 
     let ipv4_address_creator =
         Ipv4AddressCreator::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
@@ -100,7 +158,7 @@ pub fn build_state() -> web::Data<AppState> {
         Ipv4AddressDeleter::new(Arc::clone(&ipv4_address_repo), Arc::clone(&event_bus));
 
     // --- sighting ---
-    let sighting_repo: Arc<dyn SightingRepository> = Arc::new(InMemorySightingRepository::new());
+    let sighting_repo = repositories.sighting;
 
     let sighting_creator = SightingCreator::new(Arc::clone(&sighting_repo), Arc::clone(&event_bus));
     let sighting_observer =
@@ -146,7 +204,6 @@ pub fn build_state() -> web::Data<AppState> {
     command_bus
         .register(DeleteSightingCommandHandler::new(sighting_deleter))
         .expect("Failed to register DeleteSightingCommandHandler");
-    let command_bus: Arc<dyn CommandBus> = Arc::new(command_bus);
 
     // --- query bus ---
     let mut query_bus = InMemoryQueryBus::new();
@@ -174,10 +231,7 @@ pub fn build_state() -> web::Data<AppState> {
         .expect("Failed to register ListSightingsBySourceQueryHandler");
     let query_bus: Arc<dyn QueryBus> = Arc::new(query_bus);
 
-    web::Data::new(AppState {
-        command_bus,
-        query_bus,
-    })
+    (command_bus, query_bus)
 }
 
 /// Registers all HTTP routes onto an Actix-Web [`ServiceConfig`].
