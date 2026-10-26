@@ -153,6 +153,22 @@ One IPv4 host address registered as an observable, the first typed observable ki
 
 ---
 
+### `Ipv4Network`
+
+Module: `libs/kernel/src/ipv4_network/`. File: `libs/kernel/src/ipv4_network/domain/entities/ipv4_network.rs`
+
+One IPv4 CIDR block registered as an observable (see [../data-model/kinds/ipv4-network.md](../data-model/kinds/ipv4-network.md)). Its identity is its value; it shares the STIX type `ipv4-addr` with `Ipv4Address`.
+
+| Field | Value Object | Inner type | Kind | Notes |
+|---|---|---|---|---|
+| `id` | `Ipv4NetworkId` | `uuid::Uuid` | validated | **UUID v5** derived from the value (the UUID part of `ipv4-addr--<uuid>`); a path id must be an RFC 4122 UUID v5. |
+| `value` | `Ipv4NetworkValue` | `std::net::Ipv4Addr` and `u8` | validated | Network address and prefix `/0` to `/31`, no host bits set; canonical `198.51.100.0/24`. |
+| `created_at` | `Ipv4NetworkCreatedAt` | `MicrosecondTimestamp` | newtype | Set to `now()` on creation, truncated to microseconds. |
+
+Invariants and errors follow `Ipv4Address`.
+
+---
+
 ### `Ipv6Address`
 
 Module: `libs/kernel/src/ipv6_address/`. File: `libs/kernel/src/ipv6_address/domain/entities/ipv6_address.rs`
@@ -268,6 +284,7 @@ This is what keeps every module extractable: the day one of them needs its own c
 | `kernel` | `EmailAddress` | `EmailAddressId`, `EmailAddressValue`, `EmailAddressCreatedAt` | `cti_api`: `/email-addresses[/{id}]`, `/email-addresses?value=` |
 | `kernel` | `Hostname` | `HostnameId`, `HostnameValue`, `HostnameCreatedAt` | `cti_api`: `/hostnames[/{id}]`, `/hostnames?value=` |
 | `kernel` | `Ipv4Address` | `Ipv4AddressId`, `Ipv4AddressValue`, `Ipv4AddressCreatedAt` | `cti_api`: `/ipv4-addresses[/{id}]`, `/ipv4-addresses?value=` |
+| `kernel` | `Ipv4Network` | `Ipv4NetworkId`, `Ipv4NetworkValue`, `Ipv4NetworkCreatedAt` | `cti_api`: `/ipv4-networks[/{id}]`, `/ipv4-networks?value=` |
 | `kernel` | `Ipv6Address` | `Ipv6AddressId`, `Ipv6AddressValue`, `Ipv6AddressCreatedAt` | `cti_api`: `/ipv6-addresses[/{id}]`, `/ipv6-addresses?value=` |
 | `kernel` | `MacAddress` | `MacAddressId`, `MacAddressValue`, `MacAddressCreatedAt` | `cti_api`: `/mac-addresses[/{id}]`, `/mac-addresses?value=` |
 | `kernel` | `Sighting` | `SightingId`, `SightingObservableKind`, `SightingObservableId`, `SightingSourceId`, `SightingFirstSeen`, `SightingLastSeen`, `SightingCount`, `SightingCreatedAt`, `SightingUpdatedAt` | `cti_api` — `/sightings[/{id}]`, `/sightings/{id}/observations`, `/observables/{kind}/{id}/sightings`, `/sources/{source_id}/sightings` |

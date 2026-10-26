@@ -13,6 +13,7 @@ pub mod domain_name;
 pub mod email_address;
 pub mod hostname;
 pub mod ipv4_address;
+pub mod ipv4_network;
 pub mod ipv6_address;
 pub mod kernel_migrator;
 pub mod mac_address;
