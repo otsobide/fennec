@@ -152,3 +152,27 @@ async fn it_returns_400_for_missing_body_fields() {
     let resp: ServiceResponse = test::call_service(&app, req).await;
     assert_eq!(resp.status(), 400);
 }
+
+#[tokio::test]
+async fn it_returns_400_for_an_observation_time_beyond_year_9999() {
+    let app = test::init_service(
+        App::new()
+            .app_data(build_state())
+            .configure(configure_routes),
+    )
+    .await;
+
+    let req = test::TestRequest::post()
+        .uri("/sightings")
+        .set_json(json!({
+            "id": "12121212-1212-4212-8212-121212121212",
+            "observable_kind": "file",
+            "observable_id": "34343434-3434-4434-8434-343434343434",
+            "source_id": "56565656-5656-4656-8656-565656565656",
+            "observed_at": u64::MAX
+        }))
+        .to_request();
+
+    let resp: ServiceResponse = test::call_service(&app, req).await;
+    assert_eq!(resp.status(), 400);
+}

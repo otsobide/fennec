@@ -38,7 +38,7 @@ format; their sources are in
 
 | Module | STIX type | OpenCTI | MISP | Canonical form | Column | Id | PD | Status |
 |---|---|---|---|---|---|---|---|---|
-| `ipv4_address` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` | Dotted quad, no leading zeros, no `/32` | `inet`, `CHECK (family = 4 AND masklen = 32)` | A | | [in memory](kinds/ipv4-address.md) |
+| `ipv4_address` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` | Dotted quad, no leading zeros, no `/32` | `inet`, `CHECK (family = 4 AND masklen = 32)` | A | | [postgres](kinds/ipv4-address.md) |
 | `ipv4_network` | `ipv4-addr` | IPv4-Addr | `ip-src`, `ip-dst` (CIDR) | Network address with zero host bits, prefix `/0` to `/31` | `cidr`, `CHECK (family = 4 AND masklen < 32)` | A | | planned |
 | `ipv6_address` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` | RFC 5952 lowercase, no `/128` | `inet`, `CHECK (family = 6 AND masklen = 128)` | A | | planned |
 | `ipv6_network` | `ipv6-addr` | IPv6-Addr | `ip-src`, `ip-dst` (CIDR) | RFC 5952 network address, prefix `/0` to `/127` | `cidr`, `CHECK (family = 6 AND masklen < 128)` | A | | planned |

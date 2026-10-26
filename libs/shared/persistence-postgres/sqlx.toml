@@ -1,0 +1,5 @@
+# The event store keeps its own migration history, so the kernel (or any other
+# context sharing the database) can run its own migrator independently.
+[migrate]
+create-schemas = ["event_store"]
+table-name = "event_store._sqlx_migrations"

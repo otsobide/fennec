@@ -12,7 +12,7 @@ use crate::url_source::domain::value_objects::url_source_updated_at::UrlSourceUp
 use crate::url_source::domain::value_objects::url_source_url::UrlSourceUrl;
 
 /// Aggregate root carrying the URL-specific attributes of a source.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct UrlSource {
     id: UrlSourceId,
     url: UrlSourceUrl,

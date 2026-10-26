@@ -4,18 +4,23 @@
 
 use std::time::SystemTime;
 
+use shared_valueobject::domain::timestamps::truncate_to_microseconds::truncate_to_microseconds;
+
 /// An immutable Value Object wrapping a [`SystemTime`] that records the most
 /// recent observation of the referenced observable by the referenced source.
 ///
 /// The timestamp is externally provided by the caller (typically the ingester
 /// via the `observed_at` field of the create/observe command).
+///
+/// Truncated to whole microseconds, the precision PostgreSQL stores, so it
+/// compares equal after a round trip through the database.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SightingLastSeen(SystemTime);
 
 impl SightingLastSeen {
     /// Creates a `SightingLastSeen` from an explicit [`SystemTime`].
     pub fn from_system_time(value: SystemTime) -> Self {
-        Self(value)
+        Self(truncate_to_microseconds(value))
     }
 
     /// Returns the underlying [`SystemTime`].

@@ -16,6 +16,8 @@ name = "cti-api-e2e"
 path = "../../tests/apps/cti_api/tests.rs"
 
 [dev-dependencies]
+futures = "0.3"
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "json", "migrate", "macros"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 
@@ -24,6 +26,8 @@ actix-web = "4"
 kernel = { path = "../../libs/kernel" }
 shared-cqrs = { path = "../../libs/shared/cqrs" }
 shared-domain-events = { path = "../../libs/shared/domain-events" }
+shared-persistence-postgres = { path = "../../libs/shared/persistence-postgres" }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "migrate"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"

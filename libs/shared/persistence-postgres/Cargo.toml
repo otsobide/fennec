@@ -1,0 +1,25 @@
+[package]
+name = "shared-persistence-postgres"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = "0.1"
+shared-cqrs = { path = "../cqrs" }
+shared-domain-events = { path = "../domain-events" }
+serde_json = "1"
+sha2 = "0.10"
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "time", "json", "migrate", "macros", "sqlx-toml"] }
+time = "0.3"
+tokio = { version = "1", features = ["sync", "rt"] }
+tracing = "0.1"
+uuid = "1"
+
+[[test]]
+name = "shared-persistence-postgres"
+path = "../../../tests/libs/shared/persistence-postgres/tests.rs"
+
+[dev-dependencies]
+async-trait = "0.1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+uuid = { version = "1", features = ["v4"] }
